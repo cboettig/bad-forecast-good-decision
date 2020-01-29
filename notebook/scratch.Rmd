@@ -1,0 +1,10 @@
+```{r}
+library(tidyverse)
+# max is at 4 * K / 5 
+f4  <- function(x, r = .0005, K = 10){
+  x ^ 5 * r * (1 - x / K) + x * 0.5 * (1 - x / K)  
+}
+
+tibble(x = states, f= f4(x)) %>%
+ggplot(aes(x,f)) + geom_point() + coord_cartesian(xlim=c(0,16), ylim=c(-1,5))
+```
