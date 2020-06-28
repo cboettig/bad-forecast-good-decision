@@ -1,0 +1,16 @@
+Package: compendium
+Project: Bad Forecast Good Decision
+Version: 0.1.0
+Depends: tidyverse, mdplearning, truncnorm
+Suggests: rmarkdown, testthat, lintr, knitr, hrbrthemes, patchwork, Cairo, ggthemes, ggtext, rticles
+License: CC0
+Title: Compendium Package
+Description: A template for a research compendium.  Modify this
+             description appropriately for your own compendium.
+Authors@R: c(person("Carl", "Boettiger", 
+                    email = "cboettig@gmail.com", 
+                    role = c("aut", "cre", "cph"),
+                    comment=c(ORCID = "0000-0002-1642-628X")))
+Encoding: UTF-8
+VignetteBuilder: knitr
+Remotes: boettiger-lab/mdplearning

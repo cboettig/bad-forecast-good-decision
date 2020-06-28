@@ -25,6 +25,7 @@ txtcolor <- "#586e75"
 library(tidyverse)
 library(MDPtoolbox)
 library(expm)
+library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
 ```
 
 
@@ -322,5 +323,6 @@ Model with the egregiously optimistic long-term forecast for the stock size of a
 
 
 
-
+```{r}
+```
 
