@@ -1,0 +1,50 @@
+---
+title: "Forecast accuracy can be a poor metric for decision-making"
+date: "`r Sys.Date()`"
+author:
+  - name: Carl Boettiger
+    email: cboettig@berkeley.edu
+    affiliation: ucb
+#    footnote: Corresponding Author
+address:
+  - code: ucb
+    address: "ESPM Department, University of California, 130 Mulford Hall Berkeley, CA 94720-3114, USA"
+abstract: |
+  
+journal: Theoretical ecology
+layout: 3p
+bibliography: refs.bib
+output: rticles::elsevier_article
+keywords: 
+  - transients, 
+  - optimal control, 
+  - adaptive management, 
+  - stochasticity, 
+  - uncertainty, 
+  - ecological management
+preamble: |
+  \journal{preprint}
+  ## EditorialManager adds its own linenumbers to pdf already
+  \usepackage{lineno}
+  \linenumbers
+
+
+---
+
+```{r setup, message = FALSE}
+library(tidyverse)   # plotting and data manipulation
+```
+
+Is forecasting is the ultimate test of theory? 
+
+
+
+# Acknowledgements
+
+This work was supported in part by NSF CAREER () and computational resources from NSF's XSEDE Jetstream (DEB160003) and Chameleon cloud platforms.
+
+
+\pagebreak 
+
+
+# References

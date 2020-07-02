@@ -38,7 +38,7 @@ reward_fn <- function(x,h) pmin(x,h)
 discount <- 0.99
 
 # K is at twice max of f3; 8 * K_3 / 5
-f1 <- function(x, h = 0, r = 1, K = 10 * 8 / 5){
+f1 <- function(x, h = 0, r = 2, K = 10 * 8 / 5){
   s <- pmax(x - h, 0)
   s + s * (r * (1 - s / K) )
 }
@@ -82,16 +82,9 @@ d %>% pivot_longer(names(models), "model") %>%
   ggplot(aes(state, value, col=model)) +
   geom_point() + 
   geom_hline(aes(yintercept = 0)) + 
-  coord_cartesian(ylim = c(-5, 5), xlim = c(0,16))
+  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16))
 ```
 
-
-
-Comparing forecasts
-
-```{r}
-
-```
 
 
 
@@ -190,6 +183,7 @@ rmsd <- d %>% pull(rmsd)
 names(rmsd) <- d %>% pull(model)
 
 opt <- sqrt(mean((true_sim$x - 10)^2))
+opt
 ```
 
 Model 2 clearly outperforms model 1 in predictive capacity. The root mean squared deviation between the model 2 mean and the realization is `r rmsd[["f2"]]`, far lower than model 1 at `r rmsd[["f1"]]`.
@@ -220,15 +214,6 @@ map_dfr(transitions,
 
 ## Model analysis
 
-
-```{r}
-d <- map_dfc(models, function(f) f(states) - states) %>% mutate(state = states)
-d %>% pivot_longer(names(models), "model") %>%
-  ggplot(aes(state, value, col=model)) +
-  geom_point() + 
-  geom_hline(aes(yintercept = 0)) + 
-  coord_cartesian(ylim = c(-1, 5), xlim = c(0,16))
-```
 
 
 ```{r}
@@ -270,12 +255,10 @@ sims <- map_dfr(names(transitions),
                   policy <- policies %>% filter(model == m) %>% pull(policy)
                   map_dfr(1:reps, 
                           function(i){
-                            
                             mdp_planning(transitions[[true_model]], reward, discount,
                                      policy = policy, x0 = x0, Tmax = Tmax) %>%
-                              
-                              select(value, state, time)  %>% 
-                              mutate(state = states[state]) # index->value
+                              select(value, state_index = state, time, action_index = action)  %>% 
+                              mutate(state = states[state_index]) # index->value
                             },
                           .id = "reps")
                 },
@@ -292,6 +275,26 @@ fig_ts <-
   geom_line(alpha=0.5) 
 fig_ts
 ```
+
+Note that the pattern is not driven merely be differences in the unfished equilibrium.  Compare forecast performance under management:
+
+```{r}
+scores <- sims %>%
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  select(time, state_index, next_state, action_index, model, reps) %>% 
+  rowwise() %>%
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index] )
+
+scores %>% 
+  group_by(reps, model) %>%
+  summarise(score = sum(log(prob))) %>%
+  group_by(model) %>% summarise(mean_score = mean(score))
+
+```
+
+
+
+
 
 ```{r fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
 ##  Net Present Value accumulates over time, equivalent for models with near-identical management stategy
