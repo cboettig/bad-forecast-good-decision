@@ -244,7 +244,7 @@ Management under the wrong model (`f3`)
 library(mdplearning)
 Tmax <- 100
 x0 <- which.min(abs(states - 6))
-reps <- 5
+reps <- 100
 set.seed(12345)
 
 
@@ -270,25 +270,31 @@ sims <- map_dfr(names(transitions),
 ```{r}
 fig_ts <- 
   sims %>%
-  filter(time < 25) %>%
+  filter(time < 25, reps < 5) %>%
   ggplot(aes(time, state, col=model, group = interaction(model,reps))) + 
   geom_line(alpha=0.5) 
 fig_ts
 ```
 
-Note that the pattern is not driven merely be differences in the unfished equilibrium.  Compare forecast performance under management:
+Note that the pattern is not driven merely be differences in the unfished equilibrium.  Compare forecast performance under management.  Score is the sum of the log probabilities of observed outcomes, given the 
 
 ```{r}
 scores <- sims %>%
   mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  filter(model < 3) %>%
   select(time, state_index, next_state, action_index, model, reps) %>% 
   rowwise() %>%
-  mutate(prob =  transitions[[model]][state_index, next_state, action_index] )
-
-scores %>% 
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index] ) %>% 
   group_by(reps, model) %>%
-  summarise(score = sum(log(prob))) %>%
-  group_by(model) %>% summarise(mean_score = mean(score))
+  summarise(score = sum(log(prob))) 
+
+scores %>% group_by(model) %>% summarise(mean_score = mean(score))
+
+
+scores %>% mutate(model = as.factor(model)) %>% 
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 70)
+
 
 ```
 
