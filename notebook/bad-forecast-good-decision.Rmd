@@ -30,10 +30,10 @@ library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
 
 
 ```{r}
-states <- seq(0,20, length.out = 200)
+states <- seq(0,25, length.out = 200)
 actions <- states
 obs <- states
-sigma_g <- 0.04
+sigma_g <- 0.05
 reward_fn <- function(x,h) pmin(x,h)
 discount <- 0.99
 
@@ -42,7 +42,7 @@ f1 <- function(x, h = 0, r = 2, K = 10 * 8 / 5){
   s <- pmax(x - h, 0)
   s + s * (r * (1 - s / K) )
 }
-f2 <- function(x, h = 0, r = 1, K = 10){
+f2 <- function(x, h = 0, r = 0.5, K = 10){
   s <- pmax(x - h, 0)
   s + s * (r * (1 - s / K) )
 }
@@ -135,7 +135,8 @@ for (k in 1:n_s) {
   }
 }
 
-transitions <- lapply(models, function(f) transition_matrices(f, states, actions, sigma_g))
+model_sigmas <- c(sigma_g, sigma_g, sigma_g)
+transitions <- lapply(seq_along(models), function(i) transition_matrices(models[[i]], states, actions, model_sigmas[[i]]))
 
 ```
 
@@ -276,7 +277,30 @@ fig_ts <-
 fig_ts
 ```
 
-Note that the pattern is not driven merely be differences in the unfished equilibrium.  Compare forecast performance under management.  Score is the sum of the log probabilities of observed outcomes, given the 
+
+```{r}
+compare <- sims %>%
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  filter(reps == 2, time < 10) %>%
+  rowwise() %>%
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index],
+         expected = transitions[[model]][state_index, , action_index]  %*% states,
+         low = states[ max(which(cumsum(transitions[[model]][state_index,,action_index]) < 0.025)) ],
+         high = states[ min(which(cumsum(transitions[[model]][state_index,,action_index]) > 0.975)) ],
+         true = states[ next_state],
+         model = as.character(model))
+
+
+compare %>% filter(model < 3) %>% 
+  select(time, model, true, expected, low, high) %>% 
+  ggplot(aes(time, col = model, fill = model)) + 
+  geom_point(aes(y = true), pch = "*", size = 10) +
+  geom_point(aes(y = expected)) + 
+  geom_errorbar(aes(ymin = low, ymax = high), alpha = 0.5)
+```
+
+
+
 
 ```{r}
 scores <- sims %>%
@@ -287,7 +311,13 @@ scores <- sims %>%
   mutate(prob =  transitions[[model]][state_index, next_state, action_index] ) %>% 
   group_by(reps, model) %>%
   summarise(score = sum(log(prob))) 
+```
 
+
+
+
+
+````{r}
 scores %>% group_by(model) %>% summarise(mean_score = mean(score))
 
 
