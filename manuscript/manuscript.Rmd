@@ -35,7 +35,6 @@ preamble: |
 library(tidyverse)   # plotting and data manipulation
 ```
 
-Is forecasting is the ultimate test of theory? 
 
 
 
