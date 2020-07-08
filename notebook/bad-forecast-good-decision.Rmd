@@ -59,6 +59,7 @@ f4  <- function(x, h = 0, r = 4e-7, K = 10){
 }
 
 models <- list(f1 = f1, f2 = f2, f3 = f3)
+model_sigmas <- c(sigma_g, sigma_g, sigma_g)
 
 true_model <- "f3"
 
@@ -135,8 +136,13 @@ for (k in 1:n_s) {
   }
 }
 
-model_sigmas <- c(sigma_g, sigma_g, sigma_g)
-transitions <- lapply(seq_along(models), function(i) transition_matrices(models[[i]], states, actions, model_sigmas[[i]]))
+
+transitions <- lapply(seq_along(models), 
+                      function(i) transition_matrices(models[[i]], 
+                                                      states, 
+                                                      actions, 
+                                                      model_sigmas[[i]]))
+names(transitions) <- c("f1", "f2", "f3")
 
 ```
 
