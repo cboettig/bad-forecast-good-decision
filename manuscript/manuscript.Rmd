@@ -1,5 +1,5 @@
 ---
-title: "Forecast accuracy can be a poor metric for decision-making"
+title: "Bad forecast, good decision: accuracy can be a poor metric for policy"
 date: "`r Sys.Date()`"
 author:
   - name: Carl Boettiger
@@ -31,9 +31,373 @@ preamble: |
 
 ---
 
-```{r setup, message = FALSE}
-library(tidyverse)   # plotting and data manipulation
+This result will be considered by some as so preposterous that it can surely be ignored in any real world situations, and by others as so inherently obvious and commonplace as not to merit publication.  It cannot be both.  Forecasting is a well developed and rapidly growing field, accelerated by the explosion of available data and the convergence of statistical techniques with those now emerging from artificial intelligence.  
+
+
+
+
+
+A primary purpose of statistical analyses and ecological modeling is to make forecasts for the future.  Accurate forecasts are important both in assessing the accuracy of our models and understanding of natural processes, and can also underpin policy and decision making.  Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here.  Ecological processes are intrinsically complex, so that even our best models can only ever be approximations of underlying processes.  In choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  Surprisingly, this is true not only in conceptual models, but also when a decision policy is derived directly from a complex optimization routine of a probablistic predictive model, such as the stochastic dynamic programming (SDP) algorithms used to solve Markov Decision Processes [@Marescot2013].  
+
+Many ecological management problems are sequential decision problems, in which each year (or other interval) a manager must observe the state of the system and choose a course of action to maximize long term objectives. Such problems inherently depend on forecasts: each possible action can result in a different forecast for the future state, typically reflecting some uncertainty as well.  The utility the manager derives may depend on both the choice of action and the state of the system, reflecting the costs and benefits associated with each. Sequential decision-making problems are distinguished by the need to think more than one move ahead. For instance, harvesting as many fish as possible in year one may maximize the market value that year, but if too few fish are left to reproduce then harvest in future years will suffer.  The same calculus of thinking ahead frequently applies to rebuilding species populations as well [e.g. @Lambert;  @Chades2008].  
+
+Here I focus on a classic problem in conservation and resource management: optimal harvest of a fishery [@Schaefer1954; @Clark1974; @Reed1979].  Fisheries are a significant economic and conservation concern world wide and their management remains an important debate [e.g. @Worm2006; @Costello2016]. Moreover, their management has been both a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation.  For simplicity, I will focus on the case of a single-species model whose population is observed annually without error in a stationary environment without age structure.  I will further assume that the manager seeks only to maximize the net present value of the harvest.  These assumptions are not at all necessary for the analysis and results presented here, and a large literature already exists relaxing many of these assumptions (e.g. @Holden2015; @Memarzadeh2018; ..., though in practice, large scale analyses such as @Costello2016 still make these same assumptions).  Rather, I have kept the model assumptions simple only for clarity of presentation, which will allow the reader to see that this counter-intuitive result does not arise from the complexity of any particular parametric assumptions
+
+More precisely, the decision problem in question can be stated as follows: The fish stock is observed to be in state `X_t` at time `t`, and is then subjected to some harvest `H_t` before recruiting new fish, subject to stochastic environmental noise `\xi_t`, to bring the stock to $X_t+1$,
+
+\begin{equation}
+X_{t+1} = f(X_t - H_t, \xi_t) 
+\end{equation}
+
+and the manager seeks to maximize the sum of the utility derived from such a harvest and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$:
+
+\begin{equation}
+\sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
+\end{equation}
+
+While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern], for simplicity we will assume utility is merely a linear function of the harvest, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p H_t$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1974 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel; @Marescot2013).  
+
+
+
+
+```{r graphics_setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+
+## Plotting theme settings -- aesthetics only, all can be omitted without consequence
+library(ggthemes)
+library(hrbrthemes)
+library(ggplot2)
+library(Cairo)
+library(extrafont)
+library(patchwork)
+extrafont::loadfonts()
+ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
+#theme_set(theme_solarized(base_size=16))
+
+scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
+scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
+pal <- ggthemes::solarized_pal()(6)
+txtcolor <- "#586e75"
 ```
+
+```{r setup, message=FALSE}
+## Required computational libraries
+library(tidyverse)
+library(MDPtoolbox)
+library(expm)
+library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
+```
+
+\begin{equation}
+f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right)
+\end{equation}
+
+Model 1 is given by `r = 2, 
+
+```{r model_definitions}
+states <- seq(0,24, length.out = 240)
+actions <- states
+obs <- states
+sigma_g <- 0.05
+reward_fn <- function(x,h) pmin(x,h)
+discount <- 0.99
+
+# K is at twice max of f3; 8 * K_3 / 5
+f1 <- function(x, h = 0, r = 2, K = 10 * 8 / 5){
+  s <- pmax(x - h, 0)
+  s + s * (r * (1 - s / K) )
+}
+f2 <- function(x, h = 0, r = 0.5, K = 10){
+  s <- pmax(x - h, 0)
+  s + s * (r * (1 - s / K) )
+}
+
+# max is at 4 * K / 5 
+f3  <- function(x, h = 0, r = .002, K = 10){
+  s <- pmax(x - h, 0)
+  s + s ^ 4 * r * (1 - s / K)
+}
+
+# looks even closer to f2; not used
+#f4  <- function(x, h = 0, r = 4e-7, K = 10){
+#  s <- pmax(x - h, 0)
+#  s + s ^ 8 * r * (1 - s / K) + s * (1 - s / K)
+#}
+
+models <- list(f1 = f1, f2 = f2, f3 = f3)
+model_sigmas <- c(sigma_g, 1.5 * sigma_g, sigma_g)
+
+true_model <- "f3"
+```
+
+
+
+
+```{r transition_matrices}
+# A function to compute the transition matrices for each model:
+transition_matrices <- function(f,
+                      states,
+                      actions,
+                      sigma_g){
+
+  n_s <- length(states)
+  n_a <- length(actions)
+
+  transition <- array(0, dim = c(n_s, n_s, n_a))
+  for (k in 1:n_s) {
+    for (i in 1:n_a) {
+      nextpop <- f(states[k], actions[i])
+      if(nextpop <= 0){
+        transition[k, , i] <- c(1, rep(0, n_s - 1))
+      } else if(sigma_g > 0){
+        x <- dlnorm(states, log(nextpop), sdlog = sigma_g)
+        if(sum(x) == 0){ ## nextpop is computationally zero
+          transition[k, , i] <- c(1, rep(0, n_s - 1))
+        } else {
+          x <- x / sum(x) # normalize evenly
+          transition[k, , i] <- x
+        }
+      } else {
+        stop("sigma_g not > 0")
+      }
+      reward[k, i] <- reward_fn(states[k], actions[i])
+    }
+  }
+  transition
+}
+
+## Compute reward matrix (shared across all models)
+n_s <- length(states)
+n_a <- length(actions)
+reward <- array(0, dim = c(n_s, n_a))
+for (k in 1:n_s) {
+  for (i in 1:n_a) {
+    reward[k, i] <- reward_fn(states[k], actions[i])
+  }
+}
+
+## Now compute the transition matrices for each model
+transitions <- lapply(seq_along(models), 
+                      function(i) transition_matrices(models[[i]], 
+                                                      states, 
+                                                      actions, 
+                                                      model_sigmas[[i]]))
+names(transitions) <- c("f1", "f2", "f3")
+
+```
+
+```{r sdp, results="hide"}
+## This is the most (only) computationally expensive code chunk. use memoization to cache
+mdp <- memoise::memoise(mdp_value_iteration, cache = memoise::cache_filesystem("cache/"))
+
+policies <- 
+  map_dfr(transitions, 
+          function(P){
+    soln <- mdp(P, reward, discount = discount, 
+                epsilon = 0.01, max_iter = 1000, V0 = rep(0,dim(P)[[1]]))
+    escapement <- states - actions[soln$policy]
+    tibble(states, policy = soln$policy, escapement)
+    }, 
+  .id = "model")
+```
+
+```{r simulations}
+library(mdplearning)
+Tmax <- 100
+x0 <- which.min(abs(states - 6))
+reps <- 100
+set.seed(12345)
+
+
+## Simulate each policy reps times, with `f3` as the true model:
+
+sims <- map_dfr(names(transitions), 
+                function(m){
+                  policy <- policies %>% filter(model == m) %>% pull(policy)
+                  map_dfr(1:reps, 
+                          function(i){
+                            mdp_planning(transitions[[true_model]], reward, discount,
+                                     policy = policy, x0 = x0, Tmax = Tmax) %>%
+                              select(value, state_index = state, time, action_index = action)  %>% 
+                              mutate(state = states[state_index]) # index->value
+                            },
+                          .id = "reps")
+                },
+                .id = "model")
+
+
+```
+
+
+
+
+```{r stepahead_unfished}
+stepahead_unfished <- sims
+stepahead_unfished$state_index <- rep(sims$state_index[sims$model == "1"],3)
+stepahead_unfished <- stepahead_unfished  %>% 
+  filter(model != "3") %>% 
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  rowwise() %>%
+  mutate(expected = transitions[[model]][state_index, , 1]  %*% states,
+         var = transitions[[model]][state_index, , 1]  %*% states ^ 2 - expected ^ 2,
+         low = states[ max(which(cumsum(transitions[[model]][state_index,,1]) < 0.025)) ],
+         high = states[ min(which(cumsum(transitions[[model]][state_index,,1]) > 0.975)) ],
+         true = states[ next_state ],
+         model = as.character(model)) 
+```
+
+
+
+```{r fig1a}
+fig1A <- stepahead_unfished %>% 
+  filter(reps == 2, time < 10) %>%
+  ggplot(aes(time, col = model, fill = model)) + 
+  geom_point(aes(y = expected), show.legend = FALSE) + 
+  geom_errorbar(aes(ymin = low, ymax = high), show.legend = FALSE) +
+  geom_point(aes(y = true), pch = "*", size = 12, col = "grey40", show.legend = FALSE)
+
+```
+
+
+```{r stepahead_fished}
+stepahead_fished <- sims %>% 
+  filter(model != "3") %>%
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  rowwise() %>%
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index],
+         expected = transitions[[model]][state_index, , action_index]  %*% states,
+         var = transitions[[model]][state_index, , action_index]  %*% states ^ 2 - expected ^ 2,
+         low = states[ max(which(cumsum(transitions[[model]][state_index,,action_index]) < 0.025)) ],
+         high = states[ min(which(cumsum(transitions[[model]][state_index,,action_index]) > 0.975)) ],
+         true = states[ next_state],
+         model = as.character(model)) %>%
+ select(time, model, true, expected, low, high, var, prob, reps)
+```
+
+```{r fig1b}
+fig1B <- stepahead_fished  %>%  
+  filter(reps == 3, time < 10) %>%
+  ggplot(aes(time, col = model, fill = model)) + 
+  geom_point(aes(y = true), pch = "*", size = 12) +
+  geom_point(aes(y = expected)) + 
+  geom_errorbar(aes(ymin = low, ymax = high))
+ # geom_errorbar(aes(ymin = expected - 2 * sqrt(var), ymax=expected + 2 * sqrt(var)))
+
+```
+
+
+```{r proper_scores, message = FALSE}
+
+scoring_fn <- function(x, mu, sigma){ -(mu - x )^2 / sigma^2  - log(sigma)}
+
+proper_scores_unfished <- stepahead_unfished %>%
+  mutate(sd = sqrt(var),
+         score = scoring_fn(expected, true, sd)) %>%
+  select(model, reps, time, score) 
+
+fig1C <- proper_scores_unfished %>%
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 2, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-100, 1)) 
+
+proper_scores_fished <- stepahead_fished %>%
+  mutate(sd = sqrt(var),
+         score = scoring_fn(expected, true, sd)) %>%
+  select(model, reps, time, score) 
+
+fig1D <- proper_scores_fished %>%
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 2) +
+  coord_cartesian(xlim = c(-100, 1)) 
+
+```
+
+
+# Results
+
+
+
+
+```{r figure1, fig.width=7, fig.height=6}
+fig1A / fig1B
+```
+
+```{r}
+ (fig1C + fig1D)
+```
+
+
+
+
+```{r prob_scores, message = FALSE}
+scores <- sims %>%
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  filter(model < 3) %>%
+  rowwise() %>%
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index] ) %>% 
+  group_by(reps, model) %>%
+  summarise(score = sum(log(prob))) 
+
+score_table <- scores %>% group_by(model) %>% summarise(mean_score = mean(score))
+
+scores %>% mutate(model = as.factor(model)) %>% 
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 70)
+
+```
+
+
+
+
+
+
+
+```{r plot_sims}
+fig_ts <- 
+  sims %>%
+  filter(time < 25, reps < 5) %>%
+  ggplot(aes(time, state, col=model, group = interaction(model,reps))) + 
+  geom_line(alpha=0.3) 
+fig_ts
+```
+
+```{r plot_npv, message = FALSE, fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
+##  Net Present Value accumulates over time, equivalent for models with near-identical management stategy
+npv_df <- sims %>% 
+  group_by(model, reps) %>%
+  mutate(npv = cumsum(value * discount ^ time)) %>%
+  group_by(time, model)  %>% 
+  summarise(mean_npv = mean(npv)) %>% 
+  arrange(model, time) %>% ungroup()
+
+optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
+
+npv_df %>%
+  filter(model != "3", time %in% seq(1,100, by = 5)) %>%
+  ggplot(aes(time, mean_npv)) +
+  geom_line(data = optimal, lwd = 1.5, col = "grey20") +
+  geom_point(aes(col=model), size = 4, alpha = 0.8) + 
+  ylab("Net present value") + xlab("time")  
+
+```
+
+```{r plot_models}
+d <- map_dfc(models, function(f) f(states) - states) %>% mutate(state = states)
+d %>% pivot_longer(names(models), "model") %>%
+  ggplot(aes(state, value, col=model)) +
+  geom_point() + 
+  geom_hline(aes(yintercept = 0)) + 
+  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16))
+```
+
+```{r plot_policies}
+policies %>%
+  ggplot(aes(states,escapement, col=model, lty=model)) + geom_line(lwd=2)
+```
+
+
+
+# Discussion
 
 
 

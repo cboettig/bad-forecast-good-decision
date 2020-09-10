@@ -65,7 +65,6 @@ model_sigmas <- c(sigma_g, 1.5 * sigma_g, sigma_g)
 true_model <- "f3"
 ```
 
-
 ```{r transition_matrices}
 # A function to compute the transition matrices for each model:
 transition_matrices <- function(f,
@@ -130,7 +129,6 @@ policies <-
     }, 
   .id = "model")
 ```
-
 
 ```{r simulations}
 library(mdplearning)
@@ -215,7 +213,7 @@ scores <- sims %>%
   group_by(reps, model) %>%
   summarise(score = sum(log(prob))) 
 
-scores %>% group_by(model) %>% summarise(mean_score = mean(score))
+score_table <- scores %>% group_by(model) %>% summarise(mean_score = mean(score))
 
 scores %>% mutate(model = as.factor(model)) %>% 
   ggplot(aes(x = score, group = model, fill = model)) +
@@ -223,7 +221,6 @@ scores %>% mutate(model = as.factor(model)) %>%
 
 
 ```
-
 
 ## Simulations
 
@@ -236,7 +233,6 @@ fig_ts <-
   geom_line(alpha=0.3) 
 fig_ts
 ```
-
 
 ```{r plot_npv, message = FALSE, fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
 ##  Net Present Value accumulates over time, equivalent for models with near-identical management stategy
@@ -258,9 +254,6 @@ npv_df %>%
 
 ```
 
-
-
-
 ```{r plot_models}
 d <- map_dfc(models, function(f) f(states) - states) %>% mutate(state = states)
 d %>% pivot_longer(names(models), "model") %>%
@@ -269,7 +262,6 @@ d %>% pivot_longer(names(models), "model") %>%
   geom_hline(aes(yintercept = 0)) + 
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16))
 ```
-
 
 ```{r plot_policies}
 policies %>%
