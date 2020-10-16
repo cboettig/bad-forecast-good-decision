@@ -1,0 +1,2 @@
+
+This result will be considered by some as so preposterous that it can surely be ignored in any real world situations, and by others as so inherently obvious and commonplace as not to merit publication.  It cannot be both.  Forecasting is a well developed and rapidly growing field, accelerated by the explosion of available data and the convergence of statistical techniques with those now emerging from artificial intelligence.

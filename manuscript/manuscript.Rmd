@@ -10,7 +10,7 @@ address:
   - code: ucb
     address: "ESPM Department, University of California, 130 Mulford Hall Berkeley, CA 94720-3114, USA"
 abstract: |
-  
+    With the rapid expansion of available data, it is frequently suggested that _forecasting performance_ is the ultimate test of a scientific model [e.g. @Dietz2018].  Yet the model that makes the most accurate forecasts is not always the model that yields the best decisions.  This is no accident of statistics, even formal criteria such as strictly proper scoring rules [@Gneiting2007] cannot determine the best model for decision-making because they do not consider the context of the decision process itself.  I illustrate this paradox using a classic example of ecological decision making in fisheries management.  This example also reveals how an understanding of the decision problem can both explain the poor management outcomes of model which produces the best forecast, and also see how to avoid making such a mistake.  As forecasting becomes an increasing attractive and viable possibility for assessing ecological models and applying them to real-world decisions, I hope this illustration serves as a reminder that modeling can not be done in a vacuum, but must reflect the context in which the model will be applied.
 journal: Theoretical ecology
 layout: 3p
 bibliography: refs.bib
@@ -30,34 +30,16 @@ preamble: |
 
 
 ---
+  
+A primary purpose of statistical analyses and ecological modeling is to make forecasts for the future [].  Accurate forecasts are important both in assessing the accuracy of our models and understanding of natural processes, and can also underpin policy and decision making.  Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here.  Ecological processes are intrinsically complex, so that even our best models can only ever be approximations of underlying processes.  In choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  Even strictly proper scoring rules for probablistic forecasts [@Gneiting2007] will not always select the best model to guide decision-making.  Surprisingly, this is true not only in conceptual models that may guide policy choices, but also when a decision policy is derived directly from a complex optimization routine of a probablistic predictive model, such as the stochastic dynamic programming (SDP) algorithms used to solve Markov Decision Processes [@Marescot2013].  Here, I use a classical, well-understood example from fisheries management [@Schaefer1954; @Clark1974; @Reed1979] to illustrate both the paradox of how a model with the worst forecast provides the best decision outcomes, as well as show how we can avoid selecting models that are poorly suited for management by considering the management context more explicitly.
 
-This result will be considered by some as so preposterous that it can surely be ignored in any real world situations, and by others as so inherently obvious and commonplace as not to merit publication.  It cannot be both.  Forecasting is a well developed and rapidly growing field, accelerated by the explosion of available data and the convergence of statistical techniques with those now emerging from artificial intelligence.  
-
-
-
-
-
-A primary purpose of statistical analyses and ecological modeling is to make forecasts for the future.  Accurate forecasts are important both in assessing the accuracy of our models and understanding of natural processes, and can also underpin policy and decision making.  Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here.  Ecological processes are intrinsically complex, so that even our best models can only ever be approximations of underlying processes.  In choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  Surprisingly, this is true not only in conceptual models, but also when a decision policy is derived directly from a complex optimization routine of a probablistic predictive model, such as the stochastic dynamic programming (SDP) algorithms used to solve Markov Decision Processes [@Marescot2013].  
-
+<!--
 Many ecological management problems are sequential decision problems, in which each year (or other interval) a manager must observe the state of the system and choose a course of action to maximize long term objectives. Such problems inherently depend on forecasts: each possible action can result in a different forecast for the future state, typically reflecting some uncertainty as well.  The utility the manager derives may depend on both the choice of action and the state of the system, reflecting the costs and benefits associated with each. Sequential decision-making problems are distinguished by the need to think more than one move ahead. For instance, harvesting as many fish as possible in year one may maximize the market value that year, but if too few fish are left to reproduce then harvest in future years will suffer.  The same calculus of thinking ahead frequently applies to rebuilding species populations as well [e.g. @Lambert;  @Chades2008].  
-
-Here I focus on a classic problem in conservation and resource management: optimal harvest of a fishery [@Schaefer1954; @Clark1974; @Reed1979].  Fisheries are a significant economic and conservation concern world wide and their management remains an important debate [e.g. @Worm2006; @Costello2016]. Moreover, their management has been both a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation.  For simplicity, I will focus on the case of a single-species model whose population is observed annually without error in a stationary environment without age structure.  I will further assume that the manager seeks only to maximize the net present value of the harvest.  These assumptions are not at all necessary for the analysis and results presented here, and a large literature already exists relaxing many of these assumptions (e.g. @Holden2015; @Memarzadeh2018; ..., though in practice, large scale analyses such as @Costello2016 still make these same assumptions).  Rather, I have kept the model assumptions simple only for clarity of presentation, which will allow the reader to see that this counter-intuitive result does not arise from the complexity of any particular parametric assumptions
-
-More precisely, the decision problem in question can be stated as follows: The fish stock is observed to be in state `X_t` at time `t`, and is then subjected to some harvest `H_t` before recruiting new fish, subject to stochastic environmental noise `\xi_t`, to bring the stock to $X_t+1$,
-
-\begin{equation}
-X_{t+1} = f(X_t - H_t, \xi_t) 
-\end{equation}
-
-and the manager seeks to maximize the sum of the utility derived from such a harvest and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$:
-
-\begin{equation}
-\sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
-\end{equation}
-
-While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p H_t$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
+-->
 
 
+Fisheries are a significant economic and conservation concern world wide and their management remains an important debate [e.g. @Worm2006; @Costello2016]. Moreover, their management has been both a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [e.g. @Mangel1985; @Clark1990; @Marescot2013].  The decision-making problem is characterized by the need for a manager to set an acceptable harvest quota $H_t$ each year given some stock assessment estimate of the current stock size (population abundance) of the species in question [@Clark1974].  Such a decision problem appears to hinge on an accurate forecast: if we can predict to what size the stock will increase next year, $X_t+1$, knowing the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Thus it may seem natural that our first step would be to select the model that makes the most accurate forecast of next year's stock, $X_{t+1}$.  I illustrate how we do this using strictly proper scoring criteria [@Gneiting2007] for a set of candidate models,
+and show that it leads to worse decisions.  
 
 
 ```{r graphics_setup, message=FALSE, warning=FALSE}
@@ -88,11 +70,6 @@ library(expm)
 library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
 ```
 
-\begin{equation}
-f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right)
-\end{equation}
-
-Model 1 is given by `r = 2, 
 
 ```{r model_definitions}
 states <- seq(0,24, length.out = 240)
@@ -131,6 +108,24 @@ true_model <- "f3"
 ```
 
 
+
+# Ecological Models
+
+For simplicity, I will focus on the classic case case of a single-species model whose population is observed annually without error in a stochastic but stationary environment without age structure [@Reed1979; @Clark1990; @Costello2016]. These are not necessary assumptions -- in fact, the more complex the models become, the easier it is find examples in which the best forecast does not produce the best decision.  Rather, using a simple model merely reflects the famous compromise of Richard Levins [@Levins1969] in choosing generality over precision.  More precisely, the decision problem in question can be stated as follows: The fish stock is observed to be in state `X_t` at time `t`, and is then subjected to some harvest `H_t` before recruiting new fish, subject to stochastic environmental noise `\xi_t`, to bring the stock to $X_t+1$,
+
+\begin{equation}
+X_{t+1} = f(X_t - H_t, \xi_t) 
+\end{equation}
+
+Further we imagine that the function $f$ is not known precisely, and so we will rely on an evaluation of forecasting skill across a set of candidate models to determine which one to use to manage the fishery.  Again for simplicity, we will restrict ourselves to two simple candidate models $f_1$ and $f_2$.  Both share the same underlying structure of logistic recruitment:
+
+\begin{equation}
+f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right)
+\end{equation}
+
+Model 1 is given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, Model 2 by $r_2 = 0.5$,  $K_2 = 10$, $\sigma = 0.075$.  Having both the larger growth rate and the larger carrying capacity, Model 1 is clearly the more optimistic of the two choices. 
+
+Mathematical models are, at best, approximations of the underlying processes.  Ecological processes are much too complex to ever be modeled exactly down to the last atom.  For illustrative purposes, we will assume the "true" process to be given by a third model which we will leave unspecified for the moment and will examine in more detail later on.
 
 
 ```{r transition_matrices}
@@ -228,9 +223,6 @@ sims <- map_dfr(names(transitions),
 
 ```
 
-
-
-
 ```{r stepahead_unfished}
 stepahead_unfished <- sims
 stepahead_unfished$state_index <- rep(sims$state_index[sims$model == "1"],3)
@@ -246,10 +238,8 @@ stepahead_unfished <- stepahead_unfished  %>%
          model = as.character(model)) 
 ```
 
-
-
 ```{r fig1a}
-fig1A <- stepahead_unfished %>% 
+fig1a <- stepahead_unfished %>% 
   filter(reps == 2, time < 10) %>%
   ggplot(aes(time, col = model, fill = model)) + 
   geom_point(aes(y = expected), show.legend = FALSE) + 
@@ -257,7 +247,6 @@ fig1A <- stepahead_unfished %>%
   geom_point(aes(y = true), pch = "*", size = 12, col = "grey40", show.legend = FALSE)
 
 ```
-
 
 ```{r stepahead_fished}
 stepahead_fished <- sims %>% 
@@ -275,7 +264,7 @@ stepahead_fished <- sims %>%
 ```
 
 ```{r fig1b}
-fig1B <- stepahead_fished  %>%  
+fig1b <- stepahead_fished  %>%  
   filter(reps == 3, time < 10) %>%
   ggplot(aes(time, col = model, fill = model)) + 
   geom_point(aes(y = true), pch = "*", size = 12) +
@@ -295,7 +284,7 @@ proper_scores_unfished <- stepahead_unfished %>%
          score = scoring_fn(expected, true, sd)) %>%
   select(model, reps, time, score) 
 
-fig1C <- proper_scores_unfished %>%
+fig1c <- proper_scores_unfished %>%
   ggplot(aes(x = score, group = model, fill = model)) +
   geom_histogram(binwidth = 2, show.legend = FALSE) +
   coord_cartesian(xlim = c(-100, 1)) 
@@ -305,7 +294,7 @@ proper_scores_fished <- stepahead_fished %>%
          score = scoring_fn(expected, true, sd)) %>%
   select(model, reps, time, score) 
 
-fig1D <- proper_scores_fished %>%
+fig1d <- proper_scores_fished %>%
   ggplot(aes(x = score, group = model, fill = model)) +
   geom_histogram(binwidth = 2) +
   coord_cartesian(xlim = c(-100, 1)) 
@@ -315,53 +304,36 @@ fig1D <- proper_scores_fished %>%
 
 # Results
 
+## Forecast performance
 
-
-
-```{r figure1, fig.width=7, fig.height=6}
-fig1A / fig1B
-```
-
-```{r}
- (fig1C + fig1D)
-```
-
-
-
-
-```{r prob_scores, message = FALSE}
-scores <- sims %>%
-  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
-  filter(model < 3) %>%
-  rowwise() %>%
-  mutate(prob =  transitions[[model]][state_index, next_state, action_index] ) %>% 
-  group_by(reps, model) %>%
-  summarise(score = sum(log(prob))) 
-
-score_table <- scores %>% group_by(model) %>% summarise(mean_score = mean(score))
-
-scores %>% mutate(model = as.factor(model)) %>% 
-  ggplot(aes(x = score, group = model, fill = model)) +
-  geom_histogram(binwidth = 70)
+```{r figure1, fig.width=7, fig.height=8}
+(fig1a / fig1b) /
+(fig1c + fig1d)
 
 ```
 
+Figure 1A shows the step-ahead prediction performance of each model in a simulation of an un-fished environment, with error bars indicating the 95% confidence intervals around each prediction, while stars denote the observed value in that year.  Model 1 predictions appear far too optimistic, with the true value falling well below the 95% confidence intervals.  In contrast, all observed values fall easily within the confidence intervals produced by model 2.  
+
+Predictive performance of the unfished population does not give us the full picture, since it reflects predictive accuracy only in the region of the true carrying capacity, while an actively harvested stock will be at a lower size.  The model that predicts the equilibrium size may not be the one that best forecasts stock recovery. Further, this comparison does not yet implement any decisions that might be made from either model.  To address these concerns, we consider the case where our fishery is managed according to the optimal harvest predicted by each model in turn.  Each year the model produces both a forecast and a decision about the harvest quota. (Mechanics of determining a harvest quota given the model follow standard methods, e.g. @Reed1979; @Marescot2013, see appendix for details.) We then implement that harvest and compare the observed stock size the following year to that which the model has predicted, Figure 1B.  Because the models make different decisions each year, the stock size in year 2, 3, etc under management of model 1 (blue stars) is different from that under model 2 (red stars).  Again we observe that the observations under model 1 consistently fall well outside of the 95% confidence intervals it predicts, while under model 2, stock sizes consistently fall within the predicted intervals.  Once again, model 2 shows a higher forecast accuracy while model 1 appears hopelessly optimistic.  
+
+**Proper scores**.  
 
 
 
+## Ecological and economic performance
 
+Given this evidence, model 2 clearly provides the more accurate forecast and we would no doubt conclude that model 2 was thus a better approximation of the true model and thus the better choice to inform decision making about harvest quotas.  Yet if we revisit our experiment of managing the fishery under each model in turn, and focus not on _predictive accuracy_ but on _ecological_ and _economic_ outcomes, a different story emerges.  Figure 2A shows the stock sizes across five replicate simulations that have been managed according to each model.  For comparison, we have also included the results of optimal management given the true model.  Despite its optimistic predictions, model 1 does not result in over-fishing, but holds the stock near the same level as the optimal management strategy.  In contrast, model 2 suppresses the stock to a much lower level. The over-fishing in model 2 is not economically efficient either, as shown in Figure 2B.  The net present value of the fishery, as calculated as the cumulative, discounted value of the harvest (assuming a fixed unit price for fish with negligible cost for harvest, see appendix) under the fishing regime of model 1 falls precisely along that of the optimal solution, while the value derived under model 2 is consistently lower.  
 
 
 ```{r plot_sims}
-fig_ts <- 
+fig2a <- 
   sims %>%
   filter(time < 25, reps < 5) %>%
   ggplot(aes(time, state, col=model, group = interaction(model,reps))) + 
   geom_line(alpha=0.3) 
-fig_ts
 ```
 
-```{r plot_npv, message = FALSE, fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
+```{r plot_npv}
 ##  Net Present Value accumulates over time, equivalent for models with near-identical management stategy
 npv_df <- sims %>% 
   group_by(model, reps) %>%
@@ -372,6 +344,7 @@ npv_df <- sims %>%
 
 optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
 
+fig2b <- 
 npv_df %>%
   filter(model != "3", time %in% seq(1,100, by = 5)) %>%
   ggplot(aes(time, mean_npv)) +
@@ -380,10 +353,26 @@ npv_df %>%
   ylab("Net present value") + xlab("time")  
 
 ```
+```{r figure2, message = FALSE, fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
+fig2a + fig2b
+```
+
+
+## Discussion
+
+
+This paradox in performance of forecasting vs performance in decision making can be easily resolved by considering the context of the decision problem more closely. Starting back in the origins of modern fisheries management in the 1950s, @Schaefer1954 demonstrates that the Maximum Sustainable Yield (MSY) is maintained by harvesting a stock down to the size at which it achieves its maximum growth rate, i.e. $K/2$ for a logistic model (or any other symmetric growth model).  The details of this optimal harvest have been refined to allow for dynamic optimization with discounted future profits [@Clark1974] stochastic population growth [@Reed1979], and even imperfect observations [@Memarzadeh2018], but Schaefer's observation is sufficient in this case to see that the decision problem depends very much on the value of $K$ while being essentially independent of the other model parameters, including the growth rate, $r$ and stochasticity, $\sigma$. However, the growth rate (and magnitude of the stochasticity) matter very much to forecast accuracy.  Figure 3 shows the functional form of our two logistic-curve models, compared to the functional form of the "true" model used to drive the simulations.  From this graph, it is clear to see that Model 2 does indeed lie closer to the true model throughout the state space, and agrees precisely with the carrying capacity (where both functions cross zero with negative slope).  However, because the model 3, the true model, is not symmetric, it reaches its maximum growth rate very near the stock size that also maximizes the growth rate of model 1, which is considerably higher stock size than that of model 2.  Consequently, model 2 leads to over-fishing, while model 1 leads to nearly-optimal management, despite its poor performance as a forecaster.  
+
+
+If we had access to model 3, we would no doubt find that it outperformed model 2 in forecast accuracy as well as ecological and economic performance.  But in real ecological decision making, we never know the true model -- we will always be comparing among approximations.  
+
+Within fisheries, even in age-structured models, recruitment approximations with symmetric growth functions (logistic, Ricker, Beverton-Holt, etc) still dominate. 
 
 ```{r plot_models}
 d <- map_dfc(models, function(f) f(states) - states) %>% mutate(state = states)
-d %>% pivot_longer(names(models), "model") %>%
+
+fig3a <- 
+  d %>% pivot_longer(names(models), "model") %>%
   ggplot(aes(state, value, col=model)) +
   geom_point() + 
   geom_hline(aes(yintercept = 0)) + 
@@ -391,14 +380,13 @@ d %>% pivot_longer(names(models), "model") %>%
 ```
 
 ```{r plot_policies}
-policies %>%
+fig3b <- policies %>%
   ggplot(aes(states,escapement, col=model, lty=model)) + geom_line(lwd=2)
 ```
 
-
-
-# Discussion
-
+```{r figure3, fig.width=5, fig.height=7}
+fig3a / fig3b
+```
 
 
 

@@ -1,0 +1,32 @@
+
+
+
+## Decision Context
+
+and the manager seeks to maximize the sum of the utility derived from such a harvest and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$:
+
+\begin{equation}
+\sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
+\end{equation}
+
+While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p H_t$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
+
+
+
+```{r prob_scores, message = FALSE}
+## Probability scores instead of proper scores
+scores <- sims %>%
+  mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
+  filter(model < 3) %>%
+  rowwise() %>%
+  mutate(prob =  transitions[[model]][state_index, next_state, action_index] ) %>% 
+  group_by(reps, model) %>%
+  summarise(score = sum(log(prob))) 
+
+score_table <- scores %>% group_by(model) %>% summarise(mean_score = mean(score))
+
+scores %>% mutate(model = as.factor(model)) %>% 
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 70)
+
+```
