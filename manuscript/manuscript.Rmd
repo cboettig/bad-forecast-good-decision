@@ -328,7 +328,7 @@ Given this evidence, model 2 clearly provides the more accurate forecast and we 
 ```{r plot_sims}
 fig2a <- 
   sims %>%
-  filter(time < 25, reps < 5) %>%
+  filter(time < 25, reps < 5, model != 3) %>%
   ggplot(aes(time, state, col=model, group = interaction(model,reps))) + 
   geom_line(alpha=0.3) 
 ```
