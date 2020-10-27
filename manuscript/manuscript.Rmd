@@ -98,7 +98,7 @@ Mathematical models are, at best, approximations of the underlying processes.  E
 
 ## Forecast performance
 
-```{r figure1, fig.width=7, fig.height=5, include=TRUE, message=TRUE, warning=TRUE}
+```{r figure1, fig.width=7, fig.height=5, include=TRUE, message=TRUE, warning=TRUE,, fig.cap = "Forecast performance of each model."}
 fig1ab + fig1cd + 
   plot_layout(widths =  c(3,1), guides = 'collect') + 
   theme(plot.margin = margin(0, 0, .1, .1, "cm"))
@@ -116,7 +116,7 @@ Predictive performance of the unfished population does not give us the full pict
 
 Given this evidence, model 2 clearly provides the more accurate forecast and we would no doubt conclude that model 2 was thus a better approximation of the true model and thus the better choice to inform decision making about harvest quotas.  Yet if we revisit our experiment of managing the fishery under each model in turn, and focus not on _predictive accuracy_ but on _ecological_ and _economic_ outcomes, a different story emerges.  Figure 2A shows the stock sizes across five replicate simulations that have been managed according to each model.  For comparison, we have also included the results of optimal management given the true model.  Despite its optimistic predictions, model 1 does not result in over-fishing, but holds the stock near the same level as the optimal management strategy.  In contrast, model 2 suppresses the stock to a much lower level. The over-fishing in model 2 is not economically efficient either, as shown in Figure 2B.  The net present value of the fishery, as calculated as the cumulative, discounted value of the harvest (assuming a fixed unit price for fish with negligible cost for harvest, see appendix) under the fishing regime of model 1 falls precisely along that of the optimal solution, while the value derived under model 2 is consistently lower.  
 
-```{r figure2, message = FALSE, fig.cap = "Corresponding utility (measured as mean net present value, that is: cumulative value, discounting future values by $\\delta^t$, averaged across replicates). Note that the exepcted utility under model 1, which has the worst forecast, is nearly identical to the optimal utility achieved by managing under the correct model, 3.  The utility derived from model 2 is far smaller, despite it's overall better performance in long term forecasts."}
+```{r figure2, message = FALSE, fig.cap = "Ecological and economic performance of each forecast."}
 fig2a + fig2b
 ```
 
@@ -132,8 +132,8 @@ This issue is by no means unique to fisheries.  Throughout resource management a
 
 
 
-```{r figure3, fig.width=5, fig.height=7}
-fig3a / fig3b
+```{r figure3, fig.width=7, fig.height=4}
+fig3a + fig3b
 ```
 
 
