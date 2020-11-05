@@ -1,5 +1,5 @@
 ---
-title: 'Appendix for: "Bad Forecast, Good Decision..."'
+title: 'Appendix for: "Bad Forecast, Good Decision"'
 date: "`r Sys.Date()`"
 author: Carl Boettiger
 journal: Appendix
@@ -43,15 +43,7 @@ knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = F
 
 ```
 
-Here we provide annotated code necessary to completely reproduce all of the analysis
-presented in the main paper.
-This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving 
-Markov Decision Processes (MDP) using stochastic dynamic programming functionality,
-`expm` for matrix exponentials [@expm], and a few custom MDP functions provided
-by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse` 
-packages for basic manipulation and plotting [@tidyverse]. This file is also
-available as an RMarkdown document [@rmarkdown] at 
-<https://github.com/cboettig/bad-forecast-good-decision>
+Here we provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.
 
 ```{r setup, message=FALSE}
 library(tidyverse)
@@ -71,15 +63,10 @@ and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$
 \sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
 \end{equation}
 
-While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p H_t$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
+While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest quota set by the manager, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p \min(H_t, X_t)$ (noting that realized harvest cannot exceed the available stock). As units are considered already non-dimensionalized in this example, without loss of generality we will set $p=1$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
 
 
-To solve the decision problem using SDP, we define
-the state space and the action space on a discrete grid of 240 points.  The maximum
-state is set well above the largest carrying capacity used in the models,
-which limits the influence of boundary effects introduced by the transformation to
-a discrete, finite grid.  Available harvest actions match the state space, effectively 
-allowing any harvest level to be possible.  
+To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.  The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
 
 ```{r model_definitions}
 states <- seq(0,24, length.out = 240)
@@ -100,13 +87,7 @@ reward_fn <- function(x,h) pmin(x,h)
 discount <- 0.99
 ```
 
-Alternate reward functions with varying price and cost structures are possible but do not qualitatively
-impact the conclusions.  This reward function is a limiting case of any more 
-complex reward, and corresponds both to classic work that does not model utility
-explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions
-typically made in more recent models [@Reed1979]. Moreover, using a simple reward function
-makes it clear that model that performs best is not doing so merely because of particular
-features baked into the a carefully chosen reward rule.  
+Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions.  This reward function is a limiting case of any more complex reward, and corresponds both to classic work that does not model utility explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions typically made in more recent models [@Reed1979]. Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.  
 
 
 # Ecological Models
@@ -186,8 +167,7 @@ transition_matrices <- function(f, states, actions, sigma_g){
 }
 ```
 
-This follows the standard setup for standard stochastic dynamic programming, see @Marescot2013.
-Having defined a function to compute the transition matrix, we can use it to create matrices corresponding to each of the three models:
+This follows the standard setup for standard stochastic dynamic programming, see @Marescot2013. Having defined a function to compute the transition matrix, we can use it to create matrices corresponding to each of the three models:
 
 ```{r}
 transitions <- lapply(seq_along(models), 
@@ -218,11 +198,7 @@ for (k in 1:n_s) {
 # Optimal control solutions
 
 
-We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model.  
-This determines the optimal harvest policy for each possible state, given each model. Because this step is the
-most computationally intensive routine, we cache the results using memosization conditioned on the transition
-matrices [@memoise].  Running this code with alternate transition matrices automatically invalidates that
-cache, reducing the risk of loading spurious results. 
+We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model. This determines the optimal harvest policy for each possible state, given each model. Because this step is the most computationally intensive routine, we cache the results using memosization conditioned on the transition matrices [@memoise].  Running this code with alternate transition matrices automatically invalidates that cache, reducing the risk of loading spurious results. 
 
 
 ```{r sdp, results="hide"}
@@ -243,10 +219,7 @@ policies <-
 
 # Simulations and step-ahead forecasts
 
-We simulate fishing dynamics under the optimal policy for each model, using a simple
-helper function from the `mdplearning` package. Because growth dynamics are stochastic,
-we perform 100 simulations of each model from identical starting condition to
-ensure results are not the result of chance alone.
+We simulate fishing dynamics under the optimal policy for each model, using a simple helper function from the `mdplearning` package. Because growth dynamics are stochastic, we perform 100 simulations of each model from identical starting condition to ensure results are not the result of chance alone.
 
 
 ```{r simulations}
@@ -327,7 +300,7 @@ based on the first two moments of the distribution to score the respective
 forecasts under both the unfished and actively managed scenario sfor each model:
 
 ```{r proper_scores, message = FALSE}
-# Gneiting & Raferty (2007), eq24
+# Gneiting & Raferty (2007), eq27
 scoring_fn <- function(x, mu, sigma){ -(mu - x )^2 / sigma^2  - log(sigma)}
 
 stepahead_unfished <- stepahead_unfished %>%
@@ -354,10 +327,7 @@ predictions <-
 
 # Plotting
 
-Having computed a single data frame of simulation data under both optimally fished
-(according to each model) and unfished scenarios for each model, along with
-the proper scores for the step-ahead forecasts a la @Gneiting2007, we have all 
-the results necessary to generate the figures presented in the main paper.    
+Having computed a single data frame of simulation data under both optimally fished (according to each model) and unfished scenarios for each model, along with the proper scores for the step-ahead forecasts a la @Gneiting2007, we have all the results necessary to generate the figures presented in the main paper.    
 
 
 
@@ -377,8 +347,7 @@ fig1ab <- predictions %>%
 ```
 
 
-Likewise we can plot the data on proper scores associated with
-each prediction of each model: 
+Likewise we can plot the data on proper scores associated with each prediction of each model: 
 
 ```{r}
 fig1cd <- predictions %>%
@@ -419,7 +388,7 @@ fig2a <-
                     fill = model),
                 alpha = 0.2, show.legend = FALSE) +
   ylab("state") + 
-  ggtitle("A") + labs(subtitle = "Ecological performance")
+  ggtitle("A") + labs(subtitle = "Ecological")
 ```
 
 To plot the economic value over time, we must sum up the discounted values
@@ -443,7 +412,7 @@ npv_df %>%
   geom_line(data = optimal, lwd = 1.5, col = "grey20") +
   geom_point(aes(col=model), size = 4, alpha = 0.8) + 
   ylab("Net present value") + xlab("time")  + 
-  ggtitle("B.") + labs(subtitle = "Economic performance")
+  ggtitle("B.") + labs(subtitle = "Economic")
 
 ```
 
