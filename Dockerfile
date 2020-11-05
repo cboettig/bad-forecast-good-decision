@@ -1,4 +1,4 @@
-FROM rocker/binder:latest
+FROM rocker/binder:4.0.3-daily
 
 
 ## Copies your repo files into the Docker Container
