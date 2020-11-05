@@ -1,5 +1,5 @@
 ---
-title: "Bad forecast, good decision: what makes a model relevant for determining policy"
+title: "Bad forecast, good decision: predictive accuracy is not everything"
 date: "`r Sys.Date()`"
 author:
   - name: Carl Boettiger
