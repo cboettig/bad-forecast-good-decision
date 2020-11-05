@@ -347,7 +347,8 @@ predictions <-
   bind_rows(stepahead_fished  %>% 
           select(time, model, reps, expected, low, high, true, score) %>% 
           mutate(scenario = "B_fished")
-  ) 
+  ) %>% 
+  mutate(model = as.character(model))
 ```
 
 
@@ -418,7 +419,7 @@ fig2a <-
                     fill = model),
                 alpha = 0.2, show.legend = FALSE) +
   ylab("state") + 
-  ggtitle("Ecological performance")
+  ggtitle("A") + labs(subtitle = "Ecological performance")
 ```
 
 To plot the economic value over time, we must sum up the discounted values
@@ -442,7 +443,7 @@ npv_df %>%
   geom_line(data = optimal, lwd = 1.5, col = "grey20") +
   geom_point(aes(col=model), size = 4, alpha = 0.8) + 
   ylab("Net present value") + xlab("time")  + 
-  ggtitle("Economic performance")
+  ggtitle("B.") + labs(subtitle = "Economic performance")
 
 ```
 
