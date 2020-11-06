@@ -1,11 +1,12 @@
-FROM rocker/binder:4.0.3
+FROM rocker/binder:4.0.3-daily
 
 
 ## Copies your repo files into the Docker Container
 USER root
 
-RUN useradd -g rstudio rstudio
 RUN RSTUDIO_VERSION=daily /rocker_scripts/install_rstudio.sh
+
+
 COPY . ${HOME}
 ## Enable this to copy files from the binder subdirectory
 ## to the home, overriding any existing files.
