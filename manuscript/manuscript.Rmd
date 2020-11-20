@@ -1,37 +1,34 @@
 ---
-title: "Bad forecast, good decision: predictive accuracy is not everything"
-date: "`r Sys.Date()`"
+title: 'Bad forecast, good decision: predictive accuracy is not everything'
 author:
-  - name: Carl Boettiger
-    email: cboettig@berkeley.edu
-    affiliation: ucb
-address:
-  - code: ucb
-    address: "ESPM Department, University of California, 130 Mulford Hall Berkeley, CA 94720-3114, USA"
+- name: Carl Boettiger
+  email: cboettig@berkeley.edu
+  affiliation: ucb
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
 abstract: |
-     Model-based forecasts have been enabled by recent explosion of data and computational methods and spurred on by decision-makers appetite for forecasts in everything from elections to pandemic response. It is taken for granted that the model which makes the most accurate forecast, accounting for uncertainty, will also be the best model to inform decision-making.  Using a classic example from fisheries management, I demonstrate that selecting the model that produces the best forecast can lead to decidedly worse outcomes. This situation can arise whenever the models are only approximations of the reality, underscoring the risk of evaluating models only by prediction accuracy and not decision outcomes
-journal: " "
+  Model-based forecasts have been enabled by recent explosion of data and computational methods and spurred on by decision-makers appetite for forecasts in everything from elections to pandemic response. It is taken for granted that the model which makes the most accurate forecast, accounting for uncertainty, will also be the best model to inform decision-making.  Using a classic example from fisheries management, I demonstrate that selecting the model that produces the best forecast can lead to decidedly worse outcomes. This situation can arise whenever the models are only approximations of the reality, underscoring the risk of evaluating models only by prediction accuracy and not decision outcomes
+journal: ' '
 layout: 3p
 bibliography: refs.bib
 csl: science.csl
-output: word_document
-#  rticles::elsevier_article:
-#    dev: cairo_pdf
-#    keep_tex: true
-
-keywords: 
-  - transients, 
-  - optimal control, 
-  - adaptive management, 
-  - stochasticity, 
-  - uncertainty, 
-  - ecological management
+address:
+- code: ucb
+  address: ESPM Department, University of California, 130 Mulford Hall Berkeley, CA
+    94720-3114, USA
+keywords:
+- transients,
+- optimal control,
+- adaptive management,
+- stochasticity,
+- uncertainty,
+- ecological management
 preamble: |
   \journal{preprint}
   \usepackage{lineno}
   \linenumbers
-
-
 ---
   
 A primary purpose of statistical analyses and ecological modeling is to make forecasts for the future [@Clark2001; @Gneiting2014].  Accurate forecasts are important both in assessing the accuracy of our models and understanding of natural processes, they also underpin policy and decision making [@Dietze2018]. Strictly proper scoring rules provide mathematical guarantees that they will, on average, select the true model over any other[@Gneiting2007], paving the way for ever more complex and more accurate forecasting models. Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here. Surprisingly, this can even happen when a decision is derived directly from a complex optimization routine of a probabilistic predictive models [@Marescot2013].  Reality is complex; even our best models can only ever be approximations of underlying processes.  Here, I use a classic, well-understood example from fisheries management [@Schaefer1954; @Clark1973; @Reed1979] to illustrate both the paradox of how a model with the worst forecast provides the best decision outcomes, as well as show how we can avoid selecting models that are poorly suited for management by considering the management context more explicitly. These results underscore that in choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  
