@@ -217,6 +217,28 @@ policies <-
 ```
 
 
+# Adaptive Management
+
+The adaptive management solution does not rely on forecast skill alone to select a model.  Instead, the manager assigns prior probabilities across all possible models, and updates those priors in response to future observations.  Decisions reflect uncertainty over all models, and the resulting uncertainty about the net present value that would result. 
+
+```{r}
+adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
+
+am1 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.5, 0.5), x0 = 10, 
+               Tmax = 20, true_transition = transitions[[3]])
+```
+
+
+```{r}
+## Skeptic of model-1
+am2 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.1, 0.9), x0 = 10, 
+               Tmax = 20, true_transition = transitions[[3]])
+```
+
+
+
+
+
 # Simulations and step-ahead forecasts
 
 We simulate fishing dynamics under the optimal policy for each model, using a simple helper function from the `mdplearning` package. Because growth dynamics are stochastic, we perform 100 simulations of each model from identical starting condition to ensure results are not the result of chance alone.
