@@ -36,7 +36,7 @@ ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
 
 scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
 scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
-pal <- ggthemes::solarized_pal()(6)
+pal <- ggthemes::solarized_pal()(8)
 txtcolor <- "#586e75"
 
 knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
@@ -209,7 +209,7 @@ policies <-
   map_dfr(transitions, 
           function(P){
     soln <- mdp(P, reward, discount = discount, 
-                epsilon = 0.01, max_iter = 1000, V0 = rep(0,dim(P)[[1]]))
+                epsilon = 0.01, max_iter = 2000, V0 = rep(0,dim(P)[[1]]))
     escapement <- states - actions[soln$policy]
     tibble(states, policy = soln$policy, escapement)
     }, 
@@ -219,23 +219,32 @@ policies <-
 
 # Adaptive Management
 
-The adaptive management solution does not rely on forecast skill alone to select a model.  Instead, the manager assigns prior probabilities across all possible models, and updates those priors in response to future observations.  Decisions reflect uncertainty over all models, and the resulting uncertainty about the net present value that would result. 
+Passive adaptive management using a Bayesian learning scheme still learns the wrong model. 
 
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
+x0 <- which.min(abs(states - 6))
 
-am1 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.5, 0.5), x0 = 10, 
-               Tmax = 20, true_transition = transitions[[3]])
+am1 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.99, 0.01), x0 = x0, 
+               Tmax = 50, true_transition = transitions[[3]], 
+                epsilon = 0.001, max_iter = 2000)
 ```
 
 
 ```{r}
-## Skeptic of model-1
-am2 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.1, 0.9), x0 = 10, 
-               Tmax = 20, true_transition = transitions[[3]])
+am <- am1$df %>% mutate(belief = am1$posterior$V2)
+am %>%  ggplot(aes(time, states[state], col = belief)) + geom_line() + geom_point() +  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4])
 ```
 
 
+```{r include = FALSE}
+as_tibble(am1$posterior) %>% 
+  mutate(time = seq_along(V1)) %>%
+  select(time = time, "1" = V1, "2" = V2) %>% 
+  pivot_longer(c("1", "2"), values_to="belief", names_to = "model") %>%
+  filter(time < 20) %>%
+  ggplot(aes(time, belief, col=model)) + geom_line(col = pal[4])
+```
 
 
 
