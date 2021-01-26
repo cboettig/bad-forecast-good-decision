@@ -55,7 +55,8 @@ library(mdplearning)
 
 
 
-Our decision problem is defined as follows: 
+The question of optimal harvest given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context.  @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
+
 A manager seeks to maximize the sum of the utility derived from such a harvest
 and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$:
 
@@ -63,7 +64,31 @@ and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$
 \sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
 \end{equation}
 
-While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest quota set by the manager, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p \min(H_t, X_t)$ (noting that realized harvest cannot exceed the available stock). As units are considered already non-dimensionalized in this example, without loss of generality we will set $p=1$. This problem is already well studied, and it is worth noting that even under such a pessimistic assumption, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case. Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
+While in principle the utility could reflect many things, including the cost of fishing, market responses to supply and demand, the value of recreational fishing, the intrinsic value fish left in the sea [see @Halpern2013], for simplicity we will assume utility is merely a linear function of the harvest quota set by the manager, i.e. a fixed price $p$ per kilogram of fish harvested: $U(X_t, H_t) = p \min(H_t, X_t)$ (noting that realized harvest cannot exceed the available stock). As units are already specified in dimensionless quantities in this example, so without loss of generality we will set $p=1$. 
+
+To solve this optimization, we must also know the dynamics of $X_t$, describing how future stock $X_{t+1}$ changes from the present state, $X_t$, after to harvest $H_t$:
+
+\begin{equation}
+X_{t+1} = f(X_t, H_t)
+\end{equation}
+
+This problem is already well studied, and it is worth noting that even under the simple utility function which assigns no value to fish that are not harvested, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case.  As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.  
+
+The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation as , 
+
+\begin{equation}
+\end{equation}
+
+This technique, known as stochastic dynamic programming (SDP) is widely used in conservation decision problems [e.g. @Mangel1985, @Marescot2013].
+
+It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.  In the case of a deterministic model at equilibrium, these policies are identical.  Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain.  These issues are discussed in detail in @pomdp-intro.  For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries.  The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.  
+
+Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.  Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.  The issue at hand is how we determine the model in the first place.  
+
+
+
+
+Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
 
 
 To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.  The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
@@ -96,8 +121,10 @@ The manager chooses between two different logistic growth models, each of which
 can be thought of as an approximation to the underlying "true" population model:
 
 \begin{equation}
-f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right)
+f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right) \xi_i(t)
 \end{equation}
+
+where $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standar-deviation $\sigma_i$.  
 
 Model 1 has $r_1 = 2$, $K = 16$, and $\sigma_1 = 0.05$.
 Model 2 has $r_2 = 0.5, K_2 = 10$, and $\sigma_2 = 0.075$.
