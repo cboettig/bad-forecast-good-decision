@@ -1,5 +1,5 @@
 ---
-title: 'Bad forecast, good decision: predictive accuracy is not everything'
+title: ''
 author:
 - name: Carl Boettiger
   email: cboettig@berkeley.edu
@@ -7,6 +7,8 @@ author:
 date: "`r Sys.Date()`"
 
 abstract: |
+
+  
   Model-based forecasts have been enabled by recent explosion of data and computational methods and spurred on by decision-makers appetite for forecasts in everything from elections to pandemic response. It is taken for granted that the model which makes the most accurate forecast, accounting for uncertainty, will also be the best model to inform decision-making.  Using a classic example from fisheries management, I demonstrate that selecting the model that produces the most accurate and precise forecast can lead to decidedly worse outcomes. This situation can arise whenever the models are only approximations of the reality, underscoring the risk of evaluating models only by prediction accuracy and not decision objectives using formal tools of decision theory.
 
 corresponding_author:
@@ -31,12 +33,7 @@ keywords:
 lead_author_surname: Boettiger
 
 significance: |
-  It is natural to assume that a more accurate and precise forecast will lead to better decisions
-  than a less accurate one.  I demonstrate that this premise is false, and illustrate how a 
-  decision-theoretic approach provides better criteria for chosing a forecast model than forecast skill.
-  As the expansion of machine learning methods and big data lead to increasing more accurate and
-  precise forecasts in many fields, we should remember that alone is not enough to jettison earlier 
-  models.
+
 
 acknowledgements: |
   This work was supported in part by NSF CAREER (#1942280) and computational resources from NSF's XSEDE Jetstream (DEB160003) and Chameleon cloud platforms.
@@ -53,12 +50,114 @@ output: rticles::pnas_article
 ---
 
 
-Uncertainty in decision-making
-forecasting as the answer
-forecasting is not always the answer
+Global change issues are complex and outcomes are difficult to predict, making approaches to uncertainty a central part
+of effective decision-making [@ @]. While some uncertainty is intrinsic to the underlying processes (stochasticity) or by
+limits to what variables we can observe and how accurately we measure them (measurement uncertainty), much uncertainty 
+is the result of our imperfect knowledge of the processes involved, as expressed by the structure and
+parameters of mathematical models used to approximate those processes (model uncertainty). Model uncertainty can be 
+reduced by gathering additional data, which may rule out certain models or parameter values as implausible. 
+When model parameters are estimated directly from available data, there is a risk that the best-fitting models may 
+_overfit_ to patterns arising from by chance from the stochasticity or measurement error which do not reflect the
+underlying process. Researchers have often favored simpler models which are less prone to over-fitting, sometimes
+through explicit penalties such as information criteria [@], though these can be misleading [@]. With the rapid 
+expansion of available ecological and environmental data [@], it is increasingly possible to rely instead on comparisons
+between model predictions and data purposely excluded from model estimation (cross-validation), or better, 
+comparisons between model predictions and data collected in the future (forecasting, @Clark2001; @Dietze2018]). 
+Over sufficiently long timescales, comparing model forecasts to future observations will select the models with
+greatest predictive accuracy.  Because model-based forecasts frequently play an important role in decision-making,
+it is commonly assumed [e.g. @Walters1981; @Clark2001; @Dietze2018] that this approach for addressing model uncertainty
+will also improve decision-making outcomes. Here, I illustrate that this need not be the case: it is quiet possible
+that any approach with improves the forecast accuracy of the model(s) over time can simultaneously lead to worse 
+decision outcomes. This example illustrates that knowing when increased forecast accuracy will or will not also improve 
+decision outcomes in general remains an open problem, as is the challenge of what to do about it.
 
 
-A primary purpose of statistical analyses and ecological modeling is to make forecasts for the future [@Clark2001; @Gneiting2014].  Accurate forecasts are important both in assessing the accuracy of our models and understanding of natural processes, they also underpin policy and decision making [@Dietze2018]. "Strictly proper" scoring rules [sensu @Gneiting2007] provide mathematical guarantee that they will, on average, select the true model over any other, paving the way for ever more complex and more accurate forecasting models. Unlike alternative measures of 'goodness of fit' forecasts are
+
+<!-- 
+It may be easy to dismiss this example on the argument that both models are (or more precisely,
+the any logistic growth model, regardless of parameterization would be) extremely naive
+and unrealistic, and any solution would surely begin with replacing both models with something
+more realistic.  Yet such objections overlook the simple fact that for all its faults in 
+prediction, model 1 already provides nearly optimal performance.  That performance arises
+because model 1 has very accurately reflected one key aspect of the true model (the position of the
+maximum growth rate), even while it is wrong about every other aspect of the biology. 
+
+The open problem is simply to propose an approach to model uncertainty which would select model 1
+over model 2 (i.e. choosing among the suite of available models, the one that gives the better 
+decisions.)
+
+
+An important aspect of this example is that model 1 performs nearly optimally. 
+
+
+-->
+
+I illustrate this problem using an example from fisheries management. 
+Fisheries are a significant economic and conservation concern world
+wide and their management remains an important debate [e.g. @Worm2006;
+@Worm2009; @Costello2016]. Moreover, their management has been a proving 
+grounds for theoretical and practical decision-making issues which are widely
+applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994],
+and one that has long wrestled with issues of uncertainty in the context
+of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
+While modern fisheries management frequently relies on complex models which may
+contain scores of parameters to reflect the specific age or stage structure of a
+specific fish stock [@ram], I will rely on simple, well-studied models which
+permit greater intuition and generalization [@Levins1966]. Consistent with 
+such previous work [@Schaefer1954; @Clark1973; @Reed1979; @Walters1981; @Ludwig1982; @Costello2016],
+let us consider the problem of determining the optimal harvest policy given a 
+measurement of the current stock size.  
+
+# Ecological Models
+
+The sustainable harvest decision problem can be stated as follows: The fish stock is observed to be in state $X_t$ at time $t$, and is then subjected to some harvest $H_t$ before recruiting new fish, subject to stochastic environmental noise $\xi_t$, to bring the stock to $X_t+1$,
+
+\begin{equation}
+X_{t+1} = f(X_t - H_t, \xi_t) 
+\end{equation}
+
+A manager seeks each year to select the harveset $H_t$ which will maximize the sum
+of the utility derived from such a harvest and such a state, $U(X_t,H_t)$, over all time,
+subject to discount rate $\delta$ [@Clark1973]:
+
+\begin{equation}
+\sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t
+\end{equation}
+
+
+Further we imagine that the function $f$ is not known precisely, and so we will rely on an evaluation of forecasting skill across a set of candidate models to determine which one to use to manage the fishery.  Again for simplicity, we will restrict ourselves to two simple candidate models $f_1$ and $f_2$.  Both share the same underlying structure of logistic recruitment (known as the Gordon-Schaefer model in fisheries context owing to groundbreaking work independently by @Schafer1954 and @Gordon1954), differing only in their choice of certain parameters:
+
+\begin{equation}
+f_i(Y) = Y + r_i Y \left( 1 - \frac{Y}{K_i} \right) * \xi_t(\sigma)
+\end{equation}
+
+Where $\xi_t(\sigma)$ represents log-normal random noise with mean of unity and log-standard-deviation $\sigma$.
+Model 1 is given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, Model 2 by $r_2 = 0.5$,  $K_2 = 10$, $\sigma = 0.075$ (in dimensionless units).  Having both the larger growth rate and the larger carrying capacity, Model 1 is clearly the more optimistic of the two choices. 
+
+Selecting between Model 1 and Model 2 can thus be considered the simplest illustration of the model uncertainty problem. This is a subset of the more general problem of selecting model parameters, assuming a logistic growth, which itself is a subset of estimating the best structural from (e.g. Ricker, Beverton-Holt, etc).  There is no need to consider these more complicated versions of the model uncertainty problem here, since they all inherit the same issue.  Reducing the model selection problem to these two models simplifies the presentation and will aid intuition at no loss of generality.  
+
+The only additional assumption we will need is that the "true" model is not among the suite of models under consideration. 
+Mathematical models are, at best, approximations of the underlying processes.  Ecological processes are much too complex to ever be modeled exactly.  For illustrative purposes, we will thus assume the "true" process to be given by a third model, which is unknown to the decision-maker, but similar enough to at least one of the candidate models might be considered a reasonable approximation.
+
+\begin{equation}
+f_3(Y) = Y + r_3 Y^4 \left( 1 - \frac{Y}{K_3} \right)
+\end{equation}
+
+with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$. 
+
+
+
+# Managing Under Model Uncertainty 
+
+A wide range of paradigms are available for approaching the issue of decision-making under uncertainty.  These approaches can roughly be divided into two groups: the first group treats the issue of model uncertainty independently from the decision itself, while the second integrates the process of reducing model uncertainty into the process of decision making.  There are a wide range of techniques within each group.
+
+
+
+**Forecasts and Strictly Proper Scoring**
+
+Like many decision problems, this one appears to hinge on having an accurate forecast: if we can predict to what size the stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of over-fitting by comparing model predictions to later observations that were not used to estimate the model. @Gneiting2007 provides a rigorous proof for "strictly proper" scoring criteria, which have the desirable property which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$ (That is, unlike likelihood or other goodness-of-fit scores, it is impossible to overfit when conditioning on a strictly proper score).    
+
+Iterative updating, with model priors. 
 
 
 Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here. Surprisingly, this can even happen when a decision is derived directly from a complex optimization routine of a probabilistic predictive models [@Marescot2013].  Reality is complex; even our best models can only ever be approximations of underlying processes.  Here, I use a classic, well-understood example from fisheries management [@Schaefer1954; @Clark1973; @Reed1979] to illustrate both the paradox of how a model with the worst forecast provides the best decision outcomes, as well as show how we can avoid selecting models that are poorly suited for management by considering the management context more explicitly. These results underscore that in choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  
@@ -68,8 +167,7 @@ Many ecological management problems are sequential decision problems, in which e
 -->
 
 
-Fisheries are a significant economic and conservation concern world wide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016]. Moreover, their management has been both a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [e.g. @Mangel1985; @Clark1990; @Marescot2013].  The decision-making problem is characterized by the need for a manager to set an acceptable harvest quota $H_t$ each year given some stock assessment estimate of the current stock size (population abundance) of the species in question [@Clark1973].  Such a decision problem appears to hinge on an accurate forecast: if we can predict to what size the stock will increase next year, $X_t+1$, knowing the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Thus it may seem natural that our first step would be to select the model that makes the most accurate forecast of next year's stock, $X_{t+1}$.  I illustrate how we do this using strictly proper scoring criteria [@Gneiting2007] for a set of candidate models,
-and show that it leads to worse decisions.  
+
 
 
 
@@ -100,32 +198,6 @@ rmarkdown::render("appendix.Rmd")
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, warning = FALSE, dev="cairo_pdf")
 ```
 
-
-
-
-# Ecological Models
-
-For simplicity, I will focus on the classic case case of a single-species model whose population is observed annually without error in a stochastic but stationary environment without age structure [@Reed1979; @Clark1990; @Costello2016]. These are not necessary assumptions -- in fact, the more complex the models become, the easier it is find examples in which the best forecast does not produce the best decision.  Rather, using a simple model merely reflects the famous compromise of Richard Levins [@Levins1966] in choosing generality over precision.  More precisely, the decision problem in question can be stated as follows: The fish stock is observed to be in state $X_t$ at time $t$, and is then subjected to some harvest $H_t$ before recruiting new fish, subject to stochastic environmental noise $\xi_t$, to bring the stock to $X_t+1$,
-
-\begin{equation}
-X_{t+1} = f(X_t - H_t, \xi_t) 
-\end{equation}
-
-Further we imagine that the function $f$ is not known precisely, and so we will rely on an evaluation of forecasting skill across a set of candidate models to determine which one to use to manage the fishery.  Again for simplicity, we will restrict ourselves to two simple candidate models $f_1$ and $f_2$.  Both share the same underlying structure of logistic recruitment:
-
-\begin{equation}
-f_i(Y) = Y + r_i Y \left( 1 - \frac{Y}{K_i} \right)
-\end{equation}
-
-Model 1 is given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, Model 2 by $r_2 = 0.5$,  $K_2 = 10$, $\sigma = 0.075$ (in non-dimensionalized units).  Having both the larger growth rate and the larger carrying capacity, Model 1 is clearly the more optimistic of the two choices. 
-
-Mathematical models are, at best, approximations of the underlying processes.  Ecological processes are much too complex to ever be modeled exactly down to the last atom.  For illustrative purposes, we will thus assume the "true" process to be given by a third model, which is unknown to the decision-maker:
-
-\begin{equation}
-f_3(Y) = Y + r_3 Y^4 \left( 1 - \frac{Y}{K_3} \right)
-\end{equation}
-
-with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$. 
 
 
 # Results
