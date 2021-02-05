@@ -21,39 +21,6 @@ output:
 
 
 
-```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
-## Plotting themes, colors, and fonts 
-## aesthetics choices only, all can be omitted without consequence
-library(ggthemes)
-library(hrbrthemes)
-library(ggplot2)
-library(Cairo)
-library(extrafont)
-library(patchwork)
-library(styler)
-extrafont::loadfonts(quiet = TRUE)
-ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
-
-scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
-scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
-pal <- ggthemes::solarized_pal()(8)
-txtcolor <- "#586e75"
-
-knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
-
-```
-
-Here we provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.
-
-```{r setup, message=FALSE}
-library(tidyverse)
-library(MDPtoolbox)
-library(expm)
-# remotes::install_github("boettiger-lab/mdplearning")
-library(mdplearning)
-```
-
-
 
 The question of optimal harvest given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context.  @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
 
@@ -136,7 +103,45 @@ non-linear per-capita growth:
 f_i(Y) = Y + Y^4 r_i \left( 1 - \frac{Y}{K_i} \right)
 \end{equation}
 
-with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$:
+with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
+
+
+
+Here we provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.
+
+
+```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
+## Plotting themes, colors, and fonts 
+## aesthetics choices only, all can be omitted without consequence
+library(ggthemes)
+library(hrbrthemes)
+library(ggplot2)
+library(Cairo)
+library(extrafont)
+library(patchwork)
+library(styler)
+extrafont::loadfonts(quiet = TRUE)
+ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
+
+scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
+scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
+pal <- ggthemes::solarized_pal()(8)
+txtcolor <- "#586e75"
+
+knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
+
+```
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(MDPtoolbox)
+library(expm)
+# remotes::install_github("boettiger-lab/mdplearning")
+library(mdplearning)
+```
+
+
+
 
 ```{r}
 # K is at twice max of f3; 8 * K_3 / 5
@@ -492,7 +497,7 @@ fig3a <-
   geom_hline(aes(yintercept = 0), lwd=1) + 
   geom_line(lwd=2, show.legend = FALSE) + 
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
-  ylab(bquote(f(x))) + xlab("x")
+  ylab(bquote(f(x) - x)) + xlab("x")
 ```
 
 
