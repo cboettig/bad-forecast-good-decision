@@ -54,8 +54,9 @@ Global change issues are complex and outcomes are difficult to predict, making a
 of effective decision-making [@ @]. While some uncertainty is intrinsic to the underlying processes (stochasticity) or by
 limits to what variables we can observe and how accurately we measure them (measurement uncertainty), much uncertainty 
 is the result of our imperfect knowledge of the processes involved, as expressed by the structure and
-parameters of mathematical models used to approximate those processes (model uncertainty). Model uncertainty can be 
-reduced by gathering additional data, which may rule out certain models or parameter values as implausible. 
+parameters of mathematical models used to approximate those processes (model uncertainty). Unlike the other forms of
+uncertainty, model uncertainty can be 
+reduced by gathering additional data, which may rule out certain models or parameter values as implausible (). 
 When model parameters are estimated directly from available data, there is a risk that the best-fitting models may 
 _overfit_ to patterns arising from by chance from the stochasticity or measurement error which do not reflect the
 underlying process. Researchers have often favored simpler models which are less prone to over-fitting, sometimes
@@ -149,15 +150,31 @@ with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
 
 # Managing Under Model Uncertainty 
 
-A wide range of paradigms are available for approaching the issue of decision-making under uncertainty.  These approaches can roughly be divided into two groups: the first group treats the issue of model uncertainty independently from the decision itself, while the second integrates the process of reducing model uncertainty into the process of decision making.  There are a wide range of techniques within each group.
-
+A wide range of paradigms are available for approaching the issue of decision-making under uncertainty. These approaches can roughly be divided into two groups: the first group treats the issue of model uncertainty independently from the decision itself, while the second integrates the process of reducing model uncertainty into the process of decision making to maximize the value of some objective. There are a wide range of techniques within each, and it is also possible to blend approaches. The key distinction is that methods in the first group do not involve any direct consideration of the possible actions or the utility that may result from those actions in how they select models [statistical approaches such as information criteria @BurnhamAnderson; and in particular, forecasting evaluation @Clark2001; @Dietze2018], while those in the second group require a more explicit statement of possible actions and the desired objectives [Decision theoretic approaches, for which @Polasky2011 provides an excellent and accessible review]. I illustrate how the most promising techniques from each of these groups would be applied to this simple problem, and demonstrate that it both cases they lead us away from the model that produces the most desirable decisions towards worse outcomes.  In retrospect, it will become obvious that neither these nor any other widely applied methods will select the model that leads to the best outcomes from the set of models considered.  
 
 
 **Forecasts and Strictly Proper Scoring**
 
-Like many decision problems, this one appears to hinge on having an accurate forecast: if we can predict to what size the stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of over-fitting by comparing model predictions to later observations that were not used to estimate the model. @Gneiting2007 provides a rigorous proof for "strictly proper" scoring criteria, which have the desirable property which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$ (That is, unlike likelihood or other goodness-of-fit scores, it is impossible to overfit when conditioning on a strictly proper score).    
+Like many decision problems, the task of setting a sustainable harvest quota appears to hinge on having an accurate forecast: if we can predict to what size the fish stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of over-fitting by comparing model predictions to later observations that were not used to estimate the model. @Gneiting2007 provides a rigorous proof for "strictly proper" scoring criteria, which have the desirable property which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$. That is, unlike likelihood or other goodness-of-fit scores, it is impossible to overfit when conditioning on a strictly proper score -- since no model model can out-perform the true model. Not that strictly proper scoring rules score _probabilistic forecasts_ and not just point predictions, favoring models which accurately reflect the uncertainty over those which under-estimate it.  These features have made proper scoring rules for probabilistic forecasts a successful and popular approach for addressing model uncertainty in many other areas [@Gneiting2014; @Raftery2016] and a promising tool for evaluation of ecological forecasts [@Dietze2018]. 
 
-Iterative updating, with model priors. 
+I illustrate the process of model selection by strictly proper scoring rules using two scenarios.  
+
+
+**Decision-Theoretic Approaches**
+
+Decision-theoretic approaches include scenario analysis, resilience thinking, optimal control and related methods [@Polasky2011], which have a long history in ecology and particularly in fisheries management. One of the most influential of these is _adaptive management_ [sensu @Walters1978], in which a manager seeks to both reduce uncertainty over time while also achieving the best outcomes given current knowledge.  While the term today is frequently used in a looser sense, adaptive management as originally developed can be considered an example of optimal control under model uncertainty
+
+[@Walters1981; @Smith1981]
+
+
+# A way forward?
+
+note that the model set considered here already contains a model which captures the key feature. 
+
+- Greedy strategy will not work.  Could stick with a model for 50 years then switch...
+- A mechanistic understanding of the decision proces, not the ecological one.  Analyzing the decision problem, we know that in this situation, the optimal stategy depends only on the location of the peak of the growth rate.  This could suggest a very different way forward
+- 
+
 
 
 Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here. Surprisingly, this can even happen when a decision is derived directly from a complex optimization routine of a probabilistic predictive models [@Marescot2013].  Reality is complex; even our best models can only ever be approximations of underlying processes.  Here, I use a classic, well-understood example from fisheries management [@Schaefer1954; @Clark1973; @Reed1979] to illustrate both the paradox of how a model with the worst forecast provides the best decision outcomes, as well as show how we can avoid selecting models that are poorly suited for management by considering the management context more explicitly. These results underscore that in choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  
