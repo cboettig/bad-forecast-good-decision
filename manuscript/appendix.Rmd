@@ -268,7 +268,8 @@ am <- am1$df %>% mutate(belief = am1$posterior$V2)
 am %>%  ggplot(aes(time, states[state], col = belief)) + 
   geom_line() + 
   geom_point() +
-  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4])
+  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4]) +
+  ylab("stock size")
 ```
 
 
@@ -442,7 +443,7 @@ The ecological performance of the model can easily be visualized by plotting
 the results of each simulation. 
 
 ```{r plot_sims}
-fig2a <- 
+plot_ecology <- 
   sims %>% 
   group_by(model, time) %>%
   summarise(mean_state = mean(state), sd = sd(state), .groups = "drop") %>%
@@ -454,7 +455,7 @@ fig2a <-
                     fill = model),
                 alpha = 0.2, show.legend = FALSE) +
   ylab("state") + 
-  ggtitle("A") + labs(subtitle = "Ecological")
+  labs(subtitle = "Ecological")
 ```
 
 To plot the economic value over time, we must sum up the discounted values
@@ -471,7 +472,7 @@ npv_df <- sims %>%
 
 optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
 
-fig2b <- 
+plot_econ <- 
 npv_df %>%
   filter(model != "3", time %in% seq(1,100, by = 5)) %>%
   ggplot(aes(time, mean_npv)) +
@@ -481,7 +482,17 @@ npv_df %>%
   ggtitle("B.") + labs(subtitle = "Economic")
 
 ```
+```{r}
+# tabular comparisons
+npv <- npv_df %>% group_by(model) %>% summarize(npv = max(mean_npv))
 
+am_npv <- sum(am$value * discount ^ am$time)
+am_npv / npv[[1,"npv"]]
+
+
+mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
+mean(states[am$state]) / mean_state[[1, "state"]]
+```
 
 Plotting the model functions themselves are shown in Fig 3a:
 
@@ -491,11 +502,11 @@ d <-
   map_dfc(models, function(f) f(states) - states) %>%
   mutate(state = states)
 
-fig3a <- 
+plot_models <- 
   d %>% pivot_longer(names(models), "model") %>%
   ggplot(aes(state, value, col=model, lty=model)) +
   geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_line(lwd=2, show.legend = FALSE) + 
+  geom_line(lwd=2) + 
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
   ylab(bquote(f(x) - x)) + xlab("x")
 ```
@@ -505,7 +516,7 @@ We can easily plot the optimal policy derived from each model, as shown
 in Fig3b. 
 
 ```{r plot_policies}
-fig3b <- policies %>%
+plot_policies <- policies %>%
   ggplot(aes(states, escapement, col=model, lty=model)) + 
   geom_line(lwd=2) + xlab("state")
 ```
