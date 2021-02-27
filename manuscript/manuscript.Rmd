@@ -222,7 +222,7 @@ Decision-theoretic approaches include scenario analysis, resilience thinking, op
 
 In passive adaptive management, the manager chooses the action which maximizes that expected future utility. After observing the consequences of the action, the manager updates the probabilities each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982]. In active adaptive management, the key difference is that the manager may chose an action which does not maximize the utility _given the current model uncertainty_, but instead, takes an action whose consequences will more quickly discriminate between the models and thus more rapidly reduce the uncertainty. After observing the outcome of this exploratory step, model probabilities are updated as before.  Under some scenarios the cost of this 'exploration' step can be made up later by actions based on the more precise knowledge gained as a result ('exploitation'). Alternative approaches such as scenario analysis can be considered approximations of this approach.  A scenario analysis does not rely on quantitative estimates of model probabilities or expected utility, but still consider possible outcomes over a suite of models (scenarios), select actions to minimize the risk or or other suitable objective, and update or eliminate scenarios deemed implausible over time [@Polasky2011]. 
 
-Each of these approaches swiftly decides that model 1 in our example is implausible, and settles for making decisions driven almost exclusively by model 2.  I illustrate this using a passive adaptive management strategy following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig , achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. If instead of considering only these two models we consider a whole suite of Gordon-Schaefer-type models with varying $r$ and $K$ parameters, learning is slightly slower but no less counter-productive: mean stock size is $46%$ and net present value is $20%$ of what would be achieved under Model 1   (Appendix, Fig S1).  
+Each of these approaches swiftly decides that model 1 in our example is implausible, and settles for making decisions driven almost exclusively by model 2.  I illustrate this using a passive adaptive management strategy following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig , achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. If instead of considering only these two models we consider a whole suite of Gordon-Schaefer-type models with varying $r$ and $K$ parameters, learning is slightly slower but no less counter-productive: mean stock size is $46%$ and net present value is $20%$ of what would be achieved under Model 1 (Appendix, Fig S1).  
 
 ```{r}
 am <- am1$df %>% mutate(belief = am1$posterior$V2)
@@ -236,7 +236,7 @@ am %>%  ggplot(aes(time, states[state], col = belief)) +
 
 # Discussion
 
-Given this simplified version of model uncertainty in which one of the two models leads to effectively optimal ecological and economic outcomes, current approaches invariable choose the other.  The reason for this may appear obvious once we compare both curves to that of the underlying model, Model 3.  Plotting the growth rate functions of each model, [Fig 4a], it is hardly surprising that no method which would prefer the closely overlapping Model 2 to the no-where-close Model 1 as the better approximation of Model 3. Seeing this example, it is natural to pose any of four objections: (1) this problem is an artifact of overly-simplified models, (2) this problem is an artifact of the optimal control solution (3) the problem arises from different objectives, (4) the problem is already solved. I address these in turn.
+Given this simplified version of model uncertainty in which one of the two models leads to effectively optimal ecological and economic outcomes, current approaches invariably choose the other.  The reason for this may appear obvious once we compare both curves to that of the underlying model, Model 3.  Plotting the growth rate functions of each model, [Fig 4a], it is hardly surprising that no method which would prefer the closely overlapping Model 2 to the no-where-close Model 1 as the better approximation of Model 3. Nevertheless, decisions based on model 1 are nearly indistinguishable from those based on the true model [Fig4b], while Model 2 leads to over-harvesting.  So why do our best approaches fail such a simple test case? It is tempting to dismiss this example as having little relevance to real-world decision problems on a variety of grounds: (1) this problem is an artifact of overly-simplified models, (2) this problem is an artifact of an unrealistic optimal control solution, (3) the problem arises from having started with different objectives, (4) the problem is already solved. I address these in turn.
 
 
 ```{r fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth."}
@@ -250,113 +250,13 @@ Is this result an artifact of the simple models considered here?  A more realist
 
 
 <!-- move to appendix?  too confusing/too long?-->
-Is this result an artifact of the optimal control? The analysis has relied on optimal control theory to determine the optimal decision associated with each model or distribution of models.  The resulting policies are mathematically optimal under the assumptions given [see @Reed1979 for stochastic harvest problem in particular and @Marescot2013 for discussion of Markov Decision Problems more generally].  In most realistic decision problems, model complexity currently precludes the calculation of an optimal control solution at all ["the curse of dimensionality", e.g. @Polasky2011; @Marescot2013]. Under the assumptions of any of the models considered here, the optimal control solution leads to what is known as a "constant escapement" policy, which seeks to bring biomass to the target escapement level, $B_{MSY}$ as quickly as possible, $H_t = \min(X_t - B_{MSY}, 0)$.  If the assumptions are not met, a constant-escapement policy may not be optimal, as in the case when observations of the stock $X_t$ are not perfect [@pomdp-intro].  While constant escapement is used as a basis of management in some real world cases such as salmon fisheries, most marine fisheries are based on a target of "constant mortality", ($F_{MSY}$). Notably, a constant mortality policy, implemented as $H_t = F_{MSY} X_t$, would not perform better under Model 1 than Model 2.  Constant mortality is optimal only under deterministic growth at equilibrium (where the policy is the same under constant escapement).  Does that mean the result is an artifact of assuming constant escapement rather than constant mortality as the basis for management?  No, it does not.  It is just as easy to construct a model under which the constant mortality matches the constant mortality of the true model while being a poor predictor.  Moreover, using a non-optimal policy would always beg the question of whether the poor outcomes were merely the result of using a non-optimal policy rather than a consequence of model uncertainty.  
+Is this result an artifact of optimal control? The analysis has relied on optimal control theory to determine the optimal decision associated with each model or distribution of models.  The resulting policies are mathematically optimal under the assumptions given [see @Reed1979 for stochastic harvest problem in particular and @Marescot2013 for discussion of Markov Decision Problems more generally].  In most realistic decision problems, model complexity currently precludes the calculation of an optimal control solution at all ["the curse of dimensionality", e.g. @Polasky2011; @Marescot2013]. Under the assumptions of any of the models considered here, the optimal control solution leads to what is known as a "constant escapement" policy, which seeks to bring biomass to the target escapement level, $B_{MSY}$ as quickly as possible, $H_t = \min(X_t - B_{MSY}, 0)$.  If the assumptions are not met, a constant-escapement policy may not be optimal, as in the case when observations of the stock $X_t$ are not perfect [@pomdp-intro].  While constant escapement is used as a basis of management in some real world cases such as salmon fisheries, most marine fisheries are based on a target of "constant mortality", ($F_{MSY}$). Notably, a constant mortality policy, implemented as $H_t = F_{MSY} X_t$, would not perform better under Model 1 than Model 2.  Constant mortality is optimal only under deterministic growth at equilibrium (where the policy is the same under constant escapement).  Does that mean the result is an artifact of assuming constant escapement rather than constant mortality as the basis for management?  No, it does not.  It is just as easy to construct a model under which the constant mortality matches the constant mortality of the true model while being a poor predictor.  Moreover, using a non-optimal policy would always beg the question of whether the poor outcomes were merely the result of using a non-optimal policy rather than a consequence of model uncertainty.  Because the space of possible actions is smaller than that of possible models, we should expect most decision problems to have their own "Model 1," a model that would lead to correct actions while being a poor predictor of future outcomes.  The trouble is that we have no theory which would not reject such a model. 
 
-The optimal policy does not depend equally on all aspects of the underlying model.  In this simple case, the policy depends only on the biomass which provides the maximum growth rate, and it is precisely this feature which allows Model 1 to match the policy of the true model despite over-estimating both the per-capita growth rate and unharvested equilbrium stock size so dramatically. The ability to capture certain key features rather than replicate every detail is the objective of any modeling effort, and the reason why scientific decision making is possible in the first place.  Many optimal control solutions are similarly insensitive to getting all the details right.  If we seek to improve decisions in face of model uncertainty, we must be able to exploit this aspect to find models fit to purpose, and be cautious about employing methods that would reject such models out of hand.  
+Is this result merely an artifact of differing objectives?  @Gneiting2007's proper scoring rules are designed to select models which make the best forecast, and Model 2 really is the best choice for that task.  However, the adaptive management approach explicitly seeks to maximize expected utility, integrating over the uncertainty in the model, and yet it evolves away from Model 1 which would achieve that goal and settles on Model 2.  Note that this issue is not resolved by updating the learning step to reflect only the immediate reward -- it is in fact easy to see that so-called greedy algorithms would take the largest harvest possible and never reach the sustainable yield achieved by lower harvest rates of Model 1. 
 
-
-Does this problem merely reflect the fact that different objective functions lead to different solutions? In selecting models based on forecast accuracy
-
-
-
- Of course no statistic favors Model 1 over Model 2.  Nevertheless, the optimal policy derived under Model 1 is virtually indistinguishable from the optimal policy for the true model, [Fig 4b].  It is considerably less obvious that the adaptive management solution would also fail to ever select Model 1.  After all, that approach integrates over the uncertainty in the models, and explicitly seeks to maximize utility (here assumed to be economic net present value), where Model 1 does so much better.  Nevertheless, the "adaptive" part of the approach is actually its downfall. If the manager never learned, never adapted by updating the probabilities that each model was correct, the overall economic and ecological benefits would have been much higher.  What if the learning step was not based on comparing model expectations to observed outcomes, but was instead conditioned only on utility derived by that action?  Clearly such a strategy would take the largest harvest possible, crashing the stock and forfeiting all future harvest value. Such optimization techniques are known as greedy algorithms, and clearly fail in fisheries management.  
-
-There are techniques for approaching model uncertainty which condition on utility alone which are not greedy algorithms. For example, in model-free deep reinforcement learning, a neural network is trained on cumulative utility to select the best action.  
-
-
-If the problem as posed is not solved by existing approaches, then perhaps the paradox is only a result of 
-
-- This result is driven by the unrealistic simplicity, and would not occur in more realistic examples.  
-
-
-
-
-An example based on a constant-mortality policy would be easier to critique by observing that the policy was not in fact optimal in the first place.  Recall that the purpose of this modeling exercise is not to precisely mimic the decision process of a specific quota in specific fish stock, but rather to illustrate in more general terms how carefully considered theory for approaching decision making under model uncertainty, from rigorous assessment of forecast skill to adaptive management, fail to handle this very simple example.
-
-
-
-No measure of forecast skill would prefer predictions drawn from Model 1 over those drawn from Model 2. Any process of updating model probabilities will lead away from Model 1 and towards Model 2.  Simpler methods such as information criteria, $r^2$ or other goodness-of-fit metrics will also all clearly prefer model 2.  The problem does not arise from a lack of data, or from over-fitting, which given sufficient data would be addressed by the use of @Gneiting2007's proper scoring rules.  Nor does the problem resolved by approaches explicitly designed to maximize utility (e.g. economic value) over model uncertainty [@Polasky2011].  
-
-  
-
-- This result is simply an example of how different objectives lead to different strategies. 
-
-<!-- -->
-# Discussion take 2
-
-Some readers will find the presentation of forecasting 
-
-
-addressing potential critiques: 
-
-Making this problem more complicated might better approximate real-world decision making but would
-by no means resolve the issue.  For example, increasing the suite of models under consideration to
-include all possible parameter values Gordon-Schaefer model, or better, adding
-in many other well studied structural forms such as Ricker [@], Beverton-Holt [@], or Shepard equation
-to our set of candidate models would give the same result.  Moreover, focusing on expanding the set of
-possible models ignores the simple fact that our most stripped down version of the problem already 
-contains a model which can obtain nearly optimal performance, just as it already contains a model which
-can make pretty accurate forecasts.  If well considered approaches make the wrong choice in this simple
-problem, the issue requires more attention.  
-
-Note that this problem is not merely a case of alternative objectives leading to alternate outcomes. 
-Unlike model selection based on forecasting performance, the adaptive management approach explicitly
-considers the objective of maximizing the utility, and yet still fails to select the correct model.
-
-
-
-
-## Discussion
-
-
-This paradox in performance of forecasting vs performance in decision making can be easily resolved by considering the context of the decision problem more closely. Comparing plots of the functional form of our two logistic-curve models, compared to the functional form of the "true" model used to drive the simulations (Fig. 3A), it is clear to see that model 2 does indeed lie closer to the true model throughout the state space, agreeing precisely with the true carrying capacity (where both functions cross zero with negative slope).  However, the peak of model 3 very nearly matches the peak of model 1. The optimal decision literature, dating back to the 1950s [@Schaefer1954], demonstrates that the Maximum Sustainable Yield (MSY) is maintained by harvesting a stock down to the size at which it achieves its maximum growth rate, i.e. 50% of the un-fished equilibrium size for a symmetric growth model ($K/2$).  Model 1, while being very wrong about both the growth rate and the un-fished equilibrium, is nevertheless nearly perfect in estimating the stock size at which maximum growth rate is achieved, and this gives nearly optimal decisions (Fig 3B) despite its terrible forecasts.   
-
-Thus, each year our model 1 managers are again chagrined to see the stock size estimates come in far below their rosy predictions, but nevertheless manage to set a nearly optimal quota by comparing the observed stock size to the model's predicted optimal escapement level [@Reed1979].  Meanwhile, model 2 managers could only congratulate themselves that each year's observations fall neatly within their predicted interval, unaware that the they were over-exploiting the fishery by both economic and ecological metrics.  If we had access to model 3, we would no doubt find that it outperformed model 2 in forecast accuracy as well as ecological and economic performance.  But in real ecological decision making, we never know the true model -- we will always be comparing among approximations.  Within fisheries, even in today's parameter-rich age-structured models, recruitment approximations with symmetric growth functions (Logistic, Ricker, Beverton-Holt, etc) still dominate [@ramlegacy2012; @ramlegacy2018].  
-
-This issue is by no means unique to fisheries.  Throughout resource management and conservation, and no doubt other fields, decisions about which model to use are guided by which model best fits available data [@Clark1990]. Increasingly, these are joined by calls to assess _forecast accuracy_ [@Clark2001; @Dietze2018; @White2019] as the ultimate test of a model.  Yet as this example illustrates, such metrics, no matter how rigorously defined, may select entirely the wrong model for the task at hand.  A decision maker has other objectives than prediction accuracy, and approaches which ignore these considerations do so at their peril. This example has also shown that once we are managing with the wrong model, no amount of comparing predictions from that model to actual outcomes will guarantee we discover our mistake.  Despite its consistently good predictions, model 1 is in fact over-fishing to a dangerous level.  
-
-Because we will never know the "true" model, we must never forget that our choice of models must reflect the context for which those models will be used [@Levins1966].  Model 2 would indeed be a better choice than model 1 if our objective was to determine the natural size of our fish stock in the absence of fishing.  Only when we focus on the outcomes we actually care about -- in this case, economic and ecological performance -- can we see which model is best for decision-making.  Model 1, despite its many mistakes, is right about one key feature: the biomass for peak growth -- and that is enough to guarantee nearly optimal performance.   This conclusion should also be reassuring to both modelers and decision makers, for it reminds us that effective models need be perfect or even all that close in every aspect, as long as they capture the key features of the decision context.  Decision theory [e.g. @Clark1973; @Reed1979; @pomdp-intro] and research into the socio-ecological models [e.g. @Kareiva2006] helps us better understand that context.  Adaptive management approaches [@Walters1978] can apply that theory to compare management outcomes between models directly.  It is not true that we need good forecasts to make good decisions.
-
-
-
-
-```{r figure3, fig.width=7, fig.height=4, fig.cap="Panel A: Population recruitment curves for each model, compared to that of the true Model. 3 Model 2 more closely approximates the true Model 3, but note that maximum value Model 1 and Model 3 occur at nearly the same value for the state, x.  Panel B: The computed optimal policy of each model, derived by SDP, expressed in terms of the target escapement (population size remaining after harvest) for each possible stock size. Model 1 over-harvests consistently, while the target escapement under Model 2 is nearly identical to that of the true Model 3."}
-fig3a + ggtitle("A") + fig3b + ggtitle("B")
-```
-
-# Methods
-
-Stochastic transition matrices are defined for models 1-3 on a discrete grid of
-240 possible states spaced uniformly from 0 to 24. A discrete action space 
-enumerating possible harvest quotas is set to the same grid. The utility of a harvest quota $H_t$ given a population state $X_t$ is given by $U(X_t, H_t) = \min(X_t, H_t)$ (i.e. a fixed price for realized harvest). A modest discount of
-$\gamma = 0.99$ allows comparisons to approaches that ignore [@Schaefer1954] or include [@Clark1973; @Reed1979] discounting; results are not sensitive to this choice. The optimal policy for each model is determined by stochastic dynamic programming [@Marescot2013].  Details of the implementation, including fully reproducible R code, have been included in the appendix.
-
-
-
-acknowledgements: |
-  This work was supported in part by NSF CAREER (#1942280) and computational resources from NSF's XSEDE Jetstream (DEB160003) and Chameleon cloud platforms.
-
-
-
-
-
-# A way forward?
-
-note that the model set considered here already contains a model which captures the key feature. 
-
-- Greedy strategy will not work.  Could stick with a model for 50 years then switch...
-- A mechanistic understanding of the decision process, not the ecological one.  Analyzing the decision problem, we know that in this situation, the optimal stategy depends only on the location of the peak of the growth rate.  This could suggest a very different way forward
-- 
-
-
-
-Yet the model that leads to the best decisions is not always the model that makes the most accurate forecasts, as I illustrate here. Surprisingly, this can even happen when a decision is derived directly from a complex optimization routine of a probabilistic predictive models [@Marescot2013].  Reality is complex; even our best models can only ever be approximations of underlying processes.  Here, I use a classic, well-understood example from fisheries management [@Schaefer1954; @Clark1973; @Reed1979] to illustrate both the paradox of how a model with the worst forecast provides the best decision outcomes, as well as show how we can avoid selecting models that are poorly suited for management by considering the management context more explicitly. These results underscore that in choosing the best model for decision-making, it can be more important to capture a single key feature of the process than it is to make the most accurate prediction about future states.  
-
-<!--
-Many ecological management problems are sequential decision problems, in which each year (or other interval) a manager must observe the state of the system and choose a course of action to maximize long term objectives. Such problems inherently depend on forecasts: each possible action can result in a different forecast for the future state, typically reflecting some uncertainty as well.  The utility the manager derives may depend on both the choice of action and the state of the system, reflecting the costs and benefits associated with each. Sequential decision-making problems are distinguished by the need to think more than one move ahead. For instance, harvesting as many fish as possible in year one may maximize the market value that year, but if too few fish are left to reproduce then harvest in future years will suffer.  The same calculus of thinking ahead frequently applies to rebuilding species populations as well [e.g. @Lambert;  @Chades2008].  
--->
-
-
+Perhaps Model 1 is a unicorn, a mythically simple model that gives optimal results but has no analogue in the real world.  This is not an easy assertion to prove either way.  Future observations consistently fall outside the 95% confidence intervals predicted under Model 1.  Unfortunately, such innaccurate predictions are only too common in the real world.  Have any of those led to effective policy despite the innnaccuracy?  Have any been replaced with more accurate models that have also driven worse decisions? That is more difficult to answer.  What this example demonstrates is that if such unicorn models exist, our current paradigm will surely filter them out eventually, to be replaced with worse outcomes.
+<!-- Omit this?  Does it beg an example? -->
+There is at least one technique which might address the problem presented here.  Recently developed techniques based on model-free deep reinforcement learning train multi-layer neural networks to approximate the optimal control policy without assuming or attempting to model the underlying dynamic process at all.  Feedback is based on cumulative reward, not short-term reward or predictive accuracy.  
 
 
 
