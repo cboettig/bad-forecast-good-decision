@@ -1,5 +1,5 @@
 ---
-title: 'Learning to be wrong:'
+title: 'Are we learning to build better models at the cost of better decisions?'
 author:
 - name: Carl Boettiger
   email: cboettig@berkeley.edu
@@ -27,16 +27,13 @@ keywords:
 - uncertainty,
 - ecological management
 
-# For footer text
-lead_author_surname: Boettiger
-
-significance: |
 
 
 ## change to true to add optional line numbering
 lineno: true
 
-output: rticles::pnas_article
+output: rticles::elsevier_article
+layout: 3p
 ---
 
 
@@ -62,7 +59,8 @@ txtcolor <- "#586e75"
 ```
 ```{r, include=FALSE}
 rmarkdown::render("appendix.Rmd")
-knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, warning = FALSE, dev="cairo_pdf")
+knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, 
+                      warning = FALSE, dev="cairo_pdf")
 ```
 
 
@@ -121,7 +119,7 @@ and one that has long wrestled with issues of uncertainty in the context
 of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
 While modern fisheries management frequently relies on complex models which may
 contain scores of parameters to reflect the specific age or stage structure of a
-specific fish stock [@ram], I will rely on simple, well-studied models which
+specific fish stock [@ramlegacy2018; @ram], I will rely on simple, well-studied models which
 permit greater intuition and generalization [@Levins1966]. Consistent with 
 such previous work [@Schaefer1954; @Clark1973; @Reed1979; @Walters1981; @Ludwig1982; @Costello2016],
 let us consider the problem of determining the optimal harvest policy given a 
@@ -144,7 +142,7 @@ subject to discount rate $\delta$ [@Clark1973]:
 \end{equation}
 
 
-Further we imagine that the function $f$ is not known precisely, and so we will rely on an evaluation of forecasting skill across a set of candidate models to determine which one to use to manage the fishery.  Again for simplicity, we will restrict ourselves to two simple candidate models $f_1$ and $f_2$.  Both share the same underlying structure of logistic recruitment (known as the Gordon-Schaefer model in fisheries context owing to groundbreaking work independently by @Schafer1954 and @Gordon1954), differing only in their choice of certain parameters:
+Further we imagine that the function $f$ is not known precisely, and so we will rely on an evaluation of forecasting skill across a set of candidate models to determine which one to use to manage the fishery.  Again for simplicity, we will restrict ourselves to two simple candidate models $f_1$ and $f_2$.  Both share the same underlying structure of logistic recruitment (known as the Gordon-Schaefer model in fisheries context owing to groundbreaking work independently by @Schaefer1954 and @Gordon1954), differing only in their choice of certain parameters:
 
 \begin{equation}
 f_i(Y) = Y + r_i Y \left( 1 - \frac{Y}{K_i} \right) * \xi_t(\sigma)
@@ -176,42 +174,108 @@ ecologically and economically.
 
 # Methods for Managing Under Model Uncertainty 
 
-A wide range of paradigms are available for approaching the issue of decision-making under uncertainty. These approaches can roughly be divided into two groups: the first group treats the issue of model uncertainty independently from the decision itself, while the second integrates the process of reducing model uncertainty into the process of decision making to maximize the value of some objective. There are a wide range of techniques within each, and it is also possible to blend approaches. The key distinction is that methods in the first group do not involve any direct consideration of the possible actions or the utility that may result from those actions in how they select models [statistical approaches such as information criteria @BurnhamAnderson; and in particular, forecasting evaluation @Clark2001; @Dietze2018], while those in the second group require a more explicit statement of possible actions and the desired objectives [Decision theoretic approaches, for which @Polasky2011 provides an excellent and accessible review]. I illustrate how the most promising techniques from each of these groups would be applied to this simple problem, and demonstrate that it both cases they lead us away from the model that produces the most desirable decisions towards worse outcomes.  In retrospect, it will become obvious that neither these nor any other widely applied methods will select the model that leads to the best outcomes from the set of models considered.  
+A wide range of paradigms are available for approaching the issue of decision-making under uncertainty. These approaches can roughly be divided into two groups: the first group treats the issue of model uncertainty independently from the decision itself, while the second integrates the process of reducing model uncertainty into the process of decision making to maximize the value of some objective. There are a wide range of techniques within each, and it is also possible to blend approaches. The key distinction is that methods in the first group do not involve any direct consideration of the possible actions or the utility that may result from those actions in how they select models [statistical approaches such as information criteria e.g. @Burnham1998]; and in particular, forecasting evaluation @Clark2001; @Dietze2018], while those in the second group require a more explicit statement of possible actions and the desired objectives [Decision theoretic approaches, for which @Polasky2011 provides an excellent and accessible review]. I illustrate how the most promising techniques from each of these groups would be applied to this simple problem, and demonstrate that it both cases they lead us away from the model that produces the most desirable decisions towards worse outcomes.  In retrospect, it will become obvious that neither these nor any other widely applied methods will select the model that leads to the best outcomes from the set of models considered.  
 
 
 ## Forecasts and Proper Scores
 
 Like many decision problems, the task of setting a sustainable harvest quota appears to hinge on having an accurate forecast: if we can predict to what size the fish stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can safely harvest $X_{t+1} - X_t$.  Overestimating or underestimating such recruitment will result in over-harvesting or under-harvesting, respectively.  Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of over-fitting by comparing model predictions to later observations that were not used to estimate the model. @Gneiting2007 provides a rigorous proof for "proper" scoring criteria, which have the desirable property which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$. That is, unlike likelihood or other goodness-of-fit scores, it is impossible to overfit when conditioning on a strictly proper score -- since no model model can out-perform the true model. Not that strictly proper scoring rules score _probabilistic forecasts_ and not just point predictions, favoring models which accurately reflect the uncertainty over those which under-estimate it.  These features have made proper scoring rules for probabilistic forecasts a successful and popular approach for addressing model uncertainty in many other areas [@Gneiting2014; @Raftery2016] and a promising tool for evaluation of ecological forecasts [@Dietze2018]. 
 
-I illustrate the process of model selection by strictly proper scoring rules using two scenarios. In Scenario A (passive observation) the fish stock is unharvested and allowed to recover towards carrying capacity (as simulated under our "true" model, Model 3) while comparing the observed stock size in each subsequent time step to the distribution predicted under Model 1 and Model 2 respectively [Fig].  The mean, $\mu$ and variance, $\sigma$ of the forecast are compared against the true observation $x$ using a Proper scoring rule of @Geiting2007, 
+I illustrate the process of model selection by strictly proper scoring rules using two scenarios. In Scenario A (passive observation) the fish stock is unharvested and allowed to recover towards carrying capacity (as simulated under our "true" model, Model 3) while comparing the observed stock size in each subsequent time step to the distribution predicted under Model 1 and Model 2 respectively [Fig].  The mean, $\mu$ and variance, $\sigma$ of the forecast are compared against the true observation $x$ using a Proper scoring rule of @Gneiting2007, 
 
-\bein{equation}
+\begin{equation}
 -(\mu - x )^2 / \sigma^2  - \log(\sigma) \label{proper}
 \end{equation}
 
-for each prediction over 100 replicate simulations of 100 time steps each [Fig].
+for each prediction over 100 replicate simulations of 100 time steps each [Fig 1].
 
 
 
 ```{r figure1, fig.width=7, fig.height=5, fig.cap = "Forecast performance of each model.  Panels A, B: Step ahead predictions of stock size under unfished (A) and fished (B) scenarios. Error bars indicating the 95% confidence intervals around each prediction, while stars denote the observed value in that year.  Because the models make different decisions each year in the fished scenario, the observed stock size in year 2, 3, etc under the management of model 1 (blue stars) is different from that under model 2 (red stars).  Panels C, D: corresponding distribution of proper scores across all predictions (100 replicates of 100 timesteps). Higher scores are better, confirming that model 2 makes the better forecasts."}
-fig1ab + fig1cd + 
+predictions <- read_csv("../data/predictions.csv") %>% mutate(model = as.character(model))
+
+fig1cd <- predictions %>%
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 2, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-100, 1), ylim = c(0,4000)) +
+  xlab("Proper score") +
+  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
+    A_unfished = "C.",
+    B_fished = "D."))) + 
+  scale_x_continuous(breaks = c(-100, 0)) +
+  theme(axis.text.y = element_blank(),
+        plot.margin = margin(0, 0, 0, 0, "cm"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+        )
+
+
+
+ fig1ab <- predictions %>% 
+  filter(reps == "2", time < 10) %>%
+  ggplot(aes(time, col = model, fill = model)) + 
+  geom_point(aes(y = expected)) + 
+  geom_errorbar(aes(ymin = low, ymax = high)) +
+  geom_point(aes(y = true), pch = "*", size = 12, 
+             alpha = 0.6) + 
+  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
+    A_unfished = "A. Without fishing",
+    B_fished = "B. Managed harvest"))) +
+  ylab("stock size")
+ 
+ 
+ 
+ fig1ab + fig1cd + 
   plot_layout(widths =  c(3,1), guides = 'collect') + 
   theme(plot.margin = margin(0, 0, .1, .1, "cm"))
 ```
 
 
-In Scenario B (actively harvest), I have first solved for the optimal management strategy for both Model 1 and Model 2 [Fig], which for small noise and concave functions with linear reward structure can be done analytically [see proof in @Reed1979], or can be solved more generally by stochastic dynamic programming [see review by @Marescot2013, details in Appendix].  Under this scenario, replicate simulations of the stock are harvested at each time step using the optimal quota dictated by either Model 1 and Model 2. The resulting stock sizes in the time-step following this harvest are once again compared to the probabilities predicted by each model using Eq \eqref{proper}. Model 2 unequivocally outperforms Model 1 in both scenarios of passive observation and active harvest.
+In Scenario B (actively harvest), I have first solved for the optimal management strategy for both Model 1 and Model 2 [Fig 1b]. For small noise and concave functions with linear reward structure this can be done analytically [see proof in @Reed1979], or solved more generally by stochastic dynamic programming [see review by @Marescot2013, details in Appendix].  Under this scenario, replicate simulations of the stock are harvested at each time step using the optimal quota dictated by either Model 1 and Model 2. The resulting stock sizes in the time-step following this harvest are once again compared to the probabilities predicted by each model using Eq \eqref{proper}. Model 2 unequivocally outperforms Model 1 in both scenarios of passive observation and active harvest.
 
-Despite the clearly superior predictive accuracy of Model 2 in both scenarios, the outcomes from management under Model 2 are substantially worse.  We can assess such outcomes in less abstract terms than forecasting skill, such as economic value (in dollars) or the ecological value (unharvested biomass). In our simple formulation of the decision problem, the "utility" the manager seeks to maximize is simply the economic value (net present value: the discounted sum of all profits from future harvests, Eq \eqref{utility}) of harvested fish.  This formulation ignores any utility provided by fish that are not harvested, beyond their contribution to future potential harvests. While it is possible to include such contributions directly in the utility function being optimized [e.g. @Halpern2013], even without doing so, Model 1 maintains both a higher unharvested biomass and also leads to higher economic returns throughout [Fig ].  
+Despite the clearly superior predictive accuracy of Model 2 in both scenarios, the outcomes from management under Model 2 are substantially worse.  We can assess such outcomes in less abstract terms than forecasting skill, such as economic value (in dollars) or the ecological value (unharvested biomass). In our simple formulation of the decision problem, the "utility" the manager seeks to maximize is simply the economic value (net present value: the discounted sum of all profits from future harvests, Eq \eqref{utility}) of harvested fish.  This formulation ignores any utility provided by fish that are not harvested, beyond their contribution to future potential harvests. While it is possible to include such contributions directly in the utility function being optimized [e.g. @Halpern2013], even without doing so, Model 1 maintains both a higher unharvested biomass and also leads to higher economic returns throughout [Fig 2].  
 
 
 ```{r figure2, message = FALSE, fig.cap = "Ecological and economic performance of each forecast. Harvest quotas derived from Model 1 result in a significantly higher fish stock size than under Model 2 (panel A). Economic returns under Model 1 are also substantially higher (panel B)"}
-fig2a + fig2b
+
+sims <- read_csv("../data/sims.csv")
+npv_df <- read_csv("../data/npv_df.csv")
+
+
+plot_ecology <- 
+  sims %>%
+  mutate(model = as.character(model), resp = as.character(reps)) %>%
+  group_by(model, time) %>%
+  summarise(mean_state = mean(state), sd = sd(state), .groups = "drop") %>%
+  filter(time < 25, model != "3") %>%
+  ggplot(aes(time, mean_state)) + 
+  geom_line(aes(col = model), lwd=1.5, show.legend = FALSE) +
+    geom_ribbon(aes(ymin = mean_state - 2*sd, 
+                    ymax = mean_state + 2*sd,
+                    fill = model),
+                alpha = 0.2, show.legend = FALSE) +
+  ylab("state") + 
+  labs(subtitle = "A. Ecological outcomes")
+
+optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
+
+plot_econ <- 
+npv_df %>%
+  mutate(model = as.character(model), resp = as.character(reps)) %>%
+  filter(model != "3", time %in% seq(1,100, by = 5)) %>%
+  ggplot(aes(time, mean_npv)) +
+  geom_line(data = optimal, lwd = 1.5, col = "grey20") +
+  geom_point(aes(col=model), size = 4, alpha = 0.8) + 
+  ylab("Net present value") + xlab("time")  + 
+  labs(subtitle = "B. Economic outcomes")
+
+
+plot_ecology + plot_econ
 ```
 
 Had we been able to include Model 3 in our forecast comparisons, it would equal or outperform the forecasting skill of both Model 1 and Model 2 (as guaranteed by the theorem of @Gneiting2007), while also matching or out-performing their economic utility (as guaranteed by the theorem of @Reed1979).  In practice, we never have access to the generating model. 
 
-One obvious limitation in this comparison is that scenario B treats each model as fixed over the entire course of the simulation. Research has long emphasized the importance of learning and adaption in the face of new data whenever we are dealing with model uncertainty [@Polasky2011]. A related limitation is that in Scenario B, decisions were based either on assuming Model 1 is correct or assuming Model 2 is correct. A more robust approach [e.g. @Walters1978] incorporates the uncertainty over models directly into the decision calculations by integrating over the probability each model $M$ (or parameter value) is correct when calculating the utility; $U(x_t, a_t) = \int U(x_t, a_t | M) P(M)$. The probability assigned to each model can then be updated after each subsequent action in light of the resulting outcomes [@Ludgwig1982, @Smith1981]. While a the wide range of strategies for such iterative updating are known [@Polasky2011]; all will fail to select the higher-performing of the two simple models considered  here. 
+One obvious limitation in this comparison is that scenario B treats each model as fixed over the entire course of the simulation. Research has long emphasized the importance of learning and adaption in the face of new data whenever we are dealing with model uncertainty [@Polasky2011]. A related limitation is that in Scenario B, decisions were based either on assuming Model 1 is correct or assuming Model 2 is correct. A more robust approach [e.g. @Walters1978] incorporates the uncertainty over models directly into the decision calculations by integrating over the probability each model $M$ (or parameter value) is correct when calculating the utility; $U(x_t, a_t) = \int U(x_t, a_t | M) P(M)$. The probability assigned to each model can then be updated after each subsequent action in light of the resulting outcomes [@Ludwig1982, @Smith1981]. While a the wide range of strategies for such iterative updating are known [@Polasky2011]; all will fail to select the higher-performing of the two simple models considered  here. 
 
 
 <!-- replacing step-ahead with n-step ahead would not matter-->
@@ -222,11 +286,12 @@ Decision-theoretic approaches include scenario analysis, resilience thinking, op
 
 In passive adaptive management, the manager chooses the action which maximizes that expected future utility. After observing the consequences of the action, the manager updates the probabilities each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982]. In active adaptive management, the key difference is that the manager may chose an action which does not maximize the utility _given the current model uncertainty_, but instead, takes an action whose consequences will more quickly discriminate between the models and thus more rapidly reduce the uncertainty. After observing the outcome of this exploratory step, model probabilities are updated as before.  Under some scenarios the cost of this 'exploration' step can be made up later by actions based on the more precise knowledge gained as a result ('exploitation'). Alternative approaches such as scenario analysis can be considered approximations of this approach.  A scenario analysis does not rely on quantitative estimates of model probabilities or expected utility, but still consider possible outcomes over a suite of models (scenarios), select actions to minimize the risk or or other suitable objective, and update or eliminate scenarios deemed implausible over time [@Polasky2011]. 
 
-Each of these approaches swiftly decides that model 1 in our example is implausible, and settles for making decisions driven almost exclusively by model 2.  I illustrate this using a passive adaptive management strategy following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig , achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. If instead of considering only these two models we consider a whole suite of Gordon-Schaefer-type models with varying $r$ and $K$ parameters, learning is slightly slower but no less counter-productive: mean stock size is $46%$ and net present value is $20%$ of what would be achieved under Model 1 (Appendix, Fig S1).  
+Each of these approaches swiftly decides that model 1 in our example is implausible, and settles for making decisions driven almost exclusively by model 2.  I illustrate this using a passive adaptive management strategy following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig 2, achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. If instead of considering only these two models we consider a whole suite of Gordon-Schaefer-type models with varying $r$ and $K$ parameters, learning is slightly slower but no less counter-productive: mean stock size is $46%$ and net present value is $20%$ of what would be achieved under Model 1 (Appendix, Fig S1).  
 
-```{r}
-am <- am1$df %>% mutate(belief = am1$posterior$V2)
-am %>%  ggplot(aes(time, states[state], col = belief)) + 
+```{r figure3, fig.cap="Adaptive management under model uncertainty, color indicates the belief that Model 2 is correct (red). Each model is assigned an initial prior belief. To ensure that any issues with passive exploration are not the cause of preferring Model 2, the initial belief in Model 2 is set to 1%.  Within a single iteration of adaptive management, the belief over models is updated to near certainty in Model 2, resulting in higher harvests and lower stock sizes similar to managing under Model 2 alone, Fig 2."}
+am <- read_csv("../data/am.csv")
+am %>%  filter(time <30) %>%
+  ggplot(aes(time, states[state], col = belief)) + 
   geom_line() + 
   geom_point() +
   scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4]) +
@@ -239,15 +304,29 @@ am %>%  ggplot(aes(time, states[state], col = belief)) +
 Given this simplified version of model uncertainty in which one of the two models leads to effectively optimal ecological and economic outcomes, current approaches invariably choose the other.  The reason for this may appear obvious once we compare both curves to that of the underlying model, Model 3.  Plotting the growth rate functions of each model, [Fig 4a], it is hardly surprising that no method which would prefer the closely overlapping Model 2 to the no-where-close Model 1 as the better approximation of Model 3. Nevertheless, decisions based on model 1 are nearly indistinguishable from those based on the true model [Fig4b], while Model 2 leads to over-harvesting.  So why do our best approaches fail such a simple test case? It is tempting to dismiss this example as having little relevance to real-world decision problems on a variety of grounds: (1) this problem is an artifact of overly-simplified models, (2) this problem is an artifact of an unrealistic optimal control solution, (3) the problem arises from having started with different objectives, (4) the problem is already solved. I address these in turn.
 
 
-```{r fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth."}
+```{r figure4,  fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth.", fig.width=8}
 # Fig 4
-plot_models + plot_policies
+model_curves <- read_csv("../data/model_curves.csv") %>% mutate(model = as.character(model))
+policies <- read_csv("../data/policies.csv") %>% mutate(model = as.character(model))
+
+plot_models <- 
+  model_curves %>% 
+  ggplot(aes(state, value, col=model, lty=model)) +
+  geom_hline(aes(yintercept = 0), lwd=1) + 
+  geom_line(lwd=2, show.legend = FALSE) + 
+  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
+  ylab(bquote(f(x) - x)) + xlab("x")
+
+plot_policies <- policies %>%
+  ggplot(aes(states, escapement, col=model, lty=model)) + 
+  geom_line(lwd=2) + xlab("state")
+
+
+plot_models + labs(subtitle="A") +  plot_policies +  labs(subtitle="B")
 ```
 
  
-
 Is this result an artifact of the simple models considered here?  A more realistic approach would consider uncertainty over model parameters, as well as models with different structural forms, such as Beverton Holt [@], Ricker [@], Shepard [@].  Such complexity would not be sufficient to resolve the paradox of model uncertainty illustrated here. Simplicity facilitates intuition: Model 1 performs best because it correctly approximates the stock size which achieves maximum growth rate under the true model.  In contrast, each of those widely used recruitment relationships are symmetric, and their best-fitting parameter estimates will always have a maximum growth rate at a lower stock size. It is easy to point out that even this wider array of parameter and model values is too simple, since fisheries models in practice are much more complicated still (indeed, too complicated for the formal integration over model uncertainty considered here).  It is indeed true that either the forecasting or adaptive management example would work as expected if the set of candidate models included the true model, or at least a functional form that could better approximate the peak of the true model while also fitting better than model 2.  But we never have the true model in real systems.   If the candidate models are only caricatures, so too is the "true" model.  The candidate models considered here are no doubt much closer approximations to model 3 (all being single species, unstructured in age, stage, time or space, etc) than any model used in practice is to reality. Morever, a more accurate model is not required to reach optimal outcomes -- Model 1 already provides this by correctly approximating the key feature in this problem, even while it is wrong about much else.  How do proceed when our best methods fail in such a simple case? 
-
 
 <!-- move to appendix?  too confusing/too long?-->
 Is this result an artifact of optimal control? The analysis has relied on optimal control theory to determine the optimal decision associated with each model or distribution of models.  The resulting policies are mathematically optimal under the assumptions given [see @Reed1979 for stochastic harvest problem in particular and @Marescot2013 for discussion of Markov Decision Problems more generally].  In most realistic decision problems, model complexity currently precludes the calculation of an optimal control solution at all ["the curse of dimensionality", e.g. @Polasky2011; @Marescot2013]. Under the assumptions of any of the models considered here, the optimal control solution leads to what is known as a "constant escapement" policy, which seeks to bring biomass to the target escapement level, $B_{MSY}$ as quickly as possible, $H_t = \min(X_t - B_{MSY}, 0)$.  If the assumptions are not met, a constant-escapement policy may not be optimal, as in the case when observations of the stock $X_t$ are not perfect [@pomdp-intro].  While constant escapement is used as a basis of management in some real world cases such as salmon fisheries, most marine fisheries are based on a target of "constant mortality", ($F_{MSY}$). Notably, a constant mortality policy, implemented as $H_t = F_{MSY} X_t$, would not perform better under Model 1 than Model 2.  Constant mortality is optimal only under deterministic growth at equilibrium (where the policy is the same under constant escapement).  Does that mean the result is an artifact of assuming constant escapement rather than constant mortality as the basis for management?  No, it does not.  It is just as easy to construct a model under which the constant mortality matches the constant mortality of the true model while being a poor predictor.  Moreover, using a non-optimal policy would always beg the question of whether the poor outcomes were merely the result of using a non-optimal policy rather than a consequence of model uncertainty.  Because the space of possible actions is smaller than that of possible models, we should expect most decision problems to have their own "Model 1," a model that would lead to correct actions while being a poor predictor of future outcomes.  The trouble is that we have no theory which would not reject such a model. 

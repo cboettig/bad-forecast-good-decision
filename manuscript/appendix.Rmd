@@ -18,8 +18,9 @@ output:
 
 
 
+This appendix provides a fully reproducible walk-through of the implementation of the analyses considered in this paper.  None of the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are novel 
 
-
+This appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulae presented here, it is also less ambiguous.  
 
 
 The question of optimal harvest given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context.  @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
@@ -41,7 +42,7 @@ X_{t+1} = f(X_t, H_t)
 
 This problem is already well studied, and it is worth noting that even under the simple utility function which assigns no value to fish that are not harvested, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case.  As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.  
 
-The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation as , 
+The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation as, 
 
 \begin{equation}
 \end{equation}
@@ -50,12 +51,13 @@ This technique, known as stochastic dynamic programming (SDP) is widely used in 
 
 It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.  In the case of a deterministic model at equilibrium, these policies are identical.  Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain.  These issues are discussed in detail in @pomdp-intro.  For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries.  The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.  
 
-Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.  Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.  The issue at hand is how we determine the model in the first place.  
+Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.  Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.  
 
 
 
 
-Given the function $f$ with known parameters, it is straight forward to determine the optimal harvest policy by stochastic dynamic programming (SDP, see @Mangel1985; @Marescot2013).  
+
+
 
 
 To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.  The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
@@ -168,8 +170,7 @@ true_model <- "3"
 ```
 
 
-On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$,
-$f(X_t,H_t)$ as set of matrices.  Each matrix $i$ gives the transition probabilities for any current state to any future state, 
+On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$, $f(X_t,H_t)$ as set of matrices.  Each matrix $i$ gives the transition probabilities for any current state to any future state, 
 given that action $i$ is taken.  
 
 
@@ -246,40 +247,8 @@ policies <-
     tibble(states, policy = soln$policy, escapement)
     }, 
   .id = "model")
-```
 
-
-# Adaptive Management
-
-Passive adaptive management using a Bayesian learning scheme still learns the wrong model. 
-
-```{r}
-adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
-x0 <- which.min(abs(states - 6))
-
-am1 <- adaptive_management(transitions[1:2], reward, discount, model_prior = c(0.99, 0.01), x0 = x0, 
-               Tmax = 50, true_transition = transitions[[3]], 
-                epsilon = 0.001, max_iter = 2000)
-```
-
-
-```{r}
-am <- am1$df %>% mutate(belief = am1$posterior$V2)
-am %>%  ggplot(aes(time, states[state], col = belief)) + 
-  geom_line() + 
-  geom_point() +
-  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4]) +
-  ylab("stock size")
-```
-
-
-```{r include = FALSE}
-as_tibble(am1$posterior) %>% 
-  mutate(time = seq_along(V1)) %>%
-  select(time = time, "1" = V1, "2" = V2) %>% 
-  pivot_longer(c("1", "2"), values_to="belief", names_to = "model") %>%
-  filter(time < 20) %>%
-  ggplot(aes(time, belief, col=model)) + geom_line(col = pal[4])
+write_csv(policies, "../data/policies.csv")
 ```
 
 
@@ -312,6 +281,8 @@ sims <-
           },
           .id = "model"
          )
+
+write_csv(sims, "../data/sims.csv")
 ```
 
 Using the transition matrices directly, we can examine what each model would 
@@ -389,74 +360,43 @@ predictions <-
           mutate(scenario = "B_fished")
   ) %>% 
   mutate(model = as.character(model))
+
+
+write_csv(predictions, "../data/predictions.csv")
 ```
 
 
-# Plotting
-
-Having computed a single data frame of simulation data under both optimally fished (according to each model) and unfished scenarios for each model, along with the proper scores for the step-ahead forecasts a la @Gneiting2007, we have all the results necessary to generate the figures presented in the main paper.    
 
 
 
-```{r fig1a}
-fig1ab <- predictions %>%
-  filter(reps == "2", time < 10) %>%
-  ggplot(aes(time, col = model, fill = model)) + 
-  geom_point(aes(y = expected)) + 
-  geom_errorbar(aes(ymin = low, ymax = high)) +
-  geom_point(aes(y = true), pch = "*", size = 12, 
-             alpha = 0.6) + 
-  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
-    A_unfished = "A. Without fishing",
-    B_fished = "B. Managed harvest"))) +
-  ylab("stock size")
 
-```
+# Adaptive Management
 
-
-Likewise we can plot the data on proper scores associated with each prediction of each model: 
+Passive adaptive management using a Bayesian learning scheme still learns the wrong model. 
 
 ```{r}
-fig1cd <- predictions %>%
-  ggplot(aes(x = score, group = model, fill = model)) +
-  geom_histogram(binwidth = 2, show.legend = FALSE) +
-  coord_cartesian(xlim = c(-100, 1), ylim = c(0,4000)) +
-  xlab("Proper score") +
-  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
-    A_unfished = "C.",
-    B_fished = "D."))) + 
-  scale_x_continuous(breaks = c(-100, 0)) +
-  theme(axis.text.y = element_blank(),
-        plot.margin = margin(0, 0, 0, 0, "cm"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-        )
+adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
+x0 <- which.min(abs(states - 6))
+
+am1 <- adaptive_management(transitions[1:2], reward, discount, 
+                           model_prior = c(0.99, 0.01), x0 = x0, 
+                           Tmax = 50, true_transition = transitions[[3]], 
+                            epsilon = 0.001, max_iter = 2000)
+```
+
+
+```{r}
+am <- am1$df %>% mutate(belief = am1$posterior$V2)
+write_csv(am, "../data/am.csv")
 
 ```
 
 
 
-## Forecast ecological and economic performance
 
 
-The ecological performance of the model can easily be visualized by plotting
-the results of each simulation. 
+### Additional calculations for plots
 
-```{r plot_sims}
-plot_ecology <- 
-  sims %>% 
-  group_by(model, time) %>%
-  summarise(mean_state = mean(state), sd = sd(state), .groups = "drop") %>%
-  filter(time < 25, model != "3") %>%
-  ggplot(aes(time, mean_state)) + 
-  geom_line(aes(col = model), lwd=1.5, show.legend = FALSE) +
-    geom_ribbon(aes(ymin = mean_state - 2*sd, 
-                    ymax = mean_state + 2*sd,
-                    fill = model),
-                alpha = 0.2, show.legend = FALSE) +
-  ylab("state") + 
-  labs(subtitle = "Ecological")
-```
 
 To plot the economic value over time, we must sum up the discounted values
 at each time step, and then average over replicate simulations of each model:
@@ -470,62 +410,45 @@ npv_df <- sims %>%
   summarise(mean_npv = mean(npv), .groups="drop") %>% 
   arrange(model, time)
 
-optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
-
-plot_econ <- 
-npv_df %>%
-  filter(model != "3", time %in% seq(1,100, by = 5)) %>%
-  ggplot(aes(time, mean_npv)) +
-  geom_line(data = optimal, lwd = 1.5, col = "grey20") +
-  geom_point(aes(col=model), size = 4, alpha = 0.8) + 
-  ylab("Net present value") + xlab("time")  + 
-  ggtitle("B.") + labs(subtitle = "Economic")
-
+write_csv(npv_df, "../data/npv_df.csv")
 ```
+
+
+
+
+
+
 ```{r}
 # tabular comparisons
 npv <- npv_df %>% group_by(model) %>% summarize(npv = max(mean_npv))
 
 am_npv <- sum(am$value * discount ^ am$time)
-am_npv / npv[[1,"npv"]]
-
+am_economics_percent <- round(am_npv / npv[[1,"npv"]] * 100)
 
 mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
-mean(states[am$state]) / mean_state[[1, "state"]]
+am_ecology_percent <- round(mean(states[am$state])/mean_state[[1, "state"]]*100)
 ```
 
-Plotting the model functions themselves are shown in Fig 3a:
+Under adaptive management, the manager realizes only `r am_economics_percent`%
+of the economic value that would be achieved under Model 1 alone, and only 
+`r am_ecology_percent`% of the spawning stock biomass that would have been 
+achieved under Model 1 alone. 
 
+
+To plot growth curves of individual models (Fig 4a), we evaluate 
+
+$$\Delta x = x_{t+1} - x_t = f(x_t) - x_t$$
+
+for each model for all possible states $x_t$.
 
 ```{r plot_models}
-d <- 
+model_curves <- 
   map_dfc(models, function(f) f(states) - states) %>%
-  mutate(state = states)
+  mutate(state = states) %>%  pivot_longer(names(models), "model")
 
-plot_models <- 
-  d %>% pivot_longer(names(models), "model") %>%
-  ggplot(aes(state, value, col=model, lty=model)) +
-  geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_line(lwd=2) + 
-  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
-  ylab(bquote(f(x) - x)) + xlab("x")
+write_csv(model_curves, "../data/model_curves.csv")
+
 ```
-
-
-We can easily plot the optimal policy derived from each model, as shown
-in Fig3b. 
-
-```{r plot_policies}
-plot_policies <- policies %>%
-  ggplot(aes(states, escapement, col=model, lty=model)) + 
-  geom_line(lwd=2) + xlab("state")
-```
-
-
-
-
-
-
 
 
 
