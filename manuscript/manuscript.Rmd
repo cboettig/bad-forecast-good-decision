@@ -84,7 +84,12 @@ A second idea on framing: this maybe is a to divergent from the main point (or l
 <!-- Open on real-world issues, uncertainty, particularly model uncertainty as key theme.  -->
 
 Global change issues are complex and outcomes are difficult to predict, making approaches to uncertainty a central part
-of effective decision-making [@ @]. While some uncertainty is intrinsic to the underlying processes (stochasticity) or by
+of effective decision-making [@ @]. Reducing that uncertainty by improving models in response to more data
+becomes available 
+
+
+
+While some uncertainty is intrinsic to the underlying processes (stochasticity) or by
 limits to what variables we can observe and how accurately we measure them (measurement uncertainty), much uncertainty 
 is the result of our imperfect knowledge of the processes involved, as expressed by the structure and
 parameters of mathematical models used to approximate those processes (model uncertainty). Unlike the other forms of
@@ -92,7 +97,7 @@ uncertainty, model uncertainty can be
 reduced by gathering additional data, which may rule out certain models or parameter values as implausible[^1]. 
 When model parameters are estimated directly from available data, there is a risk that the best-fitting models may 
 _overfit_ to patterns arising from by chance from the stochasticity or measurement error which do not reflect the
-underlying process. Researchers have often favored simpler models which are less prone to over-fitting, sometimes
+underlying process [@Ginzburg2004]. Researchers have often favored simpler models which are less prone to over-fitting, sometimes
 through explicit penalties such as information criteria [@], though these can be misleading [@]. With the rapid 
 expansion of available ecological and environmental data [@], it is increasingly possible to rely instead on comparisons
 between model predictions and data purposely excluded from model estimation (cross-validation), or better, 
@@ -319,7 +324,13 @@ Decision-theoretic approaches include scenario analysis, resilience thinking, op
 
 
 
-In passive adaptive management, the manager chooses the action which maximizes that expected future utility. After observing the consequences of the action, the manager updates the probabilities each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982]. In active adaptive management, the key difference is that the manager may chose an action which does not maximize the utility _given the current model uncertainty_, but instead, takes an action whose consequences will more quickly discriminate between the models and thus more rapidly reduce the uncertainty. After observing the outcome of this exploratory step, model probabilities are updated as before.  Under some scenarios the cost of this 'exploration' step can be made up later by actions based on the more precise knowledge gained as a result ('exploitation'). Alternative approaches such as scenario analysis can be considered approximations of this approach.  A scenario analysis does not rely on quantitative estimates of model probabilities or expected utility, but still consider possible outcomes over a suite of models (scenarios), select actions to minimize the risk or or other suitable objective, and update or eliminate scenarios deemed implausible over time [@Polasky2011]. 
+In passive adaptive management, the manager chooses the action which maximizes that expected future utility. After observing the consequences of the action, the manager updates the posterior probabilities that each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982; @Punt2016]. The decision strategy is then re-evaluated in light of this revised uncertainty.  In many real-world applications, it may be impossible or computationally prohibitive to solve the optimal control policy given all sources of uncertainty, as is typical in fisheries management practice [@Punt2016]. Management Strategy Evaluation (MSE) evaluates 
+
+
+In active adaptive management, the key difference is that the manager may chose an action which does not maximize the utility _given the current model uncertainty_, but instead, takes an action whose consequences will more quickly discriminate between the models and thus more rapidly reduce the uncertainty. After observing the outcome of this exploratory step, model probabilities are updated as before.  Under some scenarios the cost of this 'exploration' step can be made up later by actions based on the more precise knowledge gained as a result ('exploitation'). In practice, passive adaptive management approaches are more common, such as Management Strategy Evaluation (MSE @Punt2016) or Scenario Analysis [@Polasky2011]. These approaches all share the same adaptive aspect, 
+
+
+Owing to the computational complexity involved, these approaches typically evaluate a suite of proposed policies, rather than seeking to derive the optimal policy. A scenario analysis does not rely on quantitative estimates of model probabilities or expected utility, but still consider possible outcomes over a suite of models (scenarios), select actions to minimize the risk or or other suitable objective, and update or eliminate scenarios deemed implausible over time [@Polasky2011]. 
 
 Each of these approaches swiftly decides that model 1 in our example is implausible, and settles for making decisions driven almost exclusively by model 2.  I illustrate this using a passive adaptive management strategy following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig 4]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig 2, achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. If instead of considering only these two models we consider a whole suite of Gordon-Schaefer-type models with varying $r$ and $K$ parameters, learning is slightly slower but no less counter-productive: mean stock size is $46%$ and net present value is $20%$ of what would be achieved under Model 1 (Appendix, Fig S1).  
 
