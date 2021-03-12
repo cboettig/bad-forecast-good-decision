@@ -80,9 +80,9 @@ f3  <- function(x, h = 0, r = .002, K = 10){
   s + s ^ 4 * r * (1 - s / K)
 }
 
-n_models <- 32
-rs <- seq(0.4, 2, length.out = n_models)
-Ks <- seq(8, 10*8/5, length.out = n_models)
+n_models <- 20
+rs <- seq(0.1, 2, length.out = n_models)
+Ks <- seq(1, 10*8/5, length.out = n_models)
 sigmas <- seq(0.05, 1.5*0.05, length.out = n_models)
 pars <- data.frame(r = rs, K = Ks, sigma = sigmas)
 
@@ -172,25 +172,18 @@ d <-
   map_dfc(model_set, function(f) f(states) - states) %>%
   mutate(state = states)
 
-d %>% pivot_longer(names(model_set[-1]), "model") %>%
+d  %>%
+  pivot_longer(names(model_set[-1]), "model") %>%
   mutate(model = as.numeric(model)) %>%
-  ggplot(aes(state, value, col = model)) +
+  ggplot(aes(state, value, col = model, group=model)) +
   geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_point(alpha = .5) + 
+  geom_line(alpha = .8) + 
   geom_line(aes(state, true), col = "red") +
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
   ylab(bquote(f(x) - x)) + xlab("x") + viridis::scale_color_viridis()
 ```
 
 
-We can easily plot the optimal policy derived from each model, as shown
-in Fig3b. 
-
-```{r plot_policies}
-fig3b <- policies %>%
-  ggplot(aes(states, escapement, col=model, lty=model)) + 
-  geom_line(lwd=2) + xlab("state")
-```
 
 
 # Adaptive Management
@@ -205,14 +198,14 @@ am_many <- adaptive_management(transitions[-1],
                            reward, 
                            discount, 
                            x0 = x0, 
-                           Tmax = 50, 
+                           Tmax = 20, 
                            true_transition = transitions[[true_model]], 
                            epsilon = 0.001, 
                            max_iter = 2000)
 ```
 
 ```{r}
-i <- 1:5
+i <- 1:20
 posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior[i,])) %>%
   pivot_longer(starts_with("X"), 
                values_to = "probability",
@@ -223,13 +216,16 @@ posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior[i,])) %>%
 posteriors %>%
   ggplot(aes(value, probability, group=time, col=time)) +
   geom_line(show.legend = FALSE) +
-  facet_grid(~parameter, scales="free")  
+  facet_grid(~parameter, scales="free")
+```
 
+```{r}
+best_model <- which.max(am_many$posterior[20,])
 ```
 
 ```{r, fig.cap = ""}
 am_many$df %>% 
-  mutate(belief = am_many$posterior[,1]) %>%
+  mutate(belief = am_many$posterior[,best_model]) %>%
   ggplot(aes(time, states[state], col = belief)) + 
   geom_line() + 
   geom_point() +
@@ -239,7 +235,7 @@ am_many$df %>%
 
 
 ```{r}
-am_npv <- sum(am$value * discount ^ am$time)
+am_npv <- sum(am_many$value * discount ^ am$time)
 am_npv / npv[[1,"npv"]]
 ```
 
@@ -250,7 +246,6 @@ as_tibble(am1$posterior) %>%
   mutate(time = seq_along(V1)) %>%
   select(time = time, "1" = V1, "2" = V2) %>% 
   pivot_longer(c("1", "2"), values_to="belief", names_to = "model") %>%
-  filter(time < 20) %>%
   ggplot(aes(time, belief, col=model)) + geom_line(col = pal[4])
 ```
 
