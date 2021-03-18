@@ -80,10 +80,40 @@ A second idea on framing: this maybe is a to divergent from the main point (or l
 -->
 
 <!-- Open on real-world issues, uncertainty, particularly model uncertainty as key theme.  -->
+Global change issues are complex and outcomes are difficult to predict  [@Clark2001]. 
+To guide decisions in an uncertainty world, researchers and decision makers 
+may consider a range of alternative plausible models[^1] to better reflect 
+what we do and do not know about the processes involved [@Polasky2011].  Forecasts or
+predictions from possible models can indicate what outcomes are most likely to result
+under what decisions or actions.  Further, by comparing the outcomes predicted by a model
+to future observations, a decision maker can not only _plan_ for the uncertainty, but 
+also _learn_ which models are most trustworthy.  This iterative learning process is
+particularly appealing because the models which best fit currently available data are not 
+always the models which lead to the best decisions.  Such outcomes are often characterized
+as the result of "over-fitting" [@Burnham2002]. While many methods (e.g. information criteria @Burnham2002)
+are developed seeking to avoid this
 
-Global change issues are complex and outcomes are difficult to predict, making approaches to uncertainty a central part
-of effective decision-making [@ @]. Reducing that uncertainty through additional data collection and evaluation of outcomes
-is essential for effective management [@].  
+
+
+
+While models
+may also reflect uncertainties intrinsic to the process (stochasticity) or the limits 
+of measurement (observation uncertainty), 
+
+
+Why then do some models which most closely match available data lead to worse outcomes than models which appear less accurate?
+This situation is almost universally considered to be the result of "over-fitting" [@], which much effort is dedicated to avoiding 
+in selecting models. Because the defining flaw of an over-fit model is the failure to correctly predict additional data, 
+
+
+<!-- even in a world absent of power politics, conflicting incentives, imperfect implementation, this is not an issue that can be addressed by statistics and data alone.  The 
+
+-->
+
+
+making approaches to uncertainty a central part
+of effective decision-making [@Polasky2011; @Clark2001]. Reducing that uncertainty through additional data collection 
+and evaluation of outcomes is thus essential for effective management [@walters1978].  
 
 
 
@@ -109,7 +139,9 @@ decision outcomes. This example illustrates that knowing when increased forecast
 decision outcomes in general remains an open problem, as is the challenge of what to do about it.
 
 [^1]: While some authors distinguish between model uncertainty and parameter uncertainty, I will refer collectively to
-any uncertainty that arises from our imperfect knowledge of the system as "model uncertainty". Uncertainty in model structure can often be reflected by appropriate parameterization, just as models with different parameter values can be treated distinctly. Whereas stochasticity is inherent to the process (or rather, to our choice of state variables, @Boettiger2018) and measurement uncertainty can only be reduced by more accurate tools for measurement, model uncertainty is reducible by learning from additional data. 
+any uncertainty that arises from our imperfect knowledge of the system as "model uncertainty," because the distinction
+is largely a consequence of notation rather something more intrinsic.  For example, two structurally different models, $f(x) = a x$
+and $f(x) = a x^2$ can be considered merely different parameterizations of $f(x) = a x^b$, or vice versa.  
 
 
 
@@ -305,8 +337,6 @@ One obvious limitation in this comparison is that scenario B treats each model a
 <!-- replacing step-ahead with n-step ahead would not matter-->
 
 ## Decision-Theoretic Approaches
-
-
 
 <!--
 Any of these adaptive management approaches proves to be maladaptive under the simple example of model uncertainty considered here.  That is, the manager derives lower utility (here, economic yield), and the fish stock is also surpressed to a lower biomass than would be achieved if an identical management approach without any adaptive updating to model uncertainty were employed.  Put another way, the "value of information" gained from future observations of stock in response to any management action is actually negative.     
