@@ -85,58 +85,42 @@ To guide decisions in an uncertainty world, researchers and decision makers
 may consider a range of alternative plausible models[^1] to better reflect 
 what we do and do not know about the processes involved [@Polasky2011].  Forecasts or
 predictions from possible models can indicate what outcomes are most likely to result
-under what decisions or actions.  Further, by comparing the outcomes predicted by a model
-to future observations, a decision maker can not only _plan_ for the uncertainty, but 
-also _learn_ which models are most trustworthy.  This iterative learning process is
-particularly appealing because the models which best fit currently available data are not 
-always the models which lead to the best decisions.  Such outcomes are often characterized
-as the result of "over-fitting" [@Burnham2002]. While many methods (e.g. information criteria @Burnham2002)
-are developed seeking to avoid this
+under what decisions or actions. This has made model-based forecasts a cornerstone for scientifically
+based decision making.  But, do better models always lead to better decisions?
 
+Whenever models are estimated from the data they seek to describe, there is a concern that
+the model may over-fit the data: making the data seem even more likely than it would be
+under the true process [@Burnham2002].  Over-fitting is a central concern of any model comparison
+because over-fit models may underestimate uncertainty and make poor predictions about future
+outcomes [@Ginzburg2004]. By comparing outcomes predicted by a model to future observations, 
+a decision maker can not only _plan_ for the uncertainty, but also _learn_ which models are most trustworthy.  
+This iterative learning process of learning will not only decrease uncertainty by narrowing 
+beliefs over plausible model or parameter values, but can also eliminate models which overfit the data.
+Because any iterative learning compares models to future outcomes, overfitting those outcomes
+is impossible: a concept formalized rigorously by @Gneiting2007's proof of "proper" scoring rules.
+By definition, under a proper scoring rule, no probabilistic prediction $Q(x)$ can score better, on
+average, than that of the underlying process, $P(x)$.  @Gneiting2007 further shows which
+techniques for evaluating forecast predictions do an do not satisfy this condition, i.e. which
+cannot be over-fit.  The ability to decrease uncertainty while avoiding over-fitting makes
+such iterative learning particularly appealing approach to decision making in an uncertain
+world [@Deitze2018], and the approach is already well established in the principle of 
+adaptive management [@Walters1978] and existing practices such as Management Strategy Evaluation (MSE)
+[@Punt2006] used in fisheries. Given this ability to decrease uncertainty and avoid over-fitting,
+such iterative updating approaches seem irreproachable from a theoretical basis, even if
+they may be difficult to execute in practice. 
 
+However, as long as the true process model is unknown (effectively always), there is no
+such theoretical guarantee that iterative learning over possible models or parameters will
+lead to better outcomes.  This is not -- cannot -- be because some models have over-fit the 
+data, as least as long as proper scoring rules are used for evaluation.  As I illustrate here,
+given a set of candidate models, iterative learning either through assessment of forecast
+skill or through formal adaptive management can lead to worse outcomes than forgoing any learning step.
+Put another way, the value of information [@Howard1966], as measured by the expected utility given that 
+information minus the utility without it, can be negative: a rational decision maker ought to pay
+not to know information even when that information is perfectly accurate.  
+This situation is a direct consequence of the fact that a model need only capture certain
+features of the underlying process to lead to an effective decision.
 
-
-While models
-may also reflect uncertainties intrinsic to the process (stochasticity) or the limits 
-of measurement (observation uncertainty), 
-
-
-Why then do some models which most closely match available data lead to worse outcomes than models which appear less accurate?
-This situation is almost universally considered to be the result of "over-fitting" [@], which much effort is dedicated to avoiding 
-in selecting models. Because the defining flaw of an over-fit model is the failure to correctly predict additional data, 
-
-
-<!-- even in a world absent of power politics, conflicting incentives, imperfect implementation, this is not an issue that can be addressed by statistics and data alone.  The 
-
--->
-
-
-making approaches to uncertainty a central part
-of effective decision-making [@Polasky2011; @Clark2001]. Reducing that uncertainty through additional data collection 
-and evaluation of outcomes is thus essential for effective management [@walters1978].  
-
-
-
-While some uncertainty is intrinsic to the underlying processes (stochasticity) or by
-limits to what variables we can observe and how accurately we measure them (measurement uncertainty), much uncertainty 
-is the result of our imperfect knowledge of the processes involved, as expressed by the structure and
-parameters of mathematical models used to approximate those processes (model uncertainty). Unlike the other forms of
-uncertainty, model uncertainty can be 
-reduced by gathering additional data, which may rule out certain models or parameter values as implausible[^1]. 
-When model parameters are estimated directly from available data, there is a risk that the best-fitting models may 
-_overfit_ to patterns arising from by chance from the stochasticity or measurement error which do not reflect the
-underlying process [@Ginzburg2004]. Researchers have often favored simpler models which are less prone to over-fitting, sometimes
-through explicit penalties such as information criteria [@], though these can be misleading [@]. With the rapid 
-expansion of available ecological and environmental data [@], it is increasingly possible to rely instead on comparisons
-between model predictions and data purposely excluded from model estimation (cross-validation), or better, 
-comparisons between model predictions and data collected in the future (forecasting, @Clark2001; @Dietze2018]). 
-Over sufficiently long timescales, comparing model forecasts to future observations will select the models with
-greatest predictive accuracy.  Because model-based forecasts frequently play an important role in decision-making,
-it is commonly assumed [e.g. @Walters1981; @Clark2001; @Dietze2018] that this approach for addressing model uncertainty
-will also improve decision-making outcomes. Here, I illustrate that this need not be the case: it is quiet possible
-that any approach with improves the forecast accuracy of the model(s) over time can simultaneously lead to worse 
-decision outcomes. This example illustrates that knowing when increased forecast accuracy will or will not also improve 
-decision outcomes in general remains an open problem, as is the challenge of what to do about it.
 
 [^1]: While some authors distinguish between model uncertainty and parameter uncertainty, I will refer collectively to
 any uncertainty that arises from our imperfect knowledge of the system as "model uncertainty," because the distinction
@@ -144,25 +128,20 @@ is largely a consequence of notation rather something more intrinsic.  For examp
 and $f(x) = a x^2$ can be considered merely different parameterizations of $f(x) = a x^b$, or vice versa.  
 
 
+<!-- Haven't really queued up the idea that I will present two distinct approaches that both fail.  need to more explicitly introduce and justify the two approaches-->
 
 
-<!--Gonna be two examples.  Shorten me? -->
+<!--
+
 A wide range of paradigms are available for approaching the issue of decision-making under uncertainty. These approaches can roughly be divided into two groups: statistical approaches and adaptive management approaches.  The first group, "statistical approaches," seeks to maximize some statistical metric (such as goodness-of-fit or predictive accuracy) in determining which model(s) will drive decisions. In contrast, adaptive management approaches seek to select actions which maximize the decision-maker's expected net utility over 
 
 
-Models are assessed by comparison to observation and the best model or models are used to inform management decisions.  This process of model evaluation may be repeated iteratively after observing the outcome of the management decision compared to the predictions under the model. This approach is implicit to most statistical methods of model estimation and assessment [e.g. information criteria, @Burnham1998]
-
-
-There are a wide range of techniques within each, and it is also possible to blend approaches. The key distinction is that methods in the first group do not involve any direct consideration of the possible actions or the utility that may result from those actions in how they select models [statistical approaches such as information criteria e.g. @Burnham1998]; and in particular, forecasting evaluation @Clark2001; @Dietze2018], while those in the second group require a more explicit statement of possible actions and the desired objectives [Decision theoretic approaches, for which @Polasky2011 provides an excellent and accessible review]. I illustrate how the most promising techniques from each of these groups would be applied to this simple problem, and demonstrate that it both cases they lead us away from the model that produces the most desirable decisions towards worse outcomes.  In retrospect, it will become obvious that neither these nor any other widely applied methods will select the model that leads to the best outcomes from the set of models considered.  
-
-<!-- Proper scores-->
 In the first group, I focus on evaluation using "proper" scoring rules as defined by @Gneiting2007, rather than potentially more familiar model comparisons such as $r^2$, likelihood, or information criteria [@Burnham1998] because proper scoring rules are more robust  (see @Gneiting2007 for comparison and how the approaches relate under appropriate assumptions). @Gneiting2007 provides a rigorous proof of scoring rules that have the desirable property of being "proper", that is, rules for which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$. Unlike likelihood or other goodness-of-fit scores alone, it is impossible (in expectation) to overfit the proper score -- no model model can out-perform the true model. Note that strictly proper scoring rules score _probabilistic forecasts_ and not just point predictions, favoring models which accurately reflect the uncertainty over those which under-estimate it.  These features have made proper scoring rules for probabilistic forecasts a successful and popular approach for addressing model uncertainty in many other areas [@Gneiting2014; @Raftery2016] and a promising tool for evaluation of ecological forecasts [@Dietze2018]. 
 
-<!--Adaptive management-->
 For the second group, decision-theoretic approaches, I focus on the example of adaptive management
 Decision-theoretic approaches include scenario analysis, resilience thinking, optimal control and related methods [@Polasky2011], which have a long history in ecology and particularly in fisheries management. One of the most influential of these is _adaptive management_ [sensu @Walters1978], in which a manager seeks to both reduce uncertainty over time while also achieving the best outcomes given current knowledge.  While the term today is frequently used in a looser sense, adaptive management as originally developed can be considered an example of optimal control under model uncertainty [@Walters1981; @Smith1981].  In this approach, a manager assigns probabilities to each of the possible models under consideration, i.e. models 1 & 2.  The expected utility of any action reflects both the intrinsic uncertainty over future states under either model (process uncertainty) and the manager's uncertainty over the choice of models (or parameter values). Unlike the forecast comparison, an adaptive management approach explicitly considers the utility function, Eqn \eqref{utility}, which it seeks to maximize by integrating over model uncertainty. After observing the consequences of the action, the manager updates the posterior probabilities that each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982; @Punt2016]. The decision strategy is then re-evaluated in light of this revised uncertainty.  Adaptive management may be either passive or active. Under passive adaptive management, the decision-maker chooses the action which maximizes that expected future utility.  Under active adaptive management, the decision-maker may chose 'exploratory' actions which are not optimal under the current uncertainty but may lead to more rapidly decreasing the uncertainty in the future [@Walters1978]. In practice, many managers are reluctant to employ exploratory strategies, so passive adaptive management approaches such as as Management Strategy Evaluation (MSE) are more common [@Punt2016].
 
-
+-->
 
 
 I illustrate this problem using an example from fisheries management. 
