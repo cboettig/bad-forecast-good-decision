@@ -29,9 +29,10 @@ keywords:
 
 ## change to true to add optional line numbering
 lineno: true
-
+csl: ecology-letters.csl
 output: rticles::elsevier_article
 layout: 3p
+journal: TBD
 ---
 
 
@@ -90,7 +91,7 @@ based decision making.  But, do better models always lead to better decisions?
 
 Whenever models are estimated from the data they seek to describe, there is a concern that
 the model may over-fit the data: making the data seem even more likely than it would be
-under the true process [@Burnham2002].  Over-fitting is a central concern of any model comparison
+under the true process [@Burnham1998].  Over-fitting is a central concern of any model comparison
 because over-fit models may underestimate uncertainty and make poor predictions about future
 outcomes [@Ginzburg2004]. By comparing outcomes predicted by a model to future observations, 
 a decision maker can not only _plan_ for the uncertainty, but also _learn_ which models are most trustworthy.  
@@ -103,9 +104,9 @@ average, than that of the underlying process, $P(x)$.  @Gneiting2007 further sho
 techniques for evaluating forecast predictions do an do not satisfy this condition, i.e. which
 cannot be over-fit.  The ability to decrease uncertainty while avoiding over-fitting makes
 such iterative learning particularly appealing approach to decision making in an uncertain
-world [@Deitze2018], and the approach is already well established in the principle of 
+world [@Dietze2018], and the approach is already well established in the principle of 
 adaptive management [@Walters1978] and existing practices such as Management Strategy Evaluation (MSE)
-[@Punt2006] used in fisheries. Given this ability to decrease uncertainty and avoid over-fitting,
+[@Punt2016] used in fisheries. Given this ability to decrease uncertainty and avoid over-fitting,
 such iterative updating approaches seem irreproachable from a theoretical basis, even if
 they may be difficult to execute in practice. 
 
@@ -115,7 +116,7 @@ lead to better outcomes.  This is not -- cannot -- be because some models have o
 data, as least as long as proper scoring rules are used for evaluation.  As I illustrate here,
 given a set of candidate models, iterative learning either through assessment of forecast
 skill or through formal adaptive management can lead to worse outcomes than forgoing any learning step.
-Put another way, the value of information [@Howard1966], as measured by the expected utility given that 
+Put another way, the value of information [VOI; @Howard1966; @Katz1987], as measured by the expected utility given that 
 information minus the utility without it, can be negative: a rational decision maker ought to pay
 not to know information even when that information is perfectly accurate.  
 This situation is a direct consequence of the fact that a model need only capture certain
@@ -326,18 +327,31 @@ Owing to the greater complexity involved in many fisheries models, a typical MSE
 
 Any adaptive management strategy updates posterior distributions over model uncertainty [@Punt2016; @Ludwig1982]. Unfortunately, any such adaptive updating leads to worse outcomes than the equivalent non-adaptive strategy, in which model uncertainty is held fixed.  I illustrate the application of a passive adaptive management strategy to this simple example, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty. Passive adaptive management for a simple sequential decision problem is straight forward to implement over a discrete set of states and actions using dynamic programming with iterative updates [@Smith1981, example code in Appendix]. To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.  After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig 3]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating [Fig 2, achieving a net present value over 100 time steps that only 31% that expected under management using Model 1 alone]. 
 
-```{r figure3, fig.cap="Adaptive management under model uncertainty, color indicates the belief that Model 2 is correct (red). Each model is assigned an initial prior belief. To ensure that any issues with passive exploration are not the cause of preferring Model 2, the initial belief in Model 2 is set to 1%.  Within a single iteration of adaptive management, the belief over models is updated to near certainty in Model 2, resulting in higher harvests and lower stock sizes similar to managing under Model 2 alone, Fig 2."}
+```{r figure3, fig.cap="Adaptive management under model uncertainty, color indicates the belief that Model 1 is correct (blue). Each model is assigned an initial prior belief. To ensure that any issues with passive exploration are not the cause of preferring Model 2, the initial belief in Model 2 is set to 1%.  Within a single iteration of adaptive management, the belief over models is updated to near certainty in Model 2, resulting in higher harvests and lower stock sizes similar to managing under Model 2 alone, Fig 2."}
 am <- read_csv("../data/am.csv")
-am %>%  filter(time <30) %>%
-  ggplot(aes(time, states[state], col = belief)) + 
+am %>%  filter(time <=20) %>%
+  ggplot(aes(time, stock, col = belief)) + 
   geom_line() + 
   geom_point() +
-  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4]) +
+  geom_point(aes(time, quota), col="darkgreen", shape=2) + 
+  scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) +
   ylab("stock size")
 ```
 
 
-Increasing the space of possible models to cover a whole plausible range of parameters $r$ and $K$ does nothing to resolve the problem [Fig 4].  
+Increasing the space of possible models to cover a whole plausible range of parameters $r$ and $K$ does nothing to resolve this problem.  Learning is somewhat slower over the larger range of possibilities, but nevertheless converges towards parameter values with lower growth rates and lower carrying capacity, for which the target biomass is far lower [Fig 4]. The manager becomes trapped in vicious cycle as biomass declines further and further, subsequent observations seem more and more consistent with models which most favor over-fishing in the first place.  As biomass declines, annual harvests and profits also plunge, and yet our manager becomes only more confident in their decisions.
+
+```{r}
+am_multi <- read_csv("../data/am_multi.csv")
+am_multi %>%
+  ggplot(aes(time, stock, col = belief)) + 
+  geom_line() + 
+  geom_point() +
+  geom_point(aes(time, harvest), col="darkgreen", shape=2) + 
+  scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) + 
+  ylab("fish stock") + labs(caption = "Belief in model 1 falls off rapidly as magagement pushes stocks to lower and lower sizes.")
+```
+
 
 # Discussion
 
@@ -382,10 +396,10 @@ plot_models + labs(subtitle="A") +  plot_policies +  labs(subtitle="B")
 
 
 <!-- Not just overfitting -->
-Note that the mechanism shown here has nothing to do with the much more familiar issue of over-fitting, in which a better-fitting model will also lead to worse outcomes [@overfit].  In fact, an model which has been over-fit will gradually be rejected by either the iterative forecasting or adaptive management approaches shown here, as these approaches continually confront the models with new data to which they had not been previously fit.  The ability to avoid over-fitting is one of the greatest appeals of any iterative management strategy. In the example here, both Model 1 and Model 2 have the same structural complexity.  The better decision performance of Model 1 is a consequence of capturing the key attribute needed for a good decision, which is perhaps a surprisingly an all-together different criteria than fit. Note that other methods of model selection not considered here, including goodness-of-fit metrics such as $r^2$  or information criteria [@Burnham], will all prefer Model 2 over Model 1 for the same reason.  
+Note that the mechanism shown here has nothing to do with the much more familiar issue of over-fitting, in which a better-fitting model will also lead to worse outcomes [@Burnham1998].  In fact, an model which has been over-fit will gradually be rejected by either the iterative forecasting or adaptive management approaches shown here, as these approaches continually confront the models with new data to which they had not been previously fit.  The ability to avoid over-fitting is one of the greatest appeals of any iterative management strategy. In the example here, both Model 1 and Model 2 have the same structural complexity.  The better decision performance of Model 1 is a consequence of capturing the key attribute needed for a good decision, which is perhaps a surprisingly an all-together different criteria than fit. Note that other methods of model selection not considered here, including goodness-of-fit metrics such as $r^2$  or information criteria [@Burnham1998], will all prefer Model 2 over Model 1 for the same reason.  
 
 <!-- Not just "get more models" -->
-This case cannot be dismissed merely as being dealt a bad hand in having to pick only between Model 1 and Model 2. Model 1 approximates the key feature, giving nearly optimal outcomes.  Previous literature has underscored the importance of Knightian "unknown unknowns" two alternative models examined here fail to fully reflect our uncertainty in the underlying dynamics, and the consequences of underestimating model uncertainty are well understood []. Had we included the true model in the set of possibilities, the techniques illustrated would have had little difficulty in distinguishing it from Models 1 and 2 after sufficient iterations. In practice, we never have the true model, and even a much more thorough suite of candidate models, such as considering any possible values of $r$, $K$ [Fig 4], or even among common alternative models with different structural forms, such as Beverton-Holt [@Beverton1957], Ricker [@Ricker1954], or Shepherd [@Shepherd1980], would fail to do any better, since all these models still have symmetric growth rates with a peak growth rate at half the steady-state population size).  Models will always be simpler than reality.  To insist that this issue can and will be avoided by always including more and better models of the process misses the point. 
+This case cannot be dismissed merely as being dealt a bad hand in having to pick only between Model 1 and Model 2. Model 1 approximates the key feature, giving nearly optimal outcomes.  Previous literature has underscored the importance of Knightian "unknown unknowns" two alternative models examined here fail to fully reflect our uncertainty in the underlying dynamics, and the consequences of underestimating model uncertainty are well understood [@Polasky2011; @Wintle2010]. Had we included the true model in the set of possibilities, the techniques illustrated would have had little difficulty in distinguishing it from Models 1 and 2 after sufficient iterations. In practice, we never have the true model, and even a much more thorough suite of candidate models, such as considering any possible values of $r$, $K$ [Fig 4], or even among common alternative models with different structural forms, such as Beverton-Holt [@Beverton1957], Ricker [@Ricker1954], or Shepherd [@Shepherd1980], would fail to do any better, since all these models still have symmetric growth rates with a peak growth rate at half the steady-state population size).  Models will always be simpler than reality.  To insist that this issue can and will be avoided by always including more and better models of the process misses the point. 
 
 
 <!--

@@ -386,7 +386,9 @@ am1 <- adaptive_management(transitions[1:2], reward, discount,
 
 
 ```{r}
-am <- am1$df %>% mutate(belief = am1$posterior$V2)
+am <- am1$df %>% mutate(belief = am1$posterior$V1,
+                        stock = states[state],
+                        quota = actions[action])
 write_csv(am, "../data/am.csv")
 
 ```
