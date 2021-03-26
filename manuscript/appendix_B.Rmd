@@ -1,5 +1,5 @@
 ---
-title: 'Appendix for: "Bad Forecast, Good Decision"'
+title: 'Appendix B'
 date: "`r Sys.Date()`"
 author: Carl Boettiger
 journal: Appendix
