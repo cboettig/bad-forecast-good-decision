@@ -1,5 +1,5 @@
 ---
-title: 'Appendix for: "Bad Forecast, Good Decision"'
+title: 'Appendix B'
 date: "`r Sys.Date()`"
 author: Carl Boettiger
 journal: Appendix
@@ -48,7 +48,7 @@ scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
 pal <- ggthemes::solarized_pal()(8)
 txtcolor <- "#586e75"
 
-knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
+knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = FALSE)
 
 ```
 
@@ -61,30 +61,27 @@ library(mdplearning)
 ```
 
 
-
-
 ```{r}
-# K is at twice max of f3; 8 * K_3 / 5
-f1 <- function(x, h = 0, r = 2, K = 10 * 8 / 5){
-  s <- pmax(x - h, 0)
-  s + s * (r * (1 - s / K) )
-}
-f2 <- function(x, h = 0, r = 0.5, K = 10){
-  s <- pmax(x - h, 0)
-  s + s * (r * (1 - s / K) )
-}
-
 # max is at 4 * K / 5 
 f3  <- function(x, h = 0, r = .002, K = 10){
   s <- pmax(x - h, 0)
   s + s ^ 4 * r * (1 - s / K)
 }
+```
 
-n_models <- 30
-rs <- seq(0.05, 2, length.out = n_models)
-Ks <- seq(0.1, 10*8/5, length.out = n_models)
-sigmas <- seq(0.05, 1.5*0.05, length.out = n_models)
-pars <- data.frame(r = rs, K = Ks, sigma = sigmas)
+```{r}
+# Try 6 log-spaced values
+rs <- 10 ^ seq(0.01, 2, length=6)
+Ks <- 10 ^ seq(-.3, 1.2, length=6)
+
+# compare over fixed set of candidate r and K
+rs <- c(0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 2)
+Ks <- c(0.5, 1, 1.5, 4, 10, 16)
+n_models <- length(rs)*length(Ks)
+sigmas <- 0.1
+pars <- expand.grid(rs, Ks)
+names(pars) <- c("r", "K")
+pars$sigma <- sigmas
 
 closure <- function(r, K){
   function(x, h = 0){
@@ -93,7 +90,7 @@ closure <- function(r, K){
   }
 }
 
-models <- lapply(1:n_models, function(i) closure(pars[i,"r"], pars[i,"K"]))
+models <-  lapply(1:n_models, function(i) closure(pars[i,"r"], pars[i,"K"]))
 
 ## gather models together, indicate true model
 sigma_g <- 0.05
@@ -102,10 +99,6 @@ model_sigmas <- c(sigma_g, pars$sigma)
 true_model <- 1
 ```
 
-
-On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$,
-$f(X_t,H_t)$ as set of matrices.  Each matrix $i$ gives the transition probabilities for any current state to any future state, 
-given that action $i$ is taken.  
 
 
 
@@ -134,7 +127,6 @@ transition_matrices <- function(f, states, actions, sigma_g){
 }
 ```
 
-This follows the standard setup for standard stochastic dynamic programming, see @Marescot2013. Having defined a function to compute the transition matrix, we can use it to create matrices corresponding to each of the three models:
 
 ```{r}
 transitions <- lapply(seq_along(models), 
@@ -147,7 +139,6 @@ names(transitions) <- as.character(seq_along(models))
 ```
 
 
-Likewise, a corresponding matrix defining the rewards associated with each state $X$ and each harvest action $H$ can also be defined.
 
 ````{r}
 ## Compute reward matrix (shared across all models)
@@ -165,24 +156,23 @@ for (k in 1:n_s) {
 
 
 
-```{r plot_models}
+```{r plot_models, fig.width=6, fig.height=4}
 model_set <- models
-names(model_set) <- c("true", as.character(round(Ks, 2)))
+names(model_set) <- c("true", 1:n_models)
 d <- 
   map_dfc(model_set, function(f) f(states) - states) %>%
   mutate(state = states)
 
-d  %>%
-  pivot_longer(names(model_set[-1]), "model") %>%
+d %>% pivot_longer(names(model_set[-1]), "model") %>%
   mutate(model = as.numeric(model)) %>%
-  ggplot(aes(state, value, col = model, group=model)) +
+  ggplot(aes(state, value, col = model)) +
   geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_line(alpha = .8) + 
+  geom_point(alpha = .5) + 
   geom_line(aes(state, true), col = "red") +
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
   ylab(bquote(f(x) - x)) + xlab("x") + viridis::scale_color_viridis()
-```
 
+```
 
 
 
@@ -193,60 +183,115 @@ Passive adaptive management using a Bayesian learning scheme still learns the wr
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
 x0 <- which.min(abs(states - 6))
+## start with 90% weight on 'model 1'
+model_prior <- c(rep(.1, length(models)-2) / (length(models) - 2), .9)
 
-am_many <- adaptive_management(transitions[-1], 
-                           reward, 
-                           discount, 
+am_many <- adaptive_management(transitions[-1],  
+                           reward = reward, 
+                           discount = discount,
+                           model_prior = model_prior,
                            x0 = x0, 
-                           Tmax = 25, 
+                           Tmax = 20, 
+                           true_transition = transitions[[true_model]], 
+                           epsilon = 0.001, 
+                           max_iter = 2000)
+```
+
+
+```{r}
+Tmax <- max(am_many$df$time)
+best_i <- which.max(am_many$posterior[Tmax,])
+good_i <- am_many$posterior[Tmax,] > 0.1
+pars[good_i,] %>% mutate(final_prob = as.numeric(am_many$posterior[Tmax,good_i])) 
+```
+
+
+
+```{r}
+model1 <- dim(am_many$posterior)[2]
+
+am_multi <- am_many$df %>% 
+  mutate(belief = am_many$posterior[,model1],
+         stock = states[state],
+         quota = actions[action]) %>%
+  select(time, belief, stock, quota) 
+write_csv(am_multi, "../data/am_multi.csv")
+```
+
+```{r}
+am_multi %>%
+  ggplot(aes(time, stock, col = belief)) + 
+  geom_line() + 
+  geom_point() +
+  geom_point(aes(time, quota), col="darkgreen", shape=2) + 
+  scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) + 
+  ylab("fish stock") + labs(caption = "Belief in model 1 falls off rapidly as magagement pushes stocks to lower and lower sizes.")
+
+
+
+```
+
+
+
+```{r}
+posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior)) %>%
+  pivot_longer(starts_with("X"), 
+               values_to = "probability",
+               names_to = "time") %>% 
+  mutate(time = as.integer(as.factor(time))) 
+
+i <- 20
+r_marginals <- posteriors %>% group_by(time,r) %>% 
+  summarise(prob = sum(probability), .groups = "drop") %>% 
+  filter(time %in% i)
+
+r_marginals %>%  ggplot(aes(r, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time)
+```
+
+
+## Marginal Posterior Probability evolution over K
+
+```{r}
+i = 20
+K_marginals <- posteriors %>% group_by(time,K) %>% 
+  summarise(prob = sum(probability), .groups = "drop") %>% 
+  filter(time %in% i) 
+K_marginals %>%
+  ggplot(aes(K, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time) + scale_x_log10()
+
+
+```
+
+
+
+```{r}
+policy <- mdp_compute_policy(transitions[-1],  
+                           reward = reward, 
+                           discount = discount,
+                           model_prior = model_prior,
+                           Tmax = 20)
+non_adaptive <- memoise::memoise(mdp_planning, cache = memoise::cache_filesystem("cache/"))
+x0 <- which.min(abs(states - 6))
+## start with 90% weight on 'model 1'
+model_prior <- c(rep(.1, length(models)-2) / (length(models) - 2), .9)
+
+non_am <- non_adaptive(transitions[-1],  
+                           reward = reward, 
+                           discount = discount,
+                           model_prior = model_prior,
+                           x0 = x0, 
+                           policy = policy,
+                           Tmax = 20, 
                            true_transition = transitions[[true_model]], 
                            epsilon = 0.001, 
                            max_iter = 2000)
 ```
 
 ```{r}
-i <- 1:20
-posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior[i,])) %>%
-  pivot_longer(starts_with("X"), 
-               values_to = "probability",
-               names_to = "time") %>% 
-  mutate(time = as.integer(as.factor(time))) %>%
-  pivot_longer(c("r", "K"), names_to="parameter")
-    
-posteriors %>%
-  ggplot(aes(value, probability, group=time, col=time)) +
-  geom_line(show.legend = FALSE) +
-  facet_grid(~parameter, scales="free")
-```
-
-```{r}
-best_model <- which.max(am_many$posterior[20,])
-```
-
-```{r, fig.cap = ""}
-am_many$df %>% 
-  mutate(belief = am_many$posterior[,best_model]) %>%
-  ggplot(aes(time, states[state], col = belief)) + 
-  geom_line() + 
-  geom_point() +
-  scale_colour_gradient(limits = c(0,1), low = pal[1], high = pal[4]) + 
-  xlab("fish stock")
+am_npv <- sum(am_many$df$value * discount ^ am_many$df$time)
+am_npv
 ```
 
 
-```{r}
-am_npv <- sum(am_many$value * discount ^ am$time)
-am_npv / npv[[1,"npv"]]
-```
-
-
-
-```{r include = FALSE}
-as_tibble(am1$posterior) %>% 
-  mutate(time = seq_along(V1)) %>%
-  select(time = time, "1" = V1, "2" = V2) %>% 
-  pivot_longer(c("1", "2"), values_to="belief", names_to = "model") %>%
-  ggplot(aes(time, belief, col=model)) + geom_line(col = pal[4])
-```
 
 
