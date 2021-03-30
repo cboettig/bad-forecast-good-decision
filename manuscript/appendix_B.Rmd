@@ -80,9 +80,9 @@ f3  <- function(x, h = 0, r = .002, K = 10){
   s + s ^ 4 * r * (1 - s / K)
 }
 
-n_models <- 20
-rs <- seq(0.1, 2, length.out = n_models)
-Ks <- seq(1, 10*8/5, length.out = n_models)
+n_models <- 30
+rs <- seq(0.05, 2, length.out = n_models)
+Ks <- seq(0.1, 10*8/5, length.out = n_models)
 sigmas <- seq(0.05, 1.5*0.05, length.out = n_models)
 pars <- data.frame(r = rs, K = Ks, sigma = sigmas)
 
@@ -198,7 +198,7 @@ am_many <- adaptive_management(transitions[-1],
                            reward, 
                            discount, 
                            x0 = x0, 
-                           Tmax = 20, 
+                           Tmax = 25, 
                            true_transition = transitions[[true_model]], 
                            epsilon = 0.001, 
                            max_iter = 2000)
