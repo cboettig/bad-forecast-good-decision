@@ -94,9 +94,7 @@ models <-  lapply(1:n_models, function(i) closure(pars[i,"r"], pars[i,"K"]))
 
 ## gather models together, indicate true model
 sigma_g <- 0.05
-models <- c(f3, models)
-model_sigmas <- c(sigma_g, pars$sigma)
-true_model <- 1
+model_sigmas <- pars$sigma
 ```
 
 
@@ -136,6 +134,7 @@ transitions <- lapply(seq_along(models),
                                                       model_sigmas[[i]]))
 names(transitions) <- as.character(seq_along(models))
 
+true_transition <- transition_matrices(f3, states, actions, sigma_g)
 ```
 
 
@@ -157,8 +156,8 @@ for (k in 1:n_s) {
 
 
 ```{r plot_models, fig.width=6, fig.height=4}
-model_set <- models
-names(model_set) <- c("true", 1:n_models)
+model_set <-c(f3,  models)
+names(model_set) <- c("true", 1:length(models))
 d <- 
   map_dfc(model_set, function(f) f(states) - states) %>%
   mutate(state = states)
@@ -174,25 +173,66 @@ d %>% pivot_longer(names(model_set[-1]), "model") %>%
 
 ```
 
+# Non-adaptive management over model uncertainty
+
+With strong prior probabilities weighted to Model 1
+
+```{r}
+x0 <- which.min(abs(states - 6))
+## start with 99% weight on 'model 1'
+model_prior <- c(rep(.01, length(models)-1) / (length(models) - 1), .99)
+
+```
+
+```{r}
+policy_sdp <- memoise::memoise(mdp_compute_policy, cache = memoise::cache_filesystem("cache/"))
+
+policy <- policy_sdp(transitions,  
+                     reward = reward, 
+                     discount = discount,
+                     model_prior = model_prior,
+                     Tmax = 20, 
+                     epsilon = 0.001, 
+                     max_iter = 2000)
+
+policy %>% mutate(state = states[state], quota = actions[policy]) %>% mutate(escapement = state - quota) %>% ggplot(aes(state, escapement)) + geom_line()
+```
+
+
+
+
+
+```{r}
+
+non_am <- mdp_planning(true_transition,  
+                       reward = reward, 
+                       discount = discount,
+                       model_prior = model_prior,
+                       x0 = x0, 
+                       a0 = 1,
+                       policy = policy$policy,
+                       Tmax = 20)
+
+non_am %>% mutate(state = states[state]) %>% ggplot(aes(time, state)) + geom_point() + geom_line()
+
+```
+
 
 
 # Adaptive Management
 
-Passive adaptive management using a Bayesian learning scheme still learns the wrong model. 
+Passive adaptive management, with initial strong prior probabilities weighted to Model 1.  
 
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
-x0 <- which.min(abs(states - 6))
-## start with 90% weight on 'model 1'
-model_prior <- c(rep(.1, length(models)-2) / (length(models) - 2), .9)
 
-am_many <- adaptive_management(transitions[-1],  
+am_many <- adaptive_management(transitions,  
                            reward = reward, 
                            discount = discount,
                            model_prior = model_prior,
                            x0 = x0, 
                            Tmax = 20, 
-                           true_transition = transitions[[true_model]], 
+                           true_transition = true_transition, 
                            epsilon = 0.001, 
                            max_iter = 2000)
 ```
@@ -263,29 +303,6 @@ K_marginals %>%
 ```
 
 
-
-```{r}
-policy <- mdp_compute_policy(transitions[-1],  
-                           reward = reward, 
-                           discount = discount,
-                           model_prior = model_prior,
-                           Tmax = 20)
-non_adaptive <- memoise::memoise(mdp_planning, cache = memoise::cache_filesystem("cache/"))
-x0 <- which.min(abs(states - 6))
-## start with 90% weight on 'model 1'
-model_prior <- c(rep(.1, length(models)-2) / (length(models) - 2), .9)
-
-non_am <- non_adaptive(transitions[-1],  
-                           reward = reward, 
-                           discount = discount,
-                           model_prior = model_prior,
-                           x0 = x0, 
-                           policy = policy,
-                           Tmax = 20, 
-                           true_transition = transitions[[true_model]], 
-                           epsilon = 0.001, 
-                           max_iter = 2000)
-```
 
 ```{r}
 am_npv <- sum(am_many$df$value * discount ^ am_many$df$time)
