@@ -169,8 +169,7 @@ d %>% pivot_longer(names(model_set[-1]), "model") %>%
   geom_point(alpha = .5) + 
   geom_line(aes(state, true), col = "red") +
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
-  ylab(bquote(f(x) - x)) + xlab("x") + viridis::scale_color_viridis()
-
+  ylab(bquote(f(x) - x)) + xlab("x") + scale_color_grey()
 ```
 
 # Non-adaptive management over model uncertainty

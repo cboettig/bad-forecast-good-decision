@@ -18,7 +18,6 @@ output:
 
 
 
-This appendix provides a fully reproducible walk-through of the implementation of the analyses considered in this paper.  Because the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are not themselves novel, the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulae or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulae presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in Matlab [@Marescot2013; @MDPtoolbox].  
 
 ## Optimal quotas as a Markov Decision Process (MDP) problem
 
@@ -95,7 +94,10 @@ f_i(Y) = Y + Y^4 r_i \left( 1 - \frac{Y}{K_i} \right)
 with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
 
 
-Here we provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.
+Because the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are not themselves novel, the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulae or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulae presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in Matlab [@Marescot2013; @MDPtoolbox].  
+
+
+Below, I provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
 
 
 ```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
@@ -129,7 +131,7 @@ library(mdplearning)
 ```
 
 
-
+# Model definitions
 
 ```{r}
 # K is at twice max of f3; 8 * K_3 / 5
@@ -156,8 +158,8 @@ true_model <- "3"
 ```
 
 
-On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$, $f(X_t,H_t)$ as set of matrices.  Each matrix $i$ gives the transition probabilities for any current state to any future state, 
-given that action $i$ is taken.  
+On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$, $f(X_t,H_t)$ as set of matrices.
+Each matrix $i$ gives the transition probabilities for any current state to any future state, given that action $i$ is taken.  
 
 
 
@@ -336,6 +338,9 @@ stepahead_fished <- stepahead_fished %>%
          score = scoring_fn(expected, true, sd))
 ```
 
+
+We store the replicate predictions under each model at each timestep, along with the scores, in a `predictions.csv` table for plotting.
+
 ```{r}
 predictions <- 
   stepahead_unfished %>% 
@@ -358,16 +363,20 @@ write_csv(predictions, "../data/predictions.csv")
 
 # Adaptive Management
 
+
+
+
 Passive adaptive management using a Bayesian learning scheme still learns the wrong model. Adaptive management for MDP problems is particularly computationally intensive, and not directly supported by the `MDPtoolbox` implementation, though the principle involves only a relatively straightforward, if not particularly efficient extension to the task of solving and MDP problem for a single model shown above.  Given a set of transition probability matrices $P_i$ and a belief probability $b_i$ that the $i$th model is correct, it simple to define the transition matrices over possible models by the laws of conditional probability, $P = \sum_i P_i b_i$, given $\sum_i b_i = 1$. After each subsequent action and then new observation x_j, the $b_i$ probabilities for each model are updated according to Bayes law: if $b_i = P(M_i)$ is the prior probability that the model $M_i$ is correct, then the posterior probability that model $M_i$ is correct given observation $x_j$ is:
 
 $$b_i' = P(M_i | x_j) = P(M_i) P(x_j | M_i) = b_i P(x_j | M_i) $$
 
-Note that because the transition matrices are now altered after every action and observation, it is necessary to repeat the complete SDP calculation to determine the optimal action given the updated uncertainty.  While straight forward, this is what makes adaptive management for MDP problems particularly computationally intensive and thus poorly suited for handling a large space of candidate models. Nevertheless, our example of two models is most feasible, and even the larger example of 36 models (appendix B) is not unreasonable. Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.  
+Note that because the transition matrices are now altered after every action and observation, it is necessary to repeat the complete SDP calculation to determine the optimal action given the updated uncertainty.  While straight forward, this is what makes adaptive management for MDP problems particularly computationally intensive and thus poorly suited for handling a large space of candidate models. Nevertheless, our example of two models is most feasible, and even the larger example of 36 models is not unreasonable. Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.  
+
+
+
 
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
-x0 <- which.min(abs(states - 6))
-
 am1 <- adaptive_management(transitions[1:2], reward, discount, 
                            model_prior = c(0.99, 0.01), x0 = x0, 
                            Tmax = 50, true_transition = transitions[[3]], 
@@ -375,10 +384,51 @@ am1 <- adaptive_management(transitions[1:2], reward, discount,
 ```
 
 
+
+I also compare the adaptive management solution to an approach which still integrates uncertainty over both models, but treats the resulting policy as fixed for the duration of management, rather than adaptive _learning_ by updating probabilities.  This approach is sometimes referred to as uncertainty "planning," as it accounts for the same initial uncertainty over models but does not attempt to learn.   For consistency, I use the same model prior as in the learning case, which heavily favors model 1 to begin with.  Not surprisingly, the resulting policy is nearly identical to that under model 1 alone.
+
+
 ```{r}
-am <- am1$df %>% mutate(belief = am1$posterior$V1,
-                        stock = states[state],
-                        quota = actions[action])
+# Compute policy using SDP over both models, given fixed prior beliefs
+policy_planning <- memoise::memoise(mdp_compute_policy, cache = memoise::cache_filesystem("cache/"))
+policy <- policy_planning(transitions[1:2],  
+                          reward = reward, 
+                          discount = discount,
+                          model_prior = c(0.99, 0.01),
+                          Tmax = 50, 
+                          epsilon = 0.001, 
+                          max_iter = 2000)
+```
+
+
+
+```{r}
+# Simulate under true model using fixed planning policy
+non_am <- mdp_planning(transitions[[3]],  
+                       reward = reward, 
+                       discount = discount,
+                       model_prior = c(0.99, 0.01),
+                       x0 = x0, 
+                       a0 = 1,
+                       policy = policy$policy,
+                       Tmax = 50)  %>% 
+  mutate(belief = 0.99, # belief in model 1 is fixed
+         method = "planning")
+```
+
+
+
+We combine results of the two methods and store the resulting `data.frame` of stock size, quota, and belief in Model 1 over time as `am.csv` for later plotting. 
+
+```{r}
+am <- am1$df %>%
+  mutate(belief = am1$posterior$V1,
+         method = "learning") %>%
+  bind_rows(non_am) %>%
+  mutate(stock = states[state],
+         quota = actions[action]) %>%
+  select(time, stock, quota, belief, method) 
+
 write_csv(am, "../data/am.csv")
 
 ```
@@ -386,8 +436,123 @@ write_csv(am, "../data/am.csv")
 
 
 
+## Adaptive management over many models
 
-### Additional calculations for plots
+We repeat the analysis above over a grid of $r$ and $K$ values.  
+
+```{r}
+# compare over grid set of candidate r and K
+rs <- c(0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 2)
+Ks <- c(0.5, 1, 1.5, 4, 10, 16)
+sigma <- 0.1
+n_models <- length(rs)*length(Ks)
+pars <- expand.grid(rs, Ks)
+names(pars) <- c("r", "K")
+pars$sigma <- 0.1
+closure <- function(r, K){
+  function(x, h = 0){
+  s <- pmax(x - h, 0)
+  s + s * (r * (1 - s / K) )
+  }
+}
+many_models <-  lapply(1:n_models, function(i) closure(pars[i,"r"], pars[i,"K"]))
+
+# transition matrices
+many_transitions <- lapply(seq_along(many_models), function(i) 
+  transition_matrices(many_models[[i]], states,  actions, sigma))
+names(many_transitions) <- as.character(seq_along(many_models))
+true_transition <- transition_matrices(f3, states, actions, sigma_g)
+
+## Once again, initial belief favors "model 1"
+model_prior <- c(rep(.01, n_models-1) / (n_models - 1), .99)
+
+```
+
+With the transition matrices defined for all 42 models, we perform adaptive management as before:
+
+```{r}
+adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
+am_many <- adaptive_management(many_transitions,  
+                               reward = reward, 
+                               discount = discount,
+                               model_prior = model_prior,
+                               x0 = x0, 
+                               Tmax = 20, 
+                               true_transition = true_transition, 
+                               epsilon = 0.001, 
+                               max_iter = 2000)
+
+```
+
+As before, we can compare the adaptive learning case to the policy which accounts for the initial uncertainty over all `r n_models` models, but does not seek to learn.
+
+```{r}
+policy_many <- policy_planning(many_transitions, reward = reward,  discount = discount,
+                          model_prior = model_prior, Tmax = 20, 
+                          epsilon = 0.001, max_iter = 2000)
+
+non_am_many <- mdp_planning(true_transition,  
+                       reward = reward, 
+                       discount = discount,
+                       model_prior = model_prior,
+                       x0 = x0, 
+                       a0 = 1,
+                       policy = policy_many$policy,
+                       Tmax = 20) %>% 
+  mutate(belief = 0.99, # belief in model 1 is fixed
+         method = "planning")
+
+model1 <- dim(am_many$posterior)[2]
+
+am_multi <- am_many$df %>% 
+  mutate(belief = am_many$posterior[,model1],
+         method = "learning") %>%
+  bind_rows(non_am_many) %>%
+  mutate(stock = states[state],
+         quota = actions[action]) %>%
+  select(time, belief, stock, quota, method) 
+
+write_csv(am_multi, "../data/am_multi.csv")
+```
+
+
+# Posteriors
+
+
+```{r}
+posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior)) %>%
+  pivot_longer(starts_with("X"), 
+               values_to = "probability",
+               names_to = "time") %>% 
+  mutate(time = as.integer(as.factor(time))) 
+
+i <- 20
+r_marginals <- posteriors %>% group_by(time,r) %>% 
+  summarise(prob = sum(probability), .groups = "drop") %>% 
+  filter(time %in% i)
+
+r_marginals %>%  ggplot(aes(r, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time)
+```
+
+
+## Marginal Posterior Probability evolution over K
+
+```{r}
+i = 20
+K_marginals <- posteriors %>% group_by(time,K) %>% 
+  summarise(prob = sum(probability), .groups = "drop") %>% 
+  filter(time %in% i) 
+K_marginals %>%
+  ggplot(aes(K, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time) + scale_x_log10()
+
+
+```
+
+
+
+
+
+# Economic value tabulation
 
 
 To plot the economic value over time, we must sum up the discounted values
@@ -423,6 +588,7 @@ of the economic value that would be achieved under Model 1 alone, and only
 `r am_ecology_percent`% of the spawning stock biomass that would have been 
 achieved under Model 1 alone. 
 
+# Growth models 
 
 To plot growth curves of individual models (Fig 4a), we evaluate 
 
@@ -437,6 +603,33 @@ model_curves <-
 
 write_csv(model_curves, "../data/model_curves.csv")
 
+```
+
+
+## Growth models in the many-models case:
+
+
+```{r plot_models, fig.width=6, fig.height=4}
+final_belief <- t(am_many$posterior)
+final_belief <- final_belief[,dim(final_belief)[[2]]]
+posteriors <- data.frame(model = as.character(1:length(many_models)), belief = final_belief)
+
+
+
+model_set <-c(f3,  many_models)
+names(model_set) <- c("true", 1:length(many_models))
+d <- 
+  map_dfc(model_set, function(f) f(states) - states) %>%
+  mutate(state = states) %>% pivot_longer(names(model_set[-1]), "model") %>%
+  left_join(posteriors)
+
+d %>% 
+  ggplot(aes(state, value, group=model, alpha = belief)) +
+  #geom_hline(aes(yintercept = 0), lwd=1, lty=2) + 
+  geom_line(lwd=1.5) + 
+  geom_line(aes(state, true, alpha=1), col = "red", show.legend = FALSE) +
+  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
+  ylab(bquote(f(x) - x)) + xlab("x") 
 ```
 
 
