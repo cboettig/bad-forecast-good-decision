@@ -1,5 +1,24 @@
 
 
+<!--
+
+A wide range of paradigms are available for approaching the issue of decision-making under uncertainty. These approaches can roughly be divided into two groups: statistical approaches and adaptive management approaches.  The first group, "statistical approaches," seeks to maximize some statistical metric (such as goodness-of-fit or predictive accuracy) in determining which model(s) will drive decisions. In contrast, adaptive management approaches seek to select actions which maximize the decision-maker's expected net utility over 
+
+
+In the first group, I focus on evaluation using "proper" scoring rules as defined by @Gneiting2007, rather than potentially more familiar model comparisons such as $r^2$, likelihood, or information criteria [@Burnham1998] because proper scoring rules are more robust  (see @Gneiting2007 for comparison and how the approaches relate under appropriate assumptions). @Gneiting2007 provides a rigorous proof of scoring rules that have the desirable property of being "proper", that is, rules for which no model predicting the distribution of future outcomes, $Q(x)$ can achieve a better average score than the true model $P(x)$. Unlike likelihood or other goodness-of-fit scores alone, it is impossible (in expectation) to overfit the proper score -- no model model can out-perform the true model. Note that strictly proper scoring rules score _probabilistic forecasts_ and not just point predictions, favoring models which accurately reflect the uncertainty over those which under-estimate it.  These features have made proper scoring rules for probabilistic forecasts a successful and popular approach for addressing model uncertainty in many other areas [@Gneiting2014; @Raftery2016] and a promising tool for evaluation of ecological forecasts [@Dietze2018]. 
+
+For the second group, decision-theoretic approaches, I focus on the example of adaptive management
+Decision-theoretic approaches include scenario analysis, resilience thinking, optimal control and related methods [@Polasky2011], which have a long history in ecology and particularly in fisheries management. One of the most influential of these is _adaptive management_ [sensu @Walters1978], in which a manager seeks to both reduce uncertainty over time while also achieving the best outcomes given current knowledge.  While the term today is frequently used in a looser sense, adaptive management as originally developed can be considered an example of optimal control under model uncertainty [@Walters1981; @Smith1981].  In this approach, a manager assigns probabilities to each of the possible models under consideration, i.e. models 1 & 2.  The expected utility of any action reflects both the intrinsic uncertainty over future states under either model (process uncertainty) and the manager's uncertainty over the choice of models (or parameter values). Unlike the forecast comparison, an adaptive management approach explicitly considers the utility function, Eqn \eqref{utility}, which it seeks to maximize by integrating over model uncertainty. After observing the consequences of the action, the manager updates the posterior probabilities that each model is correct, typically by Bayes rule [e.g. @Walters1981; @Smith1981; @Ludwig1982; @Punt2016]. The decision strategy is then re-evaluated in light of this revised uncertainty.  Adaptive management may be either passive or active. Under passive adaptive management, the decision-maker chooses the action which maximizes that expected future utility.  Under active adaptive management, the decision-maker may chose 'exploratory' actions which are not optimal under the current uncertainty but may lead to more rapidly decreasing the uncertainty in the future [@Walters1978]. In practice, many managers are reluctant to employ exploratory strategies, so passive adaptive management approaches such as as Management Strategy Evaluation (MSE) are more common [@Punt2016].
+
+-->
+
+<!--
+Any of these adaptive management approaches proves to be maladaptive under the simple example of model uncertainty considered here.  That is, the manager derives lower utility (here, economic yield), and the fish stock is also surpressed to a lower biomass than would be achieved if an identical management approach without any adaptive updating to model uncertainty were employed.  Put another way, the "value of information" gained from future observations of stock in response to any management action is actually negative. 
+
+Owing to the greater complexity involved in many fisheries models, a typical MSE would evaluate a fixed set of possible strategies rather than solve a sequential decision problem [@Marescot2013] for the optimal sequence of actions, but the central premise of iteratively updating model posterior probabilities remains the same.  By limiting ourselves to the simpler models considered here, we are able to perform a passive adaptive management analysis of the full sequential decision problem, analgous to earlier examples [@Walters1981; @Smith1981; @Ludwig1982], which ensures the result is not an artifact of considering too narrow a set of possible policies (e.g. only constant-mortality policies). 
+
+-->
+
 ```{r prob_scores, message = FALSE}
 ## Probability scores instead of proper scores
 scores <- sims %>%
@@ -115,6 +134,24 @@ Yet the model that leads to the best decisions is not always the model that make
 <!--
 Many ecological management problems are sequential decision problems, in which each year (or other interval) a manager must observe the state of the system and choose a course of action to maximize long term objectives. Such problems inherently depend on forecasts: each possible action can result in a different forecast for the future state, typically reflecting some uncertainty as well.  The utility the manager derives may depend on both the choice of action and the state of the system, reflecting the costs and benefits associated with each. Sequential decision-making problems are distinguished by the need to think more than one move ahead. For instance, harvesting as many fish as possible in year one may maximize the market value that year, but if too few fish are left to reproduce then harvest in future years will suffer.  The same calculus of thinking ahead frequently applies to rebuilding species populations as well [e.g. @Lambert;  @Chades2008].  
 -->
+
+
+
+ 
+<!--
+Is this result merely an artifact of differing objectives?  @Gneiting2007's proper scoring rules are designed to select models which make the best forecast, and Model 2 really is the best choice for that task.  However, the adaptive management approach explicitly seeks to maximize expected utility, integrating over the uncertainty in the model, and yet it evolves away from Model 1 which would achieve that goal and settles on Model 2.  Note that this issue is not resolved by updating the learning step to reflect only the immediate reward -- it is in fact easy to see that so-called greedy algorithms would take the largest harvest possible and never reach the sustainable yield achieved by lower harvest rates of Model 1. To select Model 1 over alternatives like Model 2 which make better predictions but lead to worse outcomes requires a more long-term approach that forgoes iterative updating of probabilities as new data becomes available.  Note that this is the opposite recommendation of _adaptive_ management [@Walters1978] or _iterative_ forecasting [@Dietze2018].
+-->
+
+
+<!-- 
+
+The open problem is simply to propose an approach to model uncertainty which would select model 1
+over model 2 (i.e. choosing among the suite of available models, the one that gives the better 
+decisions.)
+
+
+-->
+
 
 
 

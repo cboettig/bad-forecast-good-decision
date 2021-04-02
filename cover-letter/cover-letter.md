@@ -3,7 +3,7 @@ name: Carl Boettiger
 title: Assistant Professor
 email: cboettig@berkeley.edu
 homepage: https://carlboettiger.info
-address: "Science Magazine"
+address: "Ecology Letters"
 opening: "Dear Editors:"
 closing: "Sincerely,"
 campus: ucb
@@ -11,9 +11,9 @@ dept: espm
 fontsize: 10pt
 
 ## Leave this as is, make sure template.tex is in working directory
-#output:
-#  pdf_document:
-#    template: template.tex
+output:
+  pdf_document:
+    template: template.tex
 
 ## NB: Add an image of your signature called 'signature.png'
 ---
@@ -21,11 +21,27 @@ fontsize: 10pt
 
 Dear Editors,
 
-Recent events, from the current pandemic to election predictions, have underpinned the central role of model-based forecasts in decision-making. Both scientific journals and general news sources cite accuracy or inaccuracy of forecasts as a crucial judgment on which models should be preferred in making decisions.  The rapid expansion in available data and computational power has now paved the way for a new generation of forecasts based on more black-box approaches such as machine learning which could dramatically improve the accuracy and precision of such forecasts.  While such advances could open exciting new possibilities, they may also lead to worse decisions if we allow a previous generation of more mechanistic models to be replaced on the grounds of forecast skill alone.  
+I am pleased to submit my manuscript, "Iterative forecasting and the trap of self-fulfilling prophecies," for consideration for publication in Ecology Letters.  
+In this paper I show how models which produce accurate forecasts can actually lead to worse outcomes. 
+Intuitively we associate that problem either to real world problems of implementation and incentives, or to the statistical problem of over-fitting.
+I focus on a different mechanism that I believe has previously been overlooked by the extensive literature on ecological management under uncertainty,
+and not easily resolved by any existing method. 
+Using a well-studied example of fisheries management theory (often utilized in other conservation contexts as well), I illustrate how approaches that reduce model uncertainty through iterative updates, such as in the established paradigm of adaptive management or in the emerging paradigm of iterative forecasting,
+can trap managers into making poor decisions.
+In this simple example, a manager using either adaptive management or iterative forecasting to reduce model uncertainty winds up over-exploiting the fish stock, while simultaneously becoming increasing convinced that they are not over-exploiting the stock but are managing the resource more sustainably using more accurate models than they had started with.  
+Further, I illustrate why such situations are easy to construct and difficult to dismiss as possibilities.
 
-In the enclosed manuscript, I illustrate both how this conundrum arises in which the more accurate model leads a standard decision algorithm to worse outcomes, and also how it can be understood and avoided. A decision-maker's notion of utility will almost always be distinct from the statistician's notion of forecasting skill. In managing a dynamical system such as the spread of a virus or the recovery of a fishery, the optimal policy often hinges on certain details while being relatively insensitive to other details.  Using the classic ecological management problem of setting a fishing quota, I illustrate how easily one can choose the wrong model for decision-making by focusing on forecasting skill, and how a model with much less accurate predictions can lead to much better outcomes by capturing only certain essential features.  Today, decision-makers are tearing up old models that did not give accurate forecasts of elections, of COVID infections, of fire danger.  Many of these will be replaced by more complex models and machine learning algorithms that can give better forecasts. Sometimes this will lead to better outcomes.  But we also risk being stuck with flawed models, like model 2 in my example, which consistently gives good predictions while also dangerously over-harvesting, resulting in a poor economic yield and degraded ecosystem.  I believe this example can be a guide both to the risks of an over-reliance on formal metrics of forecasting skill, while also offering insight into a better way to assess predictive models used for decision-making rooted in principles of decision theory and adaptive management.  
 
 
+A shallow read of this manuscript may give the impression that it is a critique of adaptive management or iterative forecasting approaches.
+As I illustrate in the paper, it is not -- any other model choice mechanism: goodness-of-fit, information criteria, cross-validation -- is subject to the same trap.
+I focus on forecasting and adaptive management because they are the best of available techniques, so much so that it is easy to mistakenly believe they should avoid this trap.
+I made this same mistake myself, thinking that because it maximizes utility instead of forecasting skill, that an adaptive management approach would avoid this problem.
+In retrospect it is easy to see why it cannot, but then that is the point of a good example.  
+I hope and suspect that other advocates of iterative forecasting or adaptive management, such as myself, would find this to be an informative a compelling treatment of a possible limitation to these important methods, rather than an assault on any previous work.
+I look forward to the constructive feedback from your reviewers and editors.
+
+<!--
 I would recommend any of the following as potential reviewers:
 
 - Simon Levin <slevin@princeton.edu>
@@ -33,7 +49,7 @@ I would recommend any of the following as potential reviewers:
 - Anthony Ives <arives@wisc.edu>
 - Michael Neubert <mneubert@whoi.edu>
 - Carl Walters <c.walters@oceans.ubc.ca>
-
+-->
 
 Sincerely,
 
