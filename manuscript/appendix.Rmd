@@ -1,8 +1,8 @@
 ---
-title: 'Appendix A'
+title: 'Appendix'
 date: "`r Sys.Date()`"
 author: Carl Boettiger
-journal: Appendix
+journal: TBD
 layout: 3p
 bibliography: refs.bib
 #output:
@@ -191,11 +191,8 @@ transition_matrices <- function(f, states, actions, sigma_g){
 This follows the standard setup for standard stochastic dynamic programming, see @Marescot2013. Having defined a function to compute the transition matrix, we can use it to create matrices corresponding to each of the three models:
 
 ```{r}
-transitions <- lapply(seq_along(models), 
-                      function(i) transition_matrices(models[[i]], 
-                                                      states, 
-                                                      actions, 
-                                                      model_sigmas[[i]]))
+transitions <- lapply(seq_along(models), function(i) 
+  transition_matrices(models[[i]], states, actions, model_sigmas[[i]]))
 names(transitions) <- c("1", "2", "3")
 
 ```
@@ -241,7 +238,7 @@ write_csv(policies, "../data/policies.csv")
 
 
 
-# Simulations and step-ahead forecasts
+# Simulations and step-ahead forecasts (Fig 1, 2A)
 
 We simulate fishing dynamics under the optimal policy for each model, using a simple helper function from the `mdplearning` package. Because growth dynamics are stochastic, we perform 100 simulations of each model from identical starting condition to ensure results are not the result of chance alone.
 
@@ -319,7 +316,7 @@ stepahead_fished <- sims %>%
 ```
 
 
-# Proper scores
+# Proper scores (Fig 1)
 
 It is straight forward to apply the proper scoring formula of @Gneiting2007 
 based on the first two moments of the distribution to score the respective
@@ -359,18 +356,41 @@ write_csv(predictions, "../data/predictions.csv")
 
 
 
+# Economic value tabulation (Fig 2B)
+
+
+To plot the economic value over time, we must sum up the discounted values
+at each time step, and then average over replicate simulations of each model:
+
+```{r plot_npv}
+##  Net Present Value accumulates over time
+npv_df <- sims %>% 
+  group_by(model, reps) %>%
+  mutate(npv = cumsum(value * discount ^ time)) %>%
+  group_by(time, model)  %>% 
+  summarise(mean_npv = mean(npv), .groups="drop") %>% 
+  arrange(model, time)
+
+write_csv(npv_df, "../data/npv_df.csv")
+```
+
+
 
 
 # Adaptive Management
 
-
-
-
-Passive adaptive management using a Bayesian learning scheme still learns the wrong model. Adaptive management for MDP problems is particularly computationally intensive, and not directly supported by the `MDPtoolbox` implementation, though the principle involves only a relatively straightforward, if not particularly efficient extension to the task of solving and MDP problem for a single model shown above.  Given a set of transition probability matrices $P_i$ and a belief probability $b_i$ that the $i$th model is correct, it simple to define the transition matrices over possible models by the laws of conditional probability, $P = \sum_i P_i b_i$, given $\sum_i b_i = 1$. After each subsequent action and then new observation x_j, the $b_i$ probabilities for each model are updated according to Bayes law: if $b_i = P(M_i)$ is the prior probability that the model $M_i$ is correct, then the posterior probability that model $M_i$ is correct given observation $x_j$ is:
+Passive adaptive management using a Bayesian learning scheme still learns the wrong model.
+Adaptive management for MDP problems is particularly computationally intensive, and not directly supported by the `MDPtoolbox` implementation.
+Nevertheless, the principle involves only a relatively straightforward, if not particularly efficient extension to the task of solving and MDP problem for a single model shown above.
+Given a set of transition probability matrices $P_i$ and a belief probability $b_i$ that the $i$th model is correct, it simple to define the transition matrices over possible models by the laws of conditional probability, $P = \sum_i P_i b_i$, given $\sum_i b_i = 1$.
+After each subsequent action and then new observation x_j, the $b_i$ probabilities for each model are updated according to Bayes law: if $b_i = P(M_i)$ is the prior probability that the model $M_i$ is correct, then the posterior probability that model $M_i$ is correct given observation $x_j$ is:
 
 $$b_i' = P(M_i | x_j) = P(M_i) P(x_j | M_i) = b_i P(x_j | M_i) $$
 
-Note that because the transition matrices are now altered after every action and observation, it is necessary to repeat the complete SDP calculation to determine the optimal action given the updated uncertainty.  While straight forward, this is what makes adaptive management for MDP problems particularly computationally intensive and thus poorly suited for handling a large space of candidate models. Nevertheless, our example of two models is most feasible, and even the larger example of 36 models is not unreasonable. Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.  
+Note that because the transition matrices are now altered after every action and observation, it is necessary to repeat the complete SDP calculation to determine the optimal action given the updated uncertainty.
+While straight forward, this is what makes adaptive management for MDP problems particularly computationally intensive and thus poorly suited for handling a large space of candidate models.
+Nevertheless, our example of two models is most feasible, and even the larger example of 36 models is not unreasonable.
+Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.  
 
 
 
@@ -385,7 +405,10 @@ am1 <- adaptive_management(transitions[1:2], reward, discount,
 
 
 
-I also compare the adaptive management solution to an approach which still integrates uncertainty over both models, but treats the resulting policy as fixed for the duration of management, rather than adaptive _learning_ by updating probabilities.  This approach is sometimes referred to as uncertainty "planning," as it accounts for the same initial uncertainty over models but does not attempt to learn.   For consistency, I use the same model prior as in the learning case, which heavily favors model 1 to begin with.  Not surprisingly, the resulting policy is nearly identical to that under model 1 alone.
+I also compare the adaptive management solution to an approach which still integrates uncertainty over both models, but treats the resulting policy as fixed for the duration of management, rather than adaptive _learning_ by updating probabilities.
+This approach is sometimes referred to as uncertainty "planning," as it accounts for the same initial uncertainty over models but does not attempt to learn.
+For consistency, I use the same model prior as in the learning case, which heavily favors model 1 to begin with.
+Not surprisingly, the resulting policy is nearly identical to that under model 1 alone.
 
 
 ```{r}
@@ -434,6 +457,25 @@ write_csv(am, "../data/am.csv")
 ```
 
 
+We can also compare these results to the net economic value achieved under Model 1 alone:
+
+```{r}
+# tabular comparisons
+npv <- npv_df %>% group_by(model) %>% summarize(npv = max(mean_npv))
+
+am_npv <- sum(am$value * discount ^ am$time)
+am_economics_percent <- round(am_npv / npv[[1,"npv"]] * 100)
+
+mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
+am_ecology_percent <- round(mean(states[am$state])/mean_state[[1, "state"]]*100)
+```
+
+Under adaptive management, the manager realizes only `r am_economics_percent`%
+of the economic value that would be achieved under Model 1 alone, and only 
+`r am_ecology_percent`% of the spawning stock biomass that would have been 
+achieved under Model 1 alone. 
+
+
 
 
 ## Adaptive management over many models
@@ -468,7 +510,7 @@ model_prior <- c(rep(.01, n_models-1) / (n_models - 1), .99)
 
 ```
 
-With the transition matrices defined for all 42 models, we perform adaptive management as before:
+With the transition matrices defined for all `r n_models` models, we perform adaptive management as before:
 
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
@@ -501,9 +543,12 @@ non_am_many <- mdp_planning(true_transition,
                        Tmax = 20) %>% 
   mutate(belief = 0.99, # belief in model 1 is fixed
          method = "planning")
+```
 
+Again we record the posterior belief in the 'model 1' parameter values, and stack the data frames for learning and planning-only cases into a single file used to generate figure 3B. 
+
+```{r}
 model1 <- dim(am_many$posterior)[2]
-
 am_multi <- am_many$df %>% 
   mutate(belief = am_many$posterior[,model1],
          method = "learning") %>%
@@ -518,75 +563,47 @@ write_csv(am_multi, "../data/am_multi.csv")
 
 # Posteriors
 
+With `r n_models` possible models instead of two, the probability weight (belief) in Model 1 does not fully capture the evolution of the belief probabilities over time.
+To better illustrate how these beliefs evolve over the course of the simulation, I plot the marginal probabilities over values of $r$ and $K$ across the models over time.
+Note that Model 1 values, $r = 2$, $K = 16$, are quickly disfavored.  
 
 ```{r}
-posteriors <- data.frame(r = rs, K = Ks, t(am_many$posterior)) %>%
+posteriors <- 
+  data.frame(model = as.character(1:n_models), t(am_many$posterior)) %>%
+  left_join(mutate(pars, model = as.character(1:n_models))) %>%
   pivot_longer(starts_with("X"), 
                values_to = "probability",
                names_to = "time") %>% 
   mutate(time = as.integer(as.factor(time))) 
 
-i <- 20
-r_marginals <- posteriors %>% group_by(time,r) %>% 
-  summarise(prob = sum(probability), .groups = "drop") %>% 
-  filter(time %in% i)
+r_marginals <- posteriors %>% 
+  group_by(time,r) %>% 
+  summarise(prob = sum(probability), .groups = "drop")
 
-r_marginals %>%  ggplot(aes(r, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time)
-```
-
-
-## Marginal Posterior Probability evolution over K
-
-```{r}
-i = 20
 K_marginals <- posteriors %>% group_by(time,K) %>% 
-  summarise(prob = sum(probability), .groups = "drop") %>% 
-  filter(time %in% i) 
-K_marginals %>%
-  ggplot(aes(K, prob, group=time)) + geom_bar(stat="identity") + facet_wrap(~time) + scale_x_log10()
-
-
+  summarise(prob = sum(probability), .groups = "drop")
 ```
 
 
+From the table of marginal probabilities, we generate the corresponding plots
+
+```{r fig.width=8, fig.height=4, fig.cap = "Fig S1: Marginal probabilities of parameters $r$ and $K$ over the course of adaptive management over all 42 models." }
+belief_r <- r_marginals %>% 
+  mutate(r = as.character(r)) %>%
+  ggplot(aes(time, prob, group = r, col = r)) + geom_line() +
+  geom_point()
 
 
+belief_K <- K_marginals %>% 
+  mutate(K = as.character(K)) %>%
+  ggplot(aes(time, prob, group = K, col = K)) + geom_line() +
+  geom_point() 
 
-# Economic value tabulation
-
-
-To plot the economic value over time, we must sum up the discounted values
-at each time step, and then average over replicate simulations of each model:
-
-```{r plot_npv}
-##  Net Present Value accumulates over time
-npv_df <- sims %>% 
-  group_by(model, reps) %>%
-  mutate(npv = cumsum(value * discount ^ time)) %>%
-  group_by(time, model)  %>% 
-  summarise(mean_npv = mean(npv), .groups="drop") %>% 
-  arrange(model, time)
-
-write_csv(npv_df, "../data/npv_df.csv")
+belief_r + belief_K 
 ```
 
+For most of the simulation, the most probable $r$ value is around 0.3, and the most probable $K$ value around 1.5. 
 
-
-```{r}
-# tabular comparisons
-npv <- npv_df %>% group_by(model) %>% summarize(npv = max(mean_npv))
-
-am_npv <- sum(am$value * discount ^ am$time)
-am_economics_percent <- round(am_npv / npv[[1,"npv"]] * 100)
-
-mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
-am_ecology_percent <- round(mean(states[am$state])/mean_state[[1, "state"]]*100)
-```
-
-Under adaptive management, the manager realizes only `r am_economics_percent`%
-of the economic value that would be achieved under Model 1 alone, and only 
-`r am_ecology_percent`% of the spawning stock biomass that would have been 
-achieved under Model 1 alone. 
 
 # Growth models 
 
@@ -605,34 +622,35 @@ write_csv(model_curves, "../data/model_curves.csv")
 
 ```
 
-
-## Growth models in the many-models case:
-
-
-```{r plot_many_models, fig.width=6, fig.height=4}
-final_belief <- t(am_many$posterior)
-final_belief <- final_belief[,dim(final_belief)[[2]]]
-posteriors <- data.frame(model = as.character(1:length(many_models)), belief = final_belief)
+The resulting model curves are shown in the main paper, Fig 4A. 
 
 
+## Growth models in the many-models case
+
+The corresponding figure for the case of `r n_models` models.  
+
+
+```{r plot_many_models, fig.width=7, fig.height=5, fig.cap="growth curves for 42 candidate models, shaded by belief at timestep 20, relative to the true model.  The curve with parameter values corresponding to 'model 1' are recognized in the highest arc, with belief weight of less than 1%."}
+
+final_belief <- posteriors %>% filter(time == max(time)) %>%
+  select(model, belief = probability) %>% mutate(type = "candidate") %>%
+  bind_rows(data.frame(belief = 1, model="true", type="true"))
 
 model_set <-c(f3,  many_models)
 names(model_set) <- c("true", 1:length(many_models))
 d <- 
   map_dfc(model_set, function(f) f(states) - states) %>%
-  mutate(state = states) %>% pivot_longer(names(model_set[-1]), "model") %>%
-  left_join(posteriors)
+  mutate(state = states) %>% pivot_longer(names(model_set), "model") %>%
+  left_join(final_belief)
 
 d %>% 
-  ggplot(aes(state, value, group=model, alpha = belief)) +
-  #geom_hline(aes(yintercept = 0), lwd=1, lty=2) + 
-  geom_line(lwd=1.5) + 
-  geom_line(aes(state, true, alpha=1), col = "red", show.legend = FALSE) +
+  ggplot(aes(state, value, group=model, col = type, alpha = belief)) +
+  geom_line(lwd=1) + 
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
-  ylab(bquote(f(x) - x)) + xlab("x") 
+  ylab(bquote(f(x) - x)) + xlab("x")
 ```
 
-
+\pagebreak
 
 
 # References
