@@ -5,6 +5,7 @@ author: Carl Boettiger
 journal: TBD
 layout: 3p
 bibliography: refs.bib
+csl: csl/ecology-letters.csl
 #output:
 #  tufte::tufte_handout:
 #    dev: cairo_pdf
@@ -14,12 +15,29 @@ output:
     dev: cairo_pdf
     latex_engine: xelatex
 
+header-includes:
+  - \usepackage[left]{lineno}
+  - \linenumbers
+
 ---
 
 
+Because the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are not themselves novel, the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulas or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulas presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in MatLab [@Marescot2013; @MDPtoolbox].  
 
 
-## Optimal quotas as a Markov Decision Process (MDP) problem
+Below, I provide carefully annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(MDPtoolbox)
+library(expm)
+# remotes::install_github("boettiger-lab/mdplearning")
+library(mdplearning)
+```
+
+
+
+# Optimal quotas as a Markov Decision Process (MDP) problem
 
 The question of optimal harvest quotas given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context.  @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
 
@@ -70,7 +88,7 @@ discount <- 0.99
 Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions.  This reward function is a limiting case of any more complex reward, and corresponds both to classic work that does not model utility explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions typically made in more recent models [@Reed1979]. Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.  
 
 
-# Ecological Models
+## Ecological Model Definitions
 
 The manager chooses between two different logistic growth models, each of which
 can be thought of as an approximation to the underlying "true" population model:
@@ -79,7 +97,7 @@ can be thought of as an approximation to the underlying "true" population model:
 f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right) \xi_i(t)
 \end{equation}
 
-where $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standar-deviation $\sigma_i$.  
+where $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.  
 
 Model 1 has $r_1 = 2$, $K = 16$, and $\sigma_1 = 0.05$.
 Model 2 has $r_2 = 0.5, K_2 = 10$, and $\sigma_2 = 0.075$.
@@ -94,10 +112,6 @@ f_i(Y) = Y + Y^4 r_i \left( 1 - \frac{Y}{K_i} \right)
 with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
 
 
-Because the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are not themselves novel, the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulae or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulae presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in Matlab [@Marescot2013; @MDPtoolbox].  
-
-
-Below, I provide annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
 
 
 ```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
@@ -122,16 +136,6 @@ knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = F
 
 ```
 
-```{r setup, message=FALSE}
-library(tidyverse)
-library(MDPtoolbox)
-library(expm)
-# remotes::install_github("boettiger-lab/mdplearning")
-library(mdplearning)
-```
-
-
-# Model definitions
 
 ```{r}
 # K is at twice max of f3; 8 * K_3 / 5
@@ -213,7 +217,7 @@ for (k in 1:n_s) {
 ```
 
 
-# Optimal control solutions
+## Optimal control solutions
 
 
 We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model. This determines the optimal harvest policy for each possible state, given each model. Because this step is the most computationally intensive routine, we cache the results using memosization conditioned on the transition matrices [@memoise].  Running this code with alternate transition matrices automatically invalidates that cache, reducing the risk of loading spurious results. 
@@ -320,7 +324,7 @@ stepahead_fished <- sims %>%
 
 It is straight forward to apply the proper scoring formula of @Gneiting2007 
 based on the first two moments of the distribution to score the respective
-forecasts under both the unfished and actively managed scenario sfor each model:
+forecasts under both the un-fished and actively managed scenario for each model:
 
 ```{r proper_scores, message = FALSE}
 # Gneiting & Raferty (2007), eq27
@@ -561,7 +565,7 @@ write_csv(am_multi, "../data/am_multi.csv")
 ```
 
 
-# Posteriors
+## Posteriors
 
 With `r n_models` possible models instead of two, the probability weight (belief) in Model 1 does not fully capture the evolution of the belief probabilities over time.
 To better illustrate how these beliefs evolve over the course of the simulation, I plot the marginal probabilities over values of $r$ and $K$ across the models over time.

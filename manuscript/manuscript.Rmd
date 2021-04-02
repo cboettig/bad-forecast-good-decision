@@ -26,10 +26,11 @@ keywords:
 - uncertainty,
 - optimal control
 
+header-includes:
+  - \linenumbers
+  
 
-## change to true to add optional line numbering
-lineno: true
-csl: ecology-letters.csl
+csl: csl/ecology-letters.csl
 output: rticles::elsevier_article
 layout: 3p
 journal: TBD
@@ -82,7 +83,7 @@ As this example will show, by better understanding what aspects of model are mos
 Iterative learning approaches such as adaptive management or iterative forecasting [@Dietze2018] are particularly compelling because they address a different reason why seemingly-accurate models can lead to poor outcomes: the problem of over-fitting.
 When models are estimated from the data they seek to describe, the model may over-fit the data, making the data seem even more likely than it would be under the true process [@Burnham1998].
 Over-fit models may underestimate uncertainty and make poor predictions about future outcomes [@Ginzburg2004].
-Because any iterative learning compares models to future outcomes, overfitting those outcomes is impossible.
+Because any iterative learning compares models to future outcomes, over-fitting those outcomes is impossible.
 This concept was rigorously formalized by @Gneiting2007's proof of "proper" scoring rules.
 By definition, under a proper scoring rule, no probabilistic prediction $Q(x)$ can score better, on average, than that of the underlying process, $P(x)$.
 @Gneiting2007 further shows which techniques for evaluating forecast predictions do an do not satisfy this condition, i.e. which cannot be over-fit.
@@ -90,7 +91,7 @@ Adaptive management is based on equally secure footing because model predictions
 Instead of scoring and selecting among alternative models, adaptive management considers probabilities over all models [@Walters1978].
 These two approaches are particularly compelling because they can both reduce uncertainty and avoid over-fitting.
 My example is not meant to undercut the importance of these approaches.
-Previous work has long acknowledged the panelope of ways in which iterative learning or other model-based decision making can go astray due to conflicting incentives implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
+Previous work has long acknowledged the panoply of ways in which iterative learning or other model-based decision making can go astray due to conflicting incentives implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
 Here, the problem is more fundamental. 
 
 I illustrate this problem using an example from fisheries management. 
@@ -323,7 +324,7 @@ fig3a + fig3b
 
 
 Increasing the space of possible models to cover a whole plausible range of parameters $r$ and $K$ does little to resolve this problem [Fig 3B]. 
-Iterative updates again quickly dismiss the parameter values assumed by model 1, though with more options to choose from, this probability is spead over a range of seemingly plausible candidate models instead of a single alternative model (see Appendix).
+Iterative updates again quickly dismiss the parameter values assumed by model 1, though with more options to choose from, this probability is spread over a range of seemingly plausible candidate models instead of a single alternative model (see Appendix).
 While the adaptive management of additional actions and observations slowly narrow this subset of plausible models, decisions based on this uncertainty prevent fish stocks from recovering fully, and realize lower harvests as a result.
 Note that learning under either adaptive management approach (using two models or 42), the decision-maker becomes ever-increasingly convinced that they are using the right model or models.
 Future stock sizes fall consistently in the range predicted by the model(s), and consistently outside the range predicted by model 1.
@@ -365,7 +366,7 @@ It is just as easy to construct an alternative model 1 with the same properties 
 Just as the optimal control policy for a Gordon-Schaefer (logistic) model depends only on parameter $K$ [@Reed1979], the optimum constant escapement policy depends only on parameter $r$ [@Schaefer1954].
 If model 1 has a value of $r$ such that it happens to match the best possible constant-mortality solution for the (unobserved) true model, then $K$ can be set arbitrarily high, ensuring the any model selection, forecasting, or adaptive management approach would lead away from model 1 and towards worse-performing models once again.
 Many optimization problems share this feature in which the optimal policy depends only on a subset or ratio of model parameters, such that it is usually easy to find a similar model 1.
-This example also illustrates the importance of decision constraints -- a model that gives very good outcomes when we are free to vary the havest quota each year (the optimal control problem here) may give very poor results under the constraint of constant mortality, and vice versa. 
+This example also illustrates the importance of decision constraints -- a model that gives very good outcomes when we are free to vary the harvest quota each year (the optimal control problem here) may give very poor results under the constraint of constant mortality, and vice versa. 
 
 
 
@@ -426,7 +427,7 @@ But in both cases, the worse outcome is wasted effort.
 In the scenario considered here, the VOI is negative: any learning over the proposed model uncertainty leads to lower expected net utility than not learning.
 
 
-Worse, absent the counterfactual of non-adaptive management to compare to, this detioriation in outcomes is invisible. 
+Worse, absent the counter-factual of non-adaptive management to compare to, this deterioration in outcomes is invisible. 
 All the information available to our manager reinforces the conviction that this deteriorated ecological state is in fact the natural, sustainably managed equilibrium of our fish population.
 By responding in any way to future observations to reduce model uncertainty, our manager is caught in a trap of self-fulfilling prophecy:
 believing ever more firmly in models that make more accurate predictions while driving decisions that prevent the fish stock from recovering.
@@ -435,7 +436,7 @@ It may seem that the adaptive management approach fails because posterior probab
 Like iterative forecasting, this favors models which better predict the data, despite the fact that under the adaptive management approach, the overall optimization is conditioned on actual utility and not model fit.
 However, this issue is not easily avoided.
 For example, so-called greedy optimization techniques that favor actions with higher immediate reward do even worse in this context, since such an algorithm would obviously maximize the immediate harvest and therefore collapse the stock.
-Only by comparing the net utility derived from management under model 1 for many iterations to the net utility derived under model 2 after many iterations can we deterime that model 1 leads to better outcomes.
+Only by comparing the net utility derived from management under model 1 for many iterations to the net utility derived under model 2 after many iterations can we determine that model 1 leads to better outcomes.
 This raises several questions.
 Do such methods of learning and reducing model uncertainty ever lead us towards worse long-term outcomes in the real world? If so, How would we know, and what should we do about it?
 
