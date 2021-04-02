@@ -1,6 +1,5 @@
 ---
 title: 'Appendix'
-date: "`r Sys.Date()`"
 author: Carl Boettiger
 journal: TBD
 layout: 3p
