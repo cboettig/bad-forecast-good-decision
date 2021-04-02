@@ -609,7 +609,7 @@ write_csv(model_curves, "../data/model_curves.csv")
 ## Growth models in the many-models case:
 
 
-```{r plot_models, fig.width=6, fig.height=4}
+```{r plot_many_models, fig.width=6, fig.height=4}
 final_belief <- t(am_many$posterior)
 final_belief <- final_belief[,dim(final_belief)[[2]]]
 posteriors <- data.frame(model = as.character(1:length(many_models)), belief = final_belief)

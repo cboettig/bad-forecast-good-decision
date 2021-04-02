@@ -69,16 +69,58 @@ f3  <- function(x, h = 0, r = .002, K = 10){
 }
 ```
 
+
 ```{r}
-# Try 6 log-spaced values
-rs <- 10 ^ seq(0.01, 2, length=6)
-Ks <- 10 ^ seq(-.3, 1.2, length=6)
+library(nimble)
+
+logistic  <- nimble::nimbleCode({
+  
+  x[1] <- x0
+  for(t in 1:(N-1)){
+    mu[t] <- x[t] + x[t] * r * (1 - x[t] / K)  
+    x[t+1] ~ dlnorm(log(mu[t]), sd = sigma)
+  }
+  r ~ dunif(0,10);
+  K ~ dunif(0,20);
+  sigma ~ dunif(0,0.1);
+  
+})
+l_model <- nimbleModel(logistic,constants = list(N = 1e3, x0 = 6.0))
+
+
+
+f3_nimble  <- nimble::nimbleCode({
+  x[1] <- x0
+  for(t in 1:(N-1)){
+    mu[t] <- x[t] + x[t] * r * (1 - x[t] / K)  
+    x[t+1] ~ dlnorm(log(mu[t]), sd = sigma)
+  }
+})
+model <- nimbleModel(f3_nimble, constants = list(r = .002, K = 10, sigma = .05, N = 1e3), inits = list(x0 = 6.0))
+
+simulate(model)
+ggplot(data.frame(t = 1:1e3, x = model$x), aes(t,x)) + geom_line()
+```
+```{r}
+l_model$setData(list(x = model$x))
+c_model <- compileNimble(l_model)
+l_mcmc <- buildMCMC(c_model)
+c_mcmc <- compileNimble(l_mcmc)
+df <- runMCMC(c_mcmc, niter = 10000, nburnin = 1000)
+
+A <- df %>% as_tibble() %>% summarise(across(everything(), list(mean = mean, sd = sd)))
+```
+
+
+
+
+```{r}
+rs <-A$r_mean #10 ^ seq(log10(.01), log10(2), length=60)
+Ks <- A$K_mean # seq(1,16,length=50) # 10^ seq(log10(1), log10(16), length=7)
 
 # compare over fixed set of candidate r and K
-rs <- c(0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 2)
-Ks <- c(0.5, 1, 1.5, 4, 10, 16)
 n_models <- length(rs)*length(Ks)
-sigmas <- 0.1
+sigmas <- 0.05
 pars <- expand.grid(rs, Ks)
 names(pars) <- c("r", "K")
 pars$sigma <- sigmas
@@ -155,7 +197,7 @@ for (k in 1:n_s) {
 
 
 
-```{r plot_models, fig.width=6, fig.height=4}
+```{r plot_models, fig.width=10, fig.height=7}
 model_set <-c(f3,  models)
 names(model_set) <- c("true", 1:length(models))
 d <- 
@@ -163,10 +205,9 @@ d <-
   mutate(state = states)
 
 d %>% pivot_longer(names(model_set[-1]), "model") %>%
-  mutate(model = as.numeric(model)) %>%
   ggplot(aes(state, value, col = model)) +
   geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_point(alpha = .5) + 
+  geom_line(alpha = .5, show.legend = FALSE) + 
   geom_line(aes(state, true), col = "red") +
   coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
   ylab(bquote(f(x) - x)) + xlab("x") + scale_color_grey()
