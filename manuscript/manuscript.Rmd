@@ -28,13 +28,24 @@ keywords:
 
 header-includes:
   - \linenumbers
+  - \usepackage{endfloat}
   
 
 csl: csl/ecology-letters.csl
 output: rticles::elsevier_article
 layout: 3p
-journal: TBD
+journal: Ecology Letters
 ---
+
+- abbreviated running title: "The trap of self-fulfilling prophecies"
+- Authorship statement: _This is a single-author paper_
+- data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
+- number of words in the abstract: 116
+- number of words in main text: 4998
+- number of cited references: 33
+- number of tables & figures: 4 Figures
+
+\pagebreak
 
 
 ```{r, message=FALSE, warning=FALSE, include = FALSE}
