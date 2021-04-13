@@ -2,22 +2,21 @@
 title: 'Iterative forecasting and the trap of self-fulfilling prophecies'
 author:
 - name: Carl Boettiger
-  email: cboettig@berkeley.edu
-  affiliation: a,1
+  email: cboettig@berkeley.edu
+  affiliation: a,1
 date: "`r Sys.Date()`"
 
 abstract: |
-  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using a classic example from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast can lead to decidedly worse outcomes.  This creates a cycle of self-fulfilling prophecy, in which the manager not only over-exploits the fishery leading to declining biomass and declining yields, but also becomes increasingly convinced that these actions are not over-exploitation but in fact consistent with the best models and data for sustainable management. 
+  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using a classic example from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast can lead to decidedly worse outcomes. This creates a cycle of self-fulfilling prophecy, in which the manager not only over-exploits the fishery leading to declining biomass and declining yields, but also becomes increasingly convinced that these actions are not over-exploitation but in fact consistent with the best models and data for sustainable management. 
 
 corresponding_author:
-  code: 1
-  text: "To whom correspondence should be addressed. E-mail: cboettig@berkeley.edu"
+  code: 1
+  text: "To whom correspondence should be addressed. E-mail: cboettig@berkeley.edu"
 
 bibliography: refs.bib
 address:
 - code: a
-  address: Department of Environmental Science, Policy, and Management, University of California, 130 Mulford Hall Berkeley, CA
-    94720-3114, USA
+  address: Department of Environmental Science, Policy, and Management, University of California, 130 Mulford Hall Berkeley, CA 94720-3114, USA
 
 keywords:
 - forecasting,
@@ -27,9 +26,9 @@ keywords:
 - optimal control
 
 header-includes:
-  - \linenumbers
-  - \usepackage{endfloat}
-  
+  - \linenumbers
+  - \usepackage{endfloat}
+  
 
 csl: csl/ecology-letters.csl
 output: rticles::elsevier_article
@@ -70,7 +69,7 @@ txtcolor <- "#586e75"
 ```{r, include=FALSE}
 rmarkdown::render("appendix.Rmd")
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, 
-                      warning = FALSE, dev="cairo_pdf", fig.height=5, fig.width=7.5)
+                      warning = FALSE, dev="cairo_pdf", fig.height=5, fig.width=7.5)
 ```
 
 Global change issues are complex and outcomes are difficult to predict  [@Clark2001].
@@ -192,43 +191,41 @@ for each prediction over 100 replicate simulations of 100 time steps each [Fig 1
 
 
 
-```{r figure1, fig.cap = "Forecast performance of each model.  Panels A, B: Step ahead predictions of stock size under unfished (A) and fished (B) scenarios. Error bars indicating the 95% confidence intervals around each prediction, while stars denote the observed value in that year.  Because the models make different decisions each year in the fished scenario, the observed stock size in year 2, 3, etc under the management of model 1 (blue stars) is different from that under model 2 (red stars).  Panels C, D: corresponding distribution of proper scores across all predictions (100 replicates of 100 timesteps). Higher scores are better, confirming that model 2 makes the better forecasts."}
+```{r figure1, fig.cap = "Forecast performance of each model. Panels A, B: Step ahead predictions of stock size under unfished (A) and fished (B) scenarios. Error bars indicating the 95% confidence intervals around each prediction, while stars denote the observed value in that year. Because the models make different decisions each year in the fished scenario, the observed stock size in year 2, 3, etc under the management of model 1 (blue stars) is different from that under model 2 (red stars). Panels C, D: corresponding distribution of proper scores across all predictions (100 replicates of 100 timesteps). Higher scores are better, confirming that model 2 makes the better forecasts."}
 predictions <- read_csv("../data/predictions.csv") %>% mutate(model = as.character(model))
 
 fig1cd <- predictions %>%
-  ggplot(aes(x = score, group = model, fill = model)) +
-  geom_histogram(binwidth = 2, show.legend = FALSE) +
-  coord_cartesian(xlim = c(-100, 1), ylim = c(0,4000)) +
-  xlab("Proper score") +
-  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
-    A_unfished = "C.",
-    B_fished = "D."))) + 
-  scale_x_continuous(breaks = c(-100, 0)) +
-  theme(axis.text.y = element_blank(),
-        plot.margin = margin(0, 0, 0, 0, "cm"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-        )
+  ggplot(aes(x = score, group = model, fill = model)) +
+  geom_histogram(binwidth = 2, show.legend = FALSE) +
+  coord_cartesian(xlim = c(-100, 1), ylim = c(0,4000)) +
+  xlab("Proper score") +
+  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
+    A_unfished = "C.",
+    B_fished = "D."))) + 
+  scale_x_continuous(breaks = c(-100, 0)) +
+  theme(axis.text.y = element_blank(),
+        plot.margin = margin(0, 0, 0, 0, "cm"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+        )
 
 
 
- fig1ab <- predictions %>% 
-  filter(reps == "2", time < 10) %>%
-  ggplot(aes(time, col = model, fill = model)) + 
-  geom_point(aes(y = expected)) + 
-  geom_errorbar(aes(ymin = low, ymax = high)) +
-  geom_point(aes(y = true), pch = "*", size = 12, 
-             alpha = 0.6) + 
-  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
-    A_unfished = "A. Without fishing",
-    B_fished = "B. Managed harvest"))) +
-  ylab("stock size")
- 
- 
- 
- fig1ab + fig1cd + 
-  plot_layout(widths =  c(3,1), guides = 'collect') + 
-  theme(plot.margin = margin(0, 0, .1, .1, "cm"))
+fig1ab <- predictions %>% 
+  filter(reps == "2", time < 10) %>%
+  ggplot(aes(time, col = model, fill = model)) + 
+  geom_point(aes(y = expected)) + 
+  geom_errorbar(aes(ymin = low, ymax = high)) +
+  geom_point(aes(y = true), pch = "*", size = 12, 
+             alpha = 0.6) + 
+  facet_wrap(~scenario, ncol = 1, labeller =as_labeller(c(
+    A_unfished = "A. Without fishing",
+    B_fished = "B. Managed harvest"))) +
+  ylab("stock size")
+
+fig1ab + fig1cd + 
+  plot_layout(widths = c(3,1), guides = 'collect') + 
+  theme(plot.margin = margin(0, 0, .1, .1, "cm"))
 ```
 
 
@@ -252,31 +249,31 @@ npv_df <- read_csv("../data/npv_df.csv")
 
 
 plot_ecology <- 
-  sims %>%
-  mutate(model = as.character(model), resp = as.character(reps)) %>%
-  group_by(model, time) %>%
-  summarise(mean_state = mean(state), sd = sd(state), .groups = "drop") %>%
-  filter(time < 25, model != "3") %>%
-  ggplot(aes(time, mean_state)) + 
-  geom_line(aes(col = model), lwd=1.5, show.legend = FALSE) +
-    geom_ribbon(aes(ymin = mean_state - 2*sd, 
-                    ymax = mean_state + 2*sd,
-                    fill = model),
-                alpha = 0.2, show.legend = FALSE) +
-  ylab("state") + 
-  labs(subtitle = "A. Ecological outcomes")
+  sims %>%
+  mutate(model = as.character(model), resp = as.character(reps)) %>%
+  group_by(model, time) %>%
+  summarise(mean_state = mean(state), sd = sd(state), .groups = "drop") %>%
+  filter(time < 25, model != "3") %>%
+  ggplot(aes(time, mean_state)) + 
+  geom_line(aes(col = model), lwd=1.5, show.legend = FALSE) +
+  geom_ribbon(aes(ymin = mean_state - 2*sd, 
+                    ymax = mean_state + 2*sd,
+                    fill = model),
+                alpha = 0.2, show.legend = FALSE) +
+  ylab("state") + 
+  labs(subtitle = "A. Ecological outcomes")
 
 optimal <- select(filter(npv_df, model == "3"), time, mean_npv)
 
 plot_econ <- 
 npv_df %>%
-  mutate(model = as.character(model), resp = as.character(reps)) %>%
-  filter(model != "3", time %in% seq(1,100, by = 5)) %>%
-  ggplot(aes(time, mean_npv)) +
-  geom_line(data = optimal, lwd = 1.5, col = "grey20") +
-  geom_point(aes(col=model), size = 4, alpha = 0.8) + 
-  ylab("Net present value") + xlab("time")  + 
-  labs(subtitle = "B. Economic outcomes")
+  mutate(model = as.character(model), resp = as.character(reps)) %>%
+  filter(model != "3", time %in% seq(1,100, by = 5)) %>%
+  ggplot(aes(time, mean_npv)) +
+  geom_line(data = optimal, lwd = 1.5, col = "grey20") +
+  geom_point(aes(col=model), size = 4, alpha = 0.8) + 
+  ylab("Net present value") + xlab("time")  + 
+  labs(subtitle = "B. Economic outcomes")
 
 
 plot_ecology + plot_econ
@@ -307,26 +304,26 @@ After a single iteration of learning, these probabilities are completely reverse
 I compare these results to 
 As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
 
-```{r figure3, fig.cap="Adaptive management under model uncertainty.  Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning).  Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning).   Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%.  Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty.  Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines).  If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
+```{r figure3, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
 am <- read_csv("../data/am.csv")
-fig3a <- am %>%  filter(time <=20) %>% 
-  pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
-  mutate(key = factor(key, levels = c("stock", "quota"))) %>%
-  ggplot(aes(time, stock, shape = key, group = interaction(method,key))) + 
-  geom_line(aes(lty=method), col = "gray40", show.legend = FALSE) + 
-  geom_point(aes(col = belief), size=2, show.legend = FALSE) +
-  scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) +
-  ylab("fish stock") + labs(subtitle="A.")
+fig3a <- am %>% filter(time <=20) %>% 
+  pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
+  mutate(key = factor(key, levels = c("stock", "quota"))) %>%
+  ggplot(aes(time, stock, shape = key, group = interaction(method,key))) + 
+  geom_line(aes(lty=method), col = "gray40", show.legend = FALSE) + 
+  geom_point(aes(col = belief), size=2, show.legend = FALSE) +
+  scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) +
+  ylab("fish stock") + labs(subtitle="A.")
 
 am_multi <- read_csv("../data/am_multi.csv")
 fig3b <- am_multi %>% 
-  pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
-  mutate(key = factor(key, levels = c("stock", "quota"))) %>%
-  ggplot(aes(time, stock, shape = key, group = interaction(method,key))) + 
-    geom_line(aes(lty=method), col = "gray40") + 
-    geom_point(aes(col = belief), size=2) +
-    scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) +
-    ylab("fish stock") + labs(subtitle="B.")
+  pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
+  mutate(key = factor(key, levels = c("stock", "quota"))) %>%
+  ggplot(aes(time, stock, shape = key, group = interaction(method,key))) + 
+    geom_line(aes(lty=method), col = "gray40") + 
+    geom_point(aes(col = belief), size=2) +
+    scale_colour_gradient(limits = c(0,1), low = pal[4], high = pal[1]) +
+    ylab("fish stock") + labs(subtitle="B.")
 
 
 fig3a + fig3b
@@ -380,22 +377,22 @@ In general, there will be many models that can lead to the same decision, and th
 Likewise there will always be infinitely many models like Model 2, which can fit very close to the data [Fig 4] while leading to a very
 different decision policy.
 
-```{r figure4,  fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth.  Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
+```{r figure4, fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth. Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
 # Fig 4
 model_curves <- read_csv("../data/model_curves.csv") %>% mutate(model = as.character(model))
 policies <- read_csv("../data/policies.csv") %>% mutate(model = as.character(model))
 
 plot_models <- 
-  model_curves %>% 
-  ggplot(aes(state, value, col=model, lty=model)) +
-  geom_hline(aes(yintercept = 0), lwd=1) + 
-  geom_line(lwd=2, show.legend = FALSE) + 
-  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
-  ylab(bquote(f(x) - x)) + xlab("x")
+  model_curves %>% 
+  ggplot(aes(state, value, col=model, lty=model)) +
+  geom_hline(aes(yintercept = 0), lwd=1) + 
+  geom_line(lwd=2, show.legend = FALSE) + 
+  coord_cartesian(ylim = c(-5, 8), xlim = c(0,16)) +
+  ylab(bquote(f(x) - x)) + xlab("x")
 
 plot_policies <- policies %>%
-  ggplot(aes(states, escapement, col=model, lty=model)) + 
-  geom_line(lwd=2) + xlab("state")
+  ggplot(aes(states, escapement, col=model, lty=model)) + 
+  geom_line(lwd=2) + xlab("state")
 
 
 plot_models + labs(subtitle="A") +  plot_policies +  labs(subtitle="B")
@@ -455,7 +452,8 @@ It is tempting to argue that model 1 is a kind of unicorn, a mythical creature e
 Examples of serious forecasts that widely fail to predict future observations abound wherever forecasts are common, from elections to economics to environmental change [e.g. @Tetlock2015].
 If there is no shortage of bad forecasts, then could any of them be useful? 
 The premise that a model need not perfectly capture reality to be useful is at the very heart of modeling. Model 1 successfully captures the one key feature driving decisions in optimal harvest control problems: the stock size at which the maximum growth rate occurs [Fig 4A].
-Capturing only the essential aspects as simply as possible is the goal of any model building exercise.  Thus it should be no surprise that a model can drive good decisions while making poor predictions.
+Capturing only the essential aspects as simply as possible is the goal of any model building exercise. 
+Thus it should be no surprise that a model can drive good decisions while making poor predictions.
 It is also important to note that in many cases, any models being used in decision-making are not necessarily being subjected to the rigorous evaluation and updating steps proposed by adaptive management [@Walters1978] or iterative forecasting [@Dietze2018].
 This makes it more likely that such models could persist in practice until now. 
 While iterations that revise these models will no doubt improve decision outcomes in many cases, it is worth bearing in mind from the example here that such a connection is not guaranteed.
@@ -466,7 +464,7 @@ We have seen that the problem cannot be resolved by more data, and is not the re
 Nor is "creating more models" the answer: when we have a model that is good enough to get optimal results, we cannot always insist on more models.
 We have also seen how not updating our uncertainty estimates, or doing so less frequently, can reveal a unicorn model before it is discounted by further iterations.
 Approaches such as iterative forecasting or adaptive management that can reduce model uncertainty over time remain promising and important techniques, but because value of information can be negative, we must be careful not to update models without a keen understanding of what aspects of a model drive a decision [Fig 4].
-We have seen that  the intuition offered by decision theory [Fig 4] can help us better understand what features of a model are essential to decision outcomes and what are not.
+We have seen that the intuition offered by decision theory [Fig 4] can help us better understand what features of a model are essential to decision outcomes and what are not.
 Conversely, models which appear to lead to accurate predictions (like Model 2) can result in outcomes that are far from optimal.
 Building on such understanding, it may possible to identify strategies for learning that are more agnostic to the details of the model that are not important, or perhaps not reliant on model-based predictions at all.
 How that is best done in general is an open question.
