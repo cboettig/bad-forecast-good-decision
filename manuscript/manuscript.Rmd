@@ -272,7 +272,7 @@ npv_df %>%
   ggplot(aes(time, mean_npv)) +
   geom_line(data = optimal, lwd = 1.5, col = "grey20") +
   geom_point(aes(col=model), size = 4, alpha = 0.8) + 
-  ylab("Net present value") + xlab("time")  + 
+  ylab("Net present value") + xlab("time") + 
   labs(subtitle = "B. Economic outcomes")
 
 
@@ -395,7 +395,7 @@ plot_policies <- policies %>%
   geom_line(lwd=2) + xlab("state")
 
 
-plot_models + labs(subtitle="A") +  plot_policies +  labs(subtitle="B")
+plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 ```
 
 
