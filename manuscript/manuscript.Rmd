@@ -72,7 +72,7 @@ knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE,
                       warning = FALSE, dev="cairo_pdf", fig.height=5, fig.width=7.5)
 ```
 
-Global change issues are complex and outcomes are difficult to predict  [@Clark2001].
+Global change issues are complex and outcomes are difficult to predict [@Clark2001].
 To guide decisions in an uncertain world, researchers and decision makers may consider a range of alternative plausible models to better reflect what we do and do not know about the processes involved [@Polasky2011].
 Forecasts or predictions from possible models can indicate what outcomes are most likely to result under what decisions or actions.
 This has made model-based forecasts a cornerstone for scientifically based decision making.
@@ -184,7 +184,7 @@ In Scenario A (passive observation) the fish stock is unharvested and allowed to
 The mean, $\mu_t$ and variance, $\sigma_t$ of the forecast are compared against the true observation $x_t$ using a proper scoring rule given by @Gneiting2007, 
 
 \begin{equation}
-S(x_t|\mu_t,\sigma_t) = -(\mu_t - x_t )^2 / \sigma_t^2  - \log(\sigma_t) \label{proper}
+S(x_t|\mu_t,\sigma_t) = -(\mu_t - x_t )^2 / \sigma_t^2 - \log(\sigma_t) \label{proper}
 \end{equation}
 
 for each prediction over 100 replicate simulations of 100 time steps each [Fig 1].
@@ -300,7 +300,7 @@ Unfortunately, any such adaptive updating leads to worse outcomes than the equiv
 I illustrate the application of a passive adaptive management strategy to this simple example, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty.
 Passive adaptive management for a simple sequential decision problem is straightforward to implement over a discrete set of states and actions using dynamic programming with iterative updates [@Smith1981, example code in Appendix].
 To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.
-After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct  [Fig 3A].
+After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A].
 I compare these results to 
 As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
 
@@ -457,6 +457,7 @@ Thus it should be no surprise that a model can drive good decisions while making
 It is also important to note that in many cases, any models being used in decision-making are not necessarily being subjected to the rigorous evaluation and updating steps proposed by adaptive management [@Walters1978] or iterative forecasting [@Dietze2018].
 This makes it more likely that such models could persist in practice until now. 
 While iterations that revise these models will no doubt improve decision outcomes in many cases, it is worth bearing in mind from the example here that such a connection is not guaranteed.
+
 <!-- So what? -->
 If these unicorns do exist in real world management, then what do we do about them?
 I believe this is an open question, but that our first step must be to recognize it as such.
