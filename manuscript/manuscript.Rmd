@@ -81,7 +81,8 @@ By comparing outcomes predicted by a model to future observations, a decision ma
 The value of iterative learning has long been reflected in the theory of adaptive management [@Walters1978] as well as in actual adaptive management practices such as Management Strategy Evaluation (MSE) [@Punt2016] used in fisheries, and is a central tenant of a rapidly growing interest in ecological forecasting [@Dietze2018].
 But, do iterative learning approaches always lead to better decisions?
 
-In this paper, I will demonstrate that iterative learning or iterative forecasting can also be counter-productive to management outcomes:
+In this paper, I demonstrate that the model that makes the best prediction is not necessarily the model that makes the best policy.
+I show that iterative learning or iterative forecasting can be counter-productive to management outcomes:
 that in some cases, a manager would be better to ignore new information which could reduce uncertainty over available models.
 Put another way, the value of information (VOI, as measured by the expected utility given that information minus the utility without it; see @Howard1966; @Katz1987), can actually be negative.
 This is not a consequence of imperfect information (e.g. observation error) or the result of model over-fitting.
@@ -108,12 +109,10 @@ Here, the problem is more fundamental.
 I illustrate this problem using an example from fisheries management. 
 Fisheries are a significant economic and conservation concern world wide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
 Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
-While modern fisheries management frequently relies on complex models which may contain scores of parameters to reflect the specific age or stage structure of a specific fish stock [@ramlegacy2018; @ram], I will rely on simple, well-studied models which permit greater intuition and generalization [@Levins1966].
-Consistent with such previous work [@Schaefer1954; @Clark1973; @Reed1979; @Walters1981; @Ludwig1982; @Costello2016], let us consider the problem of determining the optimal harvest policy given a measurement of the current stock size. 
-
-For illustrative purposes, we will focus on the simplest example of model uncertainty: two alternative models of equal complexity but differing in the estimated value of certain parameters.
-While some authors distinguish between model uncertainty and parameter uncertainty, I will refer collectively to any uncertainty that arises from our imperfect knowledge of the system as "model uncertainty," because the distinction is largely a consequence of notation rather something more intrinsic.
-For example, two structurally different models, $f(x) = a x$ and $f(x) = a x^2$ can be considered merely different parameterizations of $f(x) = a x^b$, or vice versa.
+While modern fisheries management frequently relies on complex models which may contain over 100 parameters to reflect the specific age or stage structure of a specific fish stock [@ramlegacy2018; @ram], fisheries management and research has always appreciated the central insights offered by simpler one-dimensional models which continue to underpin both the theory and practice.
+For example, the strategies of constant mortality [@Schaefer1954] and constant escapement [@Clark1973; @Reed1979] are built on the same class of models considered here, which also continue to underpin global analyses of stock-rebuilding [e.g. @Costello2016; @Memarzadeh2019] and the foundations of adaptive management [e.g. @Walters1978; @Smith1981; @Walters1981].
+While more complex models are often required for specific applications, such models both share features with and are guided by theory built on much more general, simpler models [@Levins1966],
+from the Maximum Sustainable Yield of @Schaefer1954 or the epidemiological reproductive number, $R_0$ of @Kermack1927. 
 
 
 # Ecological Models
@@ -366,20 +365,20 @@ While the optimal control solution appears to depend only on a step-ahead foreca
 This realization is quite general: for most decision problems, simple models will exist under which the optimal decision is the same as it would be for the true model, even when that simple model is wrong in most other ways.
 
 <!-- Intuition for it's not just this example -->
-This phenomenon is not unique to sequential decision problems or optimal control solutions.
-For example, Management Strategy Evaluation [MSE; @Punt2016] in fisheries seeks to evaluate pre-specified strategies rather solve for the best possible strategy through optimal control.
-That approach is well justified -- optimal control techniques such as stochastic dynamic programming illustrated here quickly become intractable for more complex models [@Marescot2013] typically used in fisheries stock assessments.
-Constraining the search to only strategies that impose a constant mortality (defined as harvest per unit biomass, $F = H/B$) means we only have to evaluate those $N$ strategies each iteration, not solve a sequential decision problem.
-Doing so, we would find the best constant-mortality solution under model 1 performs much worse than the best constant-mortality solution under model 2.
-Does this mean MSE is not susceptible to this issue?
-No, it does not.
-It is just as easy to construct an alternative model 1 with the same properties of leading to nearly optimal decisions while being rejected by any method of iterative learning, such as forecasting or adaptive management.
-Just as the optimal control policy for a Gordon-Schaefer (logistic) model depends only on parameter $K$ [@Reed1979], the optimum constant escapement policy depends only on parameter $r$ [@Schaefer1954].
-If model 1 has a value of $r$ such that it happens to match the best possible constant-mortality solution for the (unobserved) true model, then $K$ can be set arbitrarily high, ensuring the any model selection, forecasting, or adaptive management approach would lead away from model 1 and towards worse-performing models once again.
-Many optimization problems share this feature in which the optimal policy depends only on a subset or ratio of model parameters, such that it is usually easy to find a similar model 1.
-This example also illustrates the importance of decision constraints -- a model that gives very good outcomes when we are free to vary the harvest quota each year (the optimal control problem here) may give very poor results under the constraint of constant mortality, and vice versa. 
-
-
+Situations similar to this example, in which a model can lead to the optimal decision while producing a poor forecast, are likely to be widespread.
+For example, marine fisheries typically restrict a Management Strategy Evaluation [MSE; @Punt2016] to constant mortality, (defined as harvest per unit biomass, $F = H/B$).
+Constant mortality is technically only optimal in a deterministic model [@Clark1973]; but is easier to solve for than the SDP methods for constant escapement shown here,
+which in practice is used mostly in salmon fisheries and the resource economics literature [see @pomdp-intro, @Costello2016].
+While Model 1 used here will not lead to a good constant-mortality policy, it is just as easy to construct a model which gives optimal decisions and bad forecasts.
+In the example shown above, Model 1 achieves optimal results by choosing $K$ such that $K/2$ matches the peak growth rate under the true model [@Reed1979.
+Under constant mortality, we instead choose a logistic model with $r$ such that $r/4$ matches the optimal constant mortality under the true model [@Schaefer1954].
+Everything else about our choice of Model 1 can be far from the true model, and yet it will give optimal results, just as above.
+Examples in which decisions depend a subset or ratio of model parameters can be found everywhere.
+In @Dee2017, the optimal number of non-critical species to protect in order to conserve critical species is given by a ratio of model parameters.
+In the SIR model of @Kermack1927 the basic reproductive number that determines if an infection spreads is the ratio of contact rate over the recovery rate, $R_0 = \beta / \gamma$.
+In general, there will be many models that can lead to the same decision, and thus the possibility of a similar scenario to the one seen here.
+Likewise there will always be infinitely many models like Model 2, which can fit very close to the data [Fig 4] while leading to a very
+different decision policy.
 
 ```{r figure4,  fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth.  Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 supresses stock to a much lower escapement level."}
 # Fig 4
@@ -415,18 +414,17 @@ Note that other methods of model selection not considered here, including goodne
 This case cannot be dismissed merely as being dealt a bad hand in having to pick only between model 1 and model 2.
 Model 1 approximates the key feature, giving nearly optimal outcomes.
 Previous literature has underscored the importance of Knightian "unknown unknowns" two alternative models examined here fail to fully reflect our uncertainty in the underlying dynamics, and the consequences of underestimating model uncertainty are well understood [@Polasky2011; @Wintle2010].
-Had we included the true model in the set of possibilities, the techniques illustrated would have had little difficulty in distinguishing it from models 1 and 2 after sufficient iterations.
-In practice, we never have the true model.
 We have also seen that including a much larger suite of possible values of $r$, $K$ [Fig 3B] still leaves us far from the optimal performance of model 1 alone.
 Would a more comprehensive grid of $r$ and $K$ values, or the consideration common alternative models with different structural forms, such as Beverton-Holt [@Beverton1957], Ricker [@Ricker1954], or Shepherd [@Shepherd1980], succeed in closing that gap?
 No it would not, as the comparison to the true model makes clear [Fig 4].
 Regardless of parameter value, all of these models still have symmetric growth rates with a peak growth rate at half their steady-state population size.
 By contrast, the true model has a peak growth rate much closer to the steady-state size.
 Because the decision in this problem is driven by the location of the peak growth rate [@Reed1979], any symmetric model which places its peak at the correct stock size also overestimates the carrying capacity, as is the case with our Model 1.
-If such additional structurally different models are not enough, then perhaps more complex models would serve?
-Models will always be simpler than reality.
-To insist that this issue can and will be avoided by always including more and better models of the process misses the point. 
-
+If such additional structurally different models are not enough, then perhaps yet more complex models would serve?
+For this toy example, it would be possible to span all the models considered here, including our "true" model 3, using 
+non-parametric approaches such as Gaussian Process models [@Boettiger2015].
+Even this does not guarantee a solution, as iterative learning erodes belief in model 1, and prefers harvests that retain stock sizes near historic values where predictability is highest.
+Besides, reality will always be more complex; we will never have the true model.
 
 The potential for long-term deterioration in management outcomes due to adaptive learning has not been widely acknowledged before.
 Certainly the limitations of any modeling approach to improve management outcomes due to the human context of competing interests, imperfect enforcement, etc., is readily appreciated [@Ludwig1993].
@@ -464,7 +462,7 @@ This makes it more likely that such models could persist in practice until now. 
 <!-- So what? -->
 If these unicorns do exist in real world management, then what do we do about them?
 I believe this is an open question, but that our first step must be to recognize it as such.
-We have seen that the problem cannot be resolved by more data, and is not the result of overfitting.
+We have seen that the problem cannot be resolved by more data, and is not the result of over-fitting.
 Nor is "creating more models" the answer: when we have a model that is good enough to get optimal results, we cannot always insist on more models.
 We have also seen how not updating our uncertainty estimates, or doing so less frequently, can reveal a unicorn model before it is discounted by further iterations.
 Approaches such as iterative forecasting or adaptive management that can reduce model uncertainty over time remain promising and important techniques, but because value of information can be negative, we must be careful not to update models without a keen understanding of what aspects of a model drive a decision [Fig 4].

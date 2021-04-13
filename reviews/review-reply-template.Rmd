@@ -1,0 +1,29 @@
+---
+title: "Reply To Reviewers"
+author: "Carl Boettiger & Dirk Eddelbuettel"
+date: "24 Nov 2017"
+output: pdf_document
+fontsize: 11pt
+header-includes: 
+  \usepackage{times}
+  \usepackage{etoolbox}
+  \usepackage[dvipsnames]{xcolor}
+  \usepackage[framemethod=tikz]{mdframed}
+  \let\oldquote\quote
+  \let\endoldquote\endquote
+  \renewenvironment{quote}
+    { \vspace{3.0\parskip} \oldquote
+    \mdframed[backgroundcolor=gray!10]
+    \it\small }
+    {\endmdframed \endoldquote }
+  \mdfsetup{linewidth=0pt,roundcorner=10pt,skipbelow=5pt,skipabove=10pt}
+---
+
+## Editor's Remarks
+
+> remarks here
+
+## Reviewer 1
+
+> remarks here
+
