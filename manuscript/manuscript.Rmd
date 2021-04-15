@@ -403,27 +403,23 @@ plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 Note that the mechanism shown here has nothing to do with the much more familiar issue of over-fitting, in which a better-fitting model will also lead to worse outcomes [@Burnham1998].
 In fact, a model which has been over-fit will gradually be rejected by either the iterative forecasting or adaptive management approaches shown here, as these approaches continually confront the models with new data to which they had not been previously fit.
 The ability to avoid overfitting is one of the greatest appeals of any iterative management strategy.
-In the example here, both Model 1 and Model 2 have the same structural complexity.
-The better decision performance of Model 1 is a consequence of capturing the key attribute needed for a good decision, which is perhaps surprisingly an all-together different criteria than fit.
-Note that other methods of model selection not considered here, including goodness-of-fit metrics such as $r^2$  or information criteria [@Burnham1998], will all prefer Model 2 over Model 1 for the same reason.
+In the example here, both model 1 and model 2 have the same structural complexity.
+The better decision performance of model 1 is a consequence of capturing the key attribute needed for a good decision, which is perhaps surprisingly an all-together different criteria than fit.
+Note that other methods of model selection not considered here, including goodness-of-fit metrics such as $r^2$ or information criteria [@Burnham1998], will all prefer Model 2 over Model 1 for the same reason.
 
-<!-- Not just "get more models" -->
-This case cannot be dismissed merely as being dealt a bad hand in having to pick only between model 1 and model 2.
-Model 1 approximates the key feature, giving nearly optimal outcomes.
-Previous literature has underscored the importance of Knightian "unknown unknowns" two alternative models examined here fail to fully reflect our uncertainty in the underlying dynamics, and the consequences of underestimating model uncertainty are well understood [@Polasky2011; @Wintle2010].
-We have also seen that including a much larger suite of possible values of $r$, $K$ [Fig 3B] still leaves us far from the optimal performance of model 1 alone.
-Would a more comprehensive grid of $r$ and $K$ values, or the consideration common alternative models with different structural forms, such as Beverton-Holt [@Beverton1957], Ricker [@Ricker1954], or Shepherd [@Shepherd1980], succeed in closing that gap?
-No it would not, as the comparison to the true model makes clear [Fig 4].
-Regardless of parameter value, all of these models still have symmetric growth rates with a peak growth rate at half their steady-state population size.
-By contrast, the true model has a peak growth rate much closer to the steady-state size.
-Because the decision in this problem is driven by the location of the peak growth rate [@Reed1979], any symmetric model which places its peak at the correct stock size also overestimates the carrying capacity, as is the case with our Model 1.
-If such additional structurally different models are not enough, then perhaps yet more complex models would serve?
-For this toy example, it would be possible to span all the models considered here, including our "true" model 3, using 
-non-parametric approaches such as Gaussian Process models [@Boettiger2015].
-Even this does not guarantee a solution, as iterative learning erodes belief in model 1, and prefers harvests that retain stock sizes near historic values where predictability is highest.
-Besides, reality will always be more complex; we will never have the true model.
+<!-- Not just "get more models"
+wrong!
 
-The potential for long-term deterioration in management outcomes due to adaptive learning has not been widely acknowledged before.
+-->
+ 
+This simple example can be resolved by including a model that closely approximates both the location of the peak and the shape of the curve of our "true" model.
+Given sufficient data, either adaptive management or iterative forecasting will prefer such a model (as guaranteed by @Gneiting2007's theorem), while having the correct peak location means the model will also lead to the optimal policy in this case (as guaranteed by @Reed1979's theorem).
+Yet the larger problem remains unresolved.
+In most realistic management scenarios, we do not have the benefit of a theorem similar to Reed's to identify what features are most critical to approximate well and what are not.
+For instance, the theorem no longer holds if stock estimates are uncertain [@pomdp-intro].
+Absent the guidance of such results, iterative learning over even relatively rich possible candidate models can move us towards worse outcomes than not learning at all.
+
+That potential for long-term deterioration in management outcomes due to adaptive learning has not been widely acknowledged before.
 Certainly the limitations of any modeling approach to improve management outcomes due to the human context of competing interests, imperfect enforcement, etc., is readily appreciated [@Ludwig1993].
 The problem here goes deeper, to the limits of models and learning from data even in a toy example free from other real world challenges.
 Previous work has acknowledged that iterative learning may not always be feasible and that it may not always be beneficial [@Polasky2011], but has failed to recognize the possibility that it can potentially be detrimental.
@@ -444,30 +440,27 @@ However, this issue is not easily avoided.
 For example, so-called greedy optimization techniques that favor actions with higher immediate reward do even worse in this context, since such an algorithm would obviously maximize the immediate harvest and therefore collapse the stock.
 Only by comparing the net utility derived from management under model 1 for many iterations to the net utility derived under model 2 after many iterations can we determine that model 1 leads to better outcomes.
 This raises several questions.
-Do such methods of learning and reducing model uncertainty ever lead us towards worse long-term outcomes in the real world? If so, How would we know, and what should we do about it?
+Do such methods of learning and reducing model uncertainty ever lead us towards worse long-term outcomes in the real world? 
+If so, How would we know, and what should we do about it?
 
 <!-- **Is it just a unicorn?** -->
 Do models which give nearly optimal performance while at the same time making wildly wrong predictions really exist?
 It is tempting to argue that model 1 is a kind of unicorn, a mythical creature existing only in theory. But that is a difficult assertion to prove.
 Examples of serious forecasts that widely fail to predict future observations abound wherever forecasts are common, from elections to economics to environmental change [e.g. @Tetlock2015].
 If there is no shortage of bad forecasts, then could any of them be useful? 
-The premise that a model need not perfectly capture reality to be useful is at the very heart of modeling. Model 1 successfully captures the one key feature driving decisions in optimal harvest control problems: the stock size at which the maximum growth rate occurs [Fig 4A].
-Capturing only the essential aspects as simply as possible is the goal of any model building exercise. 
-Thus it should be no surprise that a model can drive good decisions while making poor predictions.
+The premise that a model need not perfectly capture reality to be useful is at the very heart of modeling. 
 It is also important to note that in many cases, any models being used in decision-making are not necessarily being subjected to the rigorous evaluation and updating steps proposed by adaptive management [@Walters1978] or iterative forecasting [@Dietze2018].
 This makes it more likely that such models could persist in practice until now. 
-While iterations that revise these models will no doubt improve decision outcomes in many cases, it is worth bearing in mind from the example here that such a connection is not guaranteed.
+While iterations that revise these models will no doubt improve decision outcomes in many cases, it is worth bearing in mind from the example here that such improvement is not guaranteed.
 
 <!-- So what? -->
 If these unicorns do exist in real world management, then what do we do about them?
 I believe this is an open question, but that our first step must be to recognize it as such.
-We have seen that the problem cannot be resolved by more data, and is not the result of over-fitting.
-Nor is "creating more models" the answer: when we have a model that is good enough to get optimal results, we cannot always insist on more models.
+We have seen that the problem cannot be resolved by more data alone, and is not the result of over-fitting.
+Introducing more models into our candidate set is only helpful to the extent that such models can capture features important to the decision, which as we have seen can be quite different from the feature which matter most to prediction.
 We have also seen how not updating our uncertainty estimates, or doing so less frequently, can reveal a unicorn model before it is discounted by further iterations.
-Approaches such as iterative forecasting or adaptive management that can reduce model uncertainty over time remain promising and important techniques, but because value of information can be negative, we must be careful not to update models without a keen understanding of what aspects of a model drive a decision [Fig 4].
-We have seen that the intuition offered by decision theory [Fig 4] can help us better understand what features of a model are essential to decision outcomes and what are not.
-Conversely, models which appear to lead to accurate predictions (like Model 2) can result in outcomes that are far from optimal.
-Building on such understanding, it may possible to identify strategies for learning that are more agnostic to the details of the model that are not important, or perhaps not reliant on model-based predictions at all.
+Approaches such as iterative forecasting or adaptive management that can reduce model uncertainty over time remain promising and important techniques, and essential strategies to avoid the very real problem of model over-fitting.
+But their very success in selecting models which give the most accurate predictions can also be trap.
 How that is best done in general is an open question.
 
 
