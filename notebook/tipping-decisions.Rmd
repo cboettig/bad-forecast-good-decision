@@ -1,0 +1,144 @@
+---
+output: github_document
+---
+
+
+```{r setup, message=FALSE}
+library(MDPtoolbox)
+library(sarsop)
+library(tidyverse) # for plotting
+library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
+```
+
+
+
+```{r}
+states <- seq(0,2, length=100)
+actions <- seq(0,2, length.out = 100)
+observations <- states
+sigma_g <- 0.05
+sigma_m <- 0.0
+
+benefit <- 1
+cost <- 1 # quadratic costs
+reward_fn <- function(x,h) benefit * x - (h ^ cost)
+discount <- 0.999
+
+p <- list(r =.7, K = 1.2, q = 3, b = 0.15, a = 0.2) # lower-state peak is optimal
+#p <- list(r =.7, K = 1.5, q = 3, b = 0.15, a = 0.2) # higher-state peak is optimal
+
+may <- 
+  function(x, h = 0){ # May
+    y <- x +  h
+    pmax(
+      ## controlling h is controlling the bifurcation point directly...
+      y + y * p$r * (1 - y / p$K)  - p$a * y ^ p$q / (y ^ p$q + p$b ^ p$q),  
+      0)
+  }
+
+# Matches the optimal policy under these settings (depends on sigma, among others)
+logistic_1 <- 
+  function(x, h = 0){
+    y <- x +  h
+    r <- p$r - 0.09
+
+    pmax(
+      y + y * r * (1 - y / p$K),  
+      0)
+  }
+
+logistic_2 <- 
+  function(x, h = 0){
+    y <- x +  h
+    r <- p$r + .5
+    pmax(
+      y + y * r * (1 - y / p$K),  
+      0)
+  }
+```
+
+
+
+```{r}
+
+
+landscape <- map_dfr(list(logistic_1, logistic_2, may), 
+                     function(f) tibble(state = states, f = f(states, 0) -states),
+                     .id = "model")
+
+landscape %>% ggplot(aes(state, f, col=model)) + geom_point()
+```
+
+## Optimal management
+
+
+```{r}
+matrices <- lapply(list(logistic_1, logistic_2, may), 
+       function(f) fisheries_matrices(states, actions, observations, reward_fn, 
+                        f, sigma_g, sigma_m, noise = "lognormal")
+)
+```
+
+
+```{r, results="hide"}
+solns <- lapply(matrices, function(m) mdp_value_iteration(m$transition, m$reward, discount))
+```
+
+
+```{r}
+df <- map_dfr(solns, function(soln)
+        tibble(state = states,
+               action = actions[soln$policy],
+               value = soln$V),
+  .id = "model")
+
+df
+```
+
+
+
+```{r}
+df %>% ggplot(aes(state, action, col=model)) + geom_point(alpha=0.5) 
+
+#+
+#  geom_line(aes(state, f), col = "red")  + 
+#  coord_cartesian(xlim=c(0,1.3), ylim = c(-2, 3))
+```
+
+
+
+```{r}
+x0 = which.min(abs(states - 0.05))
+sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
+                   policy = soln$policy, x0 = x0, Tmax = 100)
+sim %>% mutate(state = states[state], action = actions[action]) %>% 
+  ggplot(aes(time, state)) + geom_point()+geom_path() + 
+  geom_point(aes(time, action), col="blue")
+```
+
+
+# Tipping
+
+```{r}
+
+
+p <- list(r =.7, K = 1.2, q = 3, b = 0.15, a = 0.2) # lower-state peak is optimal
+#p <- list(r =.7, K = 1.5, q = 3, b = 0.15, a = 0.2) # higher-state peak is optimal
+
+may <- function(a) 
+  function(x, h = 0){ # May
+    y <- x +  h
+    pmax(
+      ## controlling h is controlling the bifurcation point directly...
+      y + y * p$r * (1 - y / p$K)  - a * y ^ p$q / (y ^ p$q + p$b ^ p$q),  
+      0)
+  }
+
+df <- seq(0.1, 0.26, by = 0.001) %>%
+  map_dfr(function(a) tibble(x = states, f = may(a)(x,0) - x, a = a))
+df %>% 
+  ggplot(aes(x, f)) + 
+    geom_line(aes(group = a, col = a), lwd = 1) +
+    geom_line(data=dplyr::filter(df, near(a, 0.215)), col = "purple", lwd = 1) +
+    geom_hline(aes(yintercept = 0)) + coord_cartesian(ylim = c(-.2, .1))
+```

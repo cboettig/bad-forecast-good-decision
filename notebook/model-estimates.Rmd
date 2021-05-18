@@ -1,0 +1,28 @@
+---
+title: "Data Sources"
+output: github_document
+---
+
+
+```{r}
+library(contentid)
+library(tidyverse)
+library(httr)
+#library(taxalight)
+```
+
+
+# May model fit
+
+
+
+# Logistic model fit
+
+# Allen model fit
+
+
+
+
+
+# Transition matrices from ARIMA?
+

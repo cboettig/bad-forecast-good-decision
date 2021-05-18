@@ -1,0 +1,97 @@
+---
+title: "Data Sources"
+output: github_document
+---
+
+
+```{r}
+library(contentid)
+library(tidyverse)
+library(httr)
+#library(taxalight)
+```
+
+
+## GPDD
+
+John Prendergast, Ellen Bazeley-White, Owen Smith, John Lawton, Pablo Inchausti, et al. 2010. The Global Population Dynamics Database. Knowledge Network for Biocomplexity. doi:10.5063/F1BZ63Z8. 
+
+```{r}
+taxon <- read_csv(resolve("hash://md5/c996a91042243648fa0c803ac631803b", store=TRUE))
+main <- read_csv(resolve("hash://md5/b7c5d86a5a2c44d6a303f09be1a8688a", store=TRUE))
+data_source <- read_csv(resolve("hash://md5/22bf3d98318860b4cf5ea15179d5442b", store=TRUE))
+ts <- read_csv(resolve("hash://md5/8eb14acec7eccfd342f11860909ce588", store=TRUE), guess_max = 1e6)
+```
+
+
+
+```{r}
+# Redlist Data, from API via public token
+pages <- ceiling(137210/10000) -1
+query <- paste0("https://apiv3.iucnredlist.org/api/v3/species/page/", 0:pages,
+"?token=9bb4facb6d23f48efbf424bb05c0c1ef1cf6f468393bc745d42179ac4aca5fee")
+resp <- map(query, httr::GET)
+redlist_status <- map_dfr(resp, function(r){
+  x <- content(r)
+  jsonlite::fromJSON(jsonlite::toJSON(x$result, auto_unbox = TRUE), flatten=TRUE)
+})
+is_global <- map_lgl(redlist_status$population, function(x) length(x) == 0)
+redlist_endangered <- redlist_status %>% filter(category %in% c("CR", "EN"), is_global)
+```
+
+
+```{r}
+# main timeseries data for only those species where complete Census is available
+endagered <- taxon %>% 
+  inner_join(redlist_endangered, by = c(TaxonName = "scientific_name")) %>%
+  select(TaxonName,CommonName, TaxonID)
+endagered  <- main %>% inner_join(endagered)
+census <- endagered %>% filter(SamplingProtocol == "Count", grepl("Census", SamplingEffort))
+census
+
+
+```
+
+
+```{r}
+selected_ts <- ts %>% inner_join(census)
+
+selected_ts %>%
+  mutate(MainID = as.character(MainID)) %>%
+  ggplot(aes(SeriesStep, Population, col=MainID)) +
+  geom_point() + facet_wrap(~CommonName, scales="free")
+
+## Focus on two populations of Macaca sylvanus, Barbary macaque, introduced in Gilbratar
+selected_ts %>% filter(MainID %in% c(5019,5020)) %>% write_csv("barbary_macaque.csv")
+```
+
+
+```{r}
+# Examine details about these studies from the original publications
+data_source %>%
+  inner_join(select(census, 
+                    DataSourceID, 
+                    MainID, 
+                    TaxonName, 
+                    CommonName), 
+             by = c(DatasourceID = "DataSourceID"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+#Access Biotime data, BioTIME Consortium. (2018). BioTIME (Version 2) [Data set]. Zenodo. http://doi.org/10.5281/zenodo.3265871
+#biotime_csv <- resolve("hash://md5/e1b4b7fca5091584831d43a798086496", store=TRUE)
+#biotime <- read_csv(biotime_csv, guess_max = 1e6)
+
+```
