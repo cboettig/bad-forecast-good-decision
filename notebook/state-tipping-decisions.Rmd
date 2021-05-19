@@ -1,5 +1,6 @@
 ---
 output: github_document
+title: The Forecasting Trap -- notes
 ---
 
 
@@ -13,41 +14,71 @@ library(mdplearning) # remotes::install_github("boettiger-lab/mdplearning")
 
 
 ```{r}
-states <- seq(0,30, length=200)
-actions <- seq(0,1, length.out = 100)
+states <- seq(0,30, length=100)
+actions <- seq(0,30, length.out = 100)
 observations <- states
 sigma_g <- 0.05
 sigma_m <- 0.0
 
 benefit <- 1
-cost <- 1
+cost <- 1 # quadratic costs
 reward_fn <- function(x,h) benefit * x - (h ^ cost)
-discount <- 0.99
+discount <- 0.999
 
 #p <- list(r =.7, K = 1.2, q = 3, b = 0.15, a = 0.2) # lower-state peak is optimal
 p <- list(r = 2, K = 25, q = 4, b = 2, a = 7) # higher-state peak is optimal
 
 may <- 
-  function(y, h=0){ # May
-    
+  function(x, h = 0){ # May
+    y <- x +  h
     pmax(
       ## controlling h is controlling the bifurcation point directly...
-      y + y * (p$r+h) * (1 - y / p$K)  - (p$a + h) * y ^ p$q / (y ^ p$q + p$b ^ p$q),
+      y + y * p$r * (1 - y / p$K)  - p$a * y ^ p$q / (y ^ p$q + p$b ^ p$q),  
       0)
   }
+
+
 
 # Matches the optimal policy under these settings (depends on sigma, among others)
 logistic_1 <- 
-  function(y, h = 0){
+  function(x, h = 0){
+    y = x+h
     pmax(
-      y + y * (p$r+h) * (1 - y / p$K),
+      y + y * (p$r - .65) * (1 - y / p$K),  
       0)
   }
 
 
 
-may_2 <- function(x, h = .5) may(x,h)
-may_10 <- function(x, h = 1) may(x,h)
+alt  <- function(x, h = 0, r = .095, K = 20){
+  s <- pmax(x - h, 0)
+  s + s ^ 2 * r * (1 - s / K)
+}
+
+
+
+bh <- 
+  function(x, h = 0){
+    y = x+h
+    A <- 1.3 * p$r
+    B <- .6 * p$K / (p$r - 1)
+    pmax(
+      y * A / (1 + y / B),  
+      0)
+  }
+# Matches the optimal policy under these settings (depends on sigma, among others)
+logistic <- 
+  function(x, h = 0){
+    y = x + h
+    r <- p$r - .9
+    K <- p$K - 4
+    pmax(
+      y + y * r * (1 - y / K),  
+      0)
+  }
+logistic_2 <- function(x, h = 2) logistic(x,h)
+may_2 <- function(x, h = 2) may(x,h)
+may_10 <- function(x, h = 10) may(x,h)
 ```
 
 
@@ -55,18 +86,18 @@ may_10 <- function(x, h = 1) may(x,h)
 ```{r}
 
 
-landscape <- map_dfr(list(logistic_1, may, may_2, may_10), 
+landscape <- map_dfr(list(logistic_1, alt, may), 
                      function(f) tibble(state = states, f = f(states) -states),
                      .id = "model")
 
-landscape %>% ggplot(aes(state, f, col=model)) + geom_line()
+landscape %>% ggplot(aes(state, f, col=model)) + geom_point() + ylim(-5,10) + xlim(0,5)
 ```
 
 ## Optimal management
 
 
 ```{r}
-matrices <- lapply(list(logistic_1, may), 
+matrices <- lapply(list(logistic_1, alt, may), 
        function(f) fisheries_matrices(states, actions, observations, reward_fn, 
                         f, sigma_g, sigma_m, noise = "lognormal")
 )
@@ -74,9 +105,9 @@ matrices <- lapply(list(logistic_1, may),
 
 
 ```{r, results="hide"}
-#solns <- lapply(matrices, function(m) mdp_value_iteration(m$transition, m$reward, discount, epsilon = 0.01, max_iter = 5000))
-
+#solns <- lapply(matrices, function(m) mdp_value_iteration(m$transition, m$reward, discount))
 solns <- lapply(matrices, function(m) mdp_policy_iteration(m$transition, m$reward, discount, policy0 = rep(1,length(states)), max_iter = 5000))
+
 ```
 
 
@@ -86,6 +117,8 @@ df <- map_dfr(solns, function(soln)
                action = actions[soln$policy],
                value = soln$V),
   .id = "model")
+
+df
 ```
 
 
@@ -101,13 +134,14 @@ df %>% ggplot(aes(state, action, col=model)) + geom_line(alpha=0.5)
 
 
 ```{r}
-m <- matrices[[2]]
-x0 = 100
+m <- matrices[[3]]
+x0 = which.min(abs(states - 0.05))
 sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
-                   policy = solns[[2]]$policy, x0 = x0, Tmax = 100)
-sim %>% mutate(state = states[state], action = 20*actions[action]) %>% 
+                   policy = solns[[3]]$policy, x0 = x0, Tmax = 100)
+sim %>% mutate(state = states[state], action = actions[action]) %>% 
   ggplot(aes(time, state)) + geom_point()+geom_path() + 
   geom_point(aes(time, action), col="blue")
+
 
 
 ```

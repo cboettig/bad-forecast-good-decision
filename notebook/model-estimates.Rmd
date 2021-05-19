@@ -67,7 +67,7 @@ siteA <- read_csv("barbary_macaque.csv") %>%
   filter(LocationID == "414")
 
 #scale <- 20
-x <- siteA$PopulationUntransformed / scale
+x <- siteA$PopulationUntransformed
 constants <- list(N = length(siteA$SampleYear),
                   x0 = x[[1]]
 )
@@ -90,21 +90,20 @@ logistic  <- nimble::nimbleCode({
 ```
 
 ```{r}
-#p <- list(r = 2, K = 25, q = 4, b = 2, a = 7) # higher-state peak is optimal
+p <- list(r = 2, K = 25, q = 4, b = 2, a = 10)
 
 may  <- nimble::nimbleCode({
   x[1] <- x0
-  q <- 3
-  s <- 2
-  r ~ dunif(0,5) #dlnorm(log(1) - s^2/2, s)
-  K ~ dunif(0,40) #dlnorm(log(2)- s^2/2, s)
-  a ~ dunif(0,5) # dlnorm(log(7) - s^2/2,  s)
-  b ~ dunif(1.5,2.5) #dlnorm(log(1) - s^2/2, s)
-  sigma ~ dlnorm(log(0.05) - s^2/2, s)
+  q <- 4
+  r ~ dnorm(2, 0.5)
+  K ~ dnorm(25, 8)
+  a ~ dnorm(10, 3)
+  b ~ dnorm(2, .5)
+  sigma ~ dunif(0.0, .1)
 
   for(t in 1:(N-1)){
     mu[t] <-  x[t] + x[t] * r * (1 - x[t] / K)  - a * x[t] ^ q / (x[t] ^ q + b ^ q)
-    x[t+1] ~ dnorm(log( mu[t] ), sd = sigma)
+    x[t+1] ~ dlnorm(log( mu[t] ), sd = sigma)
   }
   
 })
@@ -141,26 +140,48 @@ bayesplot::mcmc_trace(m_draws)
 
 
 ```{r}
-
-may_f <- function(x){ # May
-      x + x * p$r_mean * (1 - x / p$K_mean)  - (p$a_mean) * x ^ 3 / (x ^ 3 + (p$b_mean) ^ 3)
+states <- seq(0,30, length=100)
+p <- list(r = 2, K = 25, q = 4, b = 2, a = 10)
+may_f <- function(y,p){ # May
+  p$q <- 4
+  pmax(y + y * p$r * (1 - y / p$K)  - p$a * y ^ p$q / (y ^ p$q + p$b ^ p$q), 0)
 }
 
+logistic_f <- function(y,p){
+    pmax(y + y * p$r * (1 - y / p$K), 0)
+}
+# draw and plot samples from the mcmc
+landscape <- 
+  slice_sample(m_draws, n=1000) %>% 
+  transpose() %>%
+  map_dfr(function(p) 
+    map_dfr(list(may_f, logistic_f), 
+            function(fun) tibble(state = states, f = fun(states,p)-states),
+            .id = "model"),
+          .id = "sample")
 
-# Matches the optimal policy under these settings (depends on sigma, among others)
-logistic_f <- 
-  function(x){
-      x + x * l_p$r_mean * (1 - x / l_p$K_mean)
-  }
-
-
-states <- seq(0,30, length=200)
-landscape <- map_dfr(list(may_f, logistic_f), 
-                     function(f) tibble(state = states, f = f(states) -states),
-                     .id = "model")
-
-landscape %>% ggplot(aes(state, f, col=model)) + geom_point()
+landscape %>% ggplot(aes(state, f, group=interaction(sample,model), col=model)) + geom_line(alpha=0.01) #+ ylim(c(-5,1))
 ```
+
+## Approximations
+
+controlling h is actually controlling the bifurcation point directly...
+
+
+```{r}
+landscape <- map_dfr(list(logistic_1, logistic_2, may), 
+                     function(f) tibble(state = states, f = f(states, p)),
+                     .id = "model")
+monkeys <- data.frame(state = x, f = lead(x), model = "data") 
+bind_rows(landscape, monkeys) %>% ggplot(aes(state, f, col=model)) + geom_point()
+```
+
+```{r}
+
+
+apes %>% ggplot(aes(x,x_t1)) + geom_point()
+```
+
 
 # Logistic model fit
 
