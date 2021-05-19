@@ -66,7 +66,7 @@ siteA <- read_csv("barbary_macaque.csv") %>%
   mutate(LocationID = as.character(LocationID)) %>% 
   filter(LocationID == "414")
 
-scale <- 20
+#scale <- 20
 x <- siteA$PopulationUntransformed / scale
 constants <- list(N = length(siteA$SampleYear),
                   x0 = x[[1]]
@@ -76,8 +76,8 @@ constants <- list(N = length(siteA$SampleYear),
 
 ```{r}
 logistic  <- nimble::nimbleCode({
-  r ~ dunif(0,2)
-  K ~ dunif(0,10)
+  r ~ dunif(0,5)
+  K ~ dunif(0,30)
   sigma ~ dunif(0,.4)
   x[1] <- x0
   for(t in 1:(N-1)){
@@ -90,14 +90,16 @@ logistic  <- nimble::nimbleCode({
 ```
 
 ```{r}
+#p <- list(r = 2, K = 25, q = 4, b = 2, a = 7) # higher-state peak is optimal
+
 may  <- nimble::nimbleCode({
   x[1] <- x0
   q <- 3
   s <- 2
-  r ~ dlnorm(log(.7) - s^2/2, s)
-  K ~ dlnorm(log(1.2)- s^2/2, s)
-  a ~ dlnorm(log(0.2) - s^2/2,  s)
-  b ~ dlnorm(log(0.15) - s^2/2, s)
+  r ~ dunif(0,5) #dlnorm(log(1) - s^2/2, s)
+  K ~ dunif(0,40) #dlnorm(log(2)- s^2/2, s)
+  a ~ dunif(0,5) # dlnorm(log(7) - s^2/2,  s)
+  b ~ dunif(1.5,2.5) #dlnorm(log(1) - s^2/2, s)
   sigma ~ dlnorm(log(0.05) - s^2/2, s)
 
   for(t in 1:(N-1)){
@@ -124,16 +126,13 @@ mcmc <- function(model, x, constants, niter = 100000, nburin = 1000){
 
 ```{r}
 l_draws <- mcmc(logistic, x, constants)
-l_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
-  
-```
-```{r}
+l_p <- l_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
 bayesplot::mcmc_trace(l_draws)
 ```
 
 ```{r}
 m_draws <- mcmc(may, x, constants)
-m_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
+p <- m_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
 bayesplot::mcmc_trace(m_draws)
 
 ```
@@ -141,7 +140,27 @@ bayesplot::mcmc_trace(m_draws)
 
 
 
+```{r}
 
+may_f <- function(x){ # May
+      x + x * p$r_mean * (1 - x / p$K_mean)  - (p$a_mean) * x ^ 3 / (x ^ 3 + (p$b_mean) ^ 3)
+}
+
+
+# Matches the optimal policy under these settings (depends on sigma, among others)
+logistic_f <- 
+  function(x){
+      x + x * l_p$r_mean * (1 - x / l_p$K_mean)
+  }
+
+
+states <- seq(0,30, length=200)
+landscape <- map_dfr(list(may_f, logistic_f), 
+                     function(f) tibble(state = states, f = f(states) -states),
+                     .id = "model")
+
+landscape %>% ggplot(aes(state, f, col=model)) + geom_point()
+```
 
 # Logistic model fit
 
