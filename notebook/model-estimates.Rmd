@@ -7,12 +7,139 @@ output: github_document
 ```{r}
 library(contentid)
 library(tidyverse)
-library(httr)
-#library(taxalight)
 ```
 
 
 # May model fit
+
+---
+title: 'Appendix B'
+date: "`r Sys.Date()`"
+author: Carl Boettiger
+journal: Appendix
+layout: 3p
+bibliography: refs.bib
+#output:
+#  tufte::tufte_handout:
+#    dev: cairo_pdf
+#    latex_engine: xelatex
+output: 
+  hrbrthemes::ipsum_pdf:
+    dev: cairo_pdf
+    latex_engine: xelatex
+
+---
+
+```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
+## Plotting themes, colors, and fonts 
+## aesthetics choices only, all can be omitted without consequence
+library(ggthemes)
+library(hrbrthemes)
+library(ggplot2)
+library(Cairo)
+library(extrafont)
+library(patchwork)
+library(styler)
+extrafont::loadfonts(quiet = TRUE)
+ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
+
+scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
+scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
+pal <- ggthemes::solarized_pal()(8)
+txtcolor <- "#586e75"
+
+knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = FALSE)
+
+```
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(nimble)
+```
+
+
+
+
+```{r}
+siteA <- read_csv("barbary_macaque.csv") %>% 
+  select(SampleYear, PopulationUntransformed, LocationID) %>%
+  mutate(LocationID = as.character(LocationID)) %>% 
+  filter(LocationID == "414")
+
+scale <- 20
+x <- siteA$PopulationUntransformed / scale
+constants <- list(N = length(siteA$SampleYear),
+                  x0 = x[[1]]
+)
+```
+
+
+```{r}
+logistic  <- nimble::nimbleCode({
+  r ~ dunif(0,2)
+  K ~ dunif(0,10)
+  sigma ~ dunif(0,.4)
+  x[1] <- x0
+  for(t in 1:(N-1)){
+    mu[t] <- x[t] + x[t] * r * (1 - x[t] / K)
+    x[t+1] ~ dlnorm(log(mu[t]), sd = sigma)
+  }
+
+})
+
+```
+
+```{r}
+may  <- nimble::nimbleCode({
+  x[1] <- x0
+  q <- 3
+  s <- 2
+  r ~ dlnorm(log(.7) - s^2/2, s)
+  K ~ dlnorm(log(1.2)- s^2/2, s)
+  a ~ dlnorm(log(0.2) - s^2/2,  s)
+  b ~ dlnorm(log(0.15) - s^2/2, s)
+  sigma ~ dlnorm(log(0.05) - s^2/2, s)
+
+  for(t in 1:(N-1)){
+    mu[t] <-  x[t] + x[t] * r * (1 - x[t] / K)  - a * x[t] ^ q / (x[t] ^ q + b ^ q)
+    x[t+1] ~ dnorm(log( mu[t] ), sd = sigma)
+  }
+  
+})
+
+```
+
+
+```{r}
+mcmc <- function(model, x, constants, niter = 100000, nburin = 1000){
+  r_model <- nimbleModel(model, constants = constants)
+  r_model$setData(list(x = x))
+  c_model <- compileNimble(r_model)
+  r_mcmc <- buildMCMC(c_model)
+  c_mcmc <- compileNimble(r_mcmc)
+  df <- runMCMC(c_mcmc, niter = niter, nburnin = nburin)
+  tibble::as_tibble(df)
+}
+```
+
+```{r}
+l_draws <- mcmc(logistic, x, constants)
+l_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
+  
+```
+```{r}
+bayesplot::mcmc_trace(l_draws)
+```
+
+```{r}
+m_draws <- mcmc(may, x, constants)
+m_draws %>% summarise(across(everything(), list(mean = mean, sd = sd)))
+bayesplot::mcmc_trace(m_draws)
+
+```
+
+
+
 
 
 

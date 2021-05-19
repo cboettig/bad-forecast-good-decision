@@ -108,13 +108,35 @@ df %>% ggplot(aes(state, action, col=model)) + geom_point(alpha=0.5)
 
 
 ```{r}
+m <- matrices[[3]]
 x0 = which.min(abs(states - 0.05))
 sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
-                   policy = soln$policy, x0 = x0, Tmax = 100)
+                   policy = solns[[3]]$policy, x0 = x0, Tmax = 100)
 sim %>% mutate(state = states[state], action = actions[action]) %>% 
   ggplot(aes(time, state)) + geom_point()+geom_path() + 
   geom_point(aes(time, action), col="blue")
+
+
+
 ```
+
+unmanaged 
+
+
+```{r}
+nothing <- rep(1, length(states))
+m <- matrices[[3]]
+x0 = which.min(abs(states - 0.7))
+sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
+                   policy = nothing, x0 = x0, Tmax = 1000)
+sim %>% mutate(state = states[state], action = actions[action]) %>% 
+  ggplot(aes(time, state)) + geom_point()+geom_path() + 
+  geom_point(aes(time, action), col="blue")
+
+
+
+```
+
 
 
 # Tipping
