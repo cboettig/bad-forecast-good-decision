@@ -484,8 +484,8 @@ We repeat the analysis above over a grid of $r$ and $K$ values.
 
 ```{r}
 # compare over grid set of candidate r and K
-rs <- c(0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 2)
-Ks <- c(0.5, 1, 1.5, 4, 10, 16)
+rs <- seq(.1, 2, length=6)
+Ks <- seq(1,19,by=3)
 sigma <- 0.1
 n_models <- length(rs)*length(Ks)
 pars <- expand.grid(rs, Ks)
