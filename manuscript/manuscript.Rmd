@@ -1,13 +1,12 @@
 ---
-title: 'Iterative forecasting and the trap of self-fulfilling prophecies'
-author:
+title: 'The forecast trap'
 - name: Carl Boettiger
   email: cboettig@berkeley.edu
   affiliation: a,1
 date: "`r Sys.Date()`"
 
 abstract: |
-  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using a classic example from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast can lead to decidedly worse outcomes. This creates a cycle of self-fulfilling prophecy, in which the manager not only over-exploits the fishery leading to declining biomass and declining yields, but also becomes increasingly convinced that these actions are not over-exploitation but in fact consistent with the best models and data for sustainable management. 
+  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using a classic example from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (as measured by most widely used statistical scores) can lead to decidedly worse outcomes (as measured by real-world objectives such as dollars or fish). This can create a forecast trap: in which the manager not only over-exploits the fishery leading to declining biomass and declining yields, but also becomes increasingly convinced that these actions are not over-exploitation but in fact consistent with the best models and data for sustainable management. The forecast trap is not unique to this example, but possible whenever (1) the optimal management policy is not unique to the generative process, and (2) the generative process is not itself in our candidate set of models. 
 
 corresponding_author:
   code: 1
@@ -36,7 +35,7 @@ layout: 3p
 journal: Ecology Letters
 ---
 
-- abbreviated running title: "The trap of self-fulfilling prophecies"
+- abbreviated running title: "The forecast trap"
 - Authorship statement: _This is a single-author paper_
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
 - number of words in the abstract: 116
@@ -80,30 +79,45 @@ By comparing outcomes predicted by a model to future observations, a decision ma
 The value of iterative learning has long been reflected in the theory of adaptive management [@Walters1978] as well as in actual adaptive management practices such as Management Strategy Evaluation (MSE) [@Punt2016] used in fisheries, and is a central tenet of a rapidly growing interest in ecological forecasting [@Dietze2018].
 But, do iterative learning approaches always lead to better decisions?
 
-In this paper, I demonstrate that the model that makes the best prediction is not necessarily the model that makes the best policy.
-I show that iterative learning or iterative forecasting can be counter-productive to management outcomes:
-that in some cases, a manager would be better to ignore new information which could reduce uncertainty over available models.
+In this paper, I demonstrate that the model that makes the better prediction (rigorously defined as a strictly proper score, @Gneiting2007) is not necessarily the model that makes the better policy (rigorously defined in terms of utility, e.g. expected net present value, @Clark1990).
+I show that methods for learning about model structure or parameters by repeatedly comparing forecasts to observations can be counter-productive.
 Put another way, the value of information (VOI, as measured by the expected utility given that information minus the utility without it; see @Howard1966; @Katz1987), can actually be negative.
-This is not a consequence of imperfect information (e.g. observation error) or the result of model over-fitting.
-The issue is an intrinsic consequence of the fact that many models can lead to the same decisions, and no generic solution to the problem exists. 
-Worse, whenever this situation arises, the decision-maker becomes trapped by a form of self-fulfilling prophecy: 
-the model(s) which the decision-makers have learned to favor lead to decisions and outcomes that closely match model expectations.
-Consequently, the decision-maker can become ever more firmly entrenched in the belief that their new models are accurate and the mediocre outcomes they experience are as good as it gets, while confidently rejecting earlier models which would have led to much better outcomes.
-As this example will show, by better understanding what aspects of a model are most and least important to shaping a particular decision, we can at least anticipate the circumstances that make this problem more likely.
+When VOI is negative, the decision-maker may become trapped into accepting mediocre outcomes derived from a model that makes accurate forecasts, even when a less accurate model that would generate better outcomes is available.
+In our example, the manager will decide the fishery in question simply has low productivity, because such a model yields better predictions, rather than realizing that the low productivity observed is in fact a consequence of the over-harvesting.
+This disconcerting situation can arise whenever two conditions are met: (1) the optimal management policy is not unique to the generative process, and (2) the generative process is not included in candidate set of models.
+These conditions do not guarantee the trap will occur, only the circumstances in which it cannot be ruled out entirely.
 
-Iterative learning approaches such as adaptive management or iterative forecasting [@Dietze2018] are particularly compelling because they address a different reason why seemingly-accurate models can lead to poor outcomes: the problem of overfitting.
-When models are estimated from the data they seek to describe, the model may overfit the data, making the data seem even more likely than it would be under the true process [@Burnham1998].
-Over-fit models may underestimate uncertainty and make poor predictions about future outcomes [@Ginzburg2004].
-Because any iterative learning compares models to future outcomes, over-fitting those outcomes is impossible.
-This concept was rigorously formalized by @Gneiting2007's proof of "proper" scoring rules.
-By definition, under a proper scoring rule, no probabilistic prediction $Q(x)$ can score better, on average, than that of the underlying process, $P(x)$.
-@Gneiting2007 further shows which techniques for evaluating forecast predictions do and do not satisfy this condition, i.e. which cannot be over-fit.
-Adaptive management is based on equally secure footing because model predictions are again compared to future outcomes not used to fit the model.
-Instead of scoring and selecting among alternative models, adaptive management considers probabilities over all models [@Walters1978].
-These two approaches are particularly compelling because they can both reduce uncertainty and avoid over-fitting.
-My example is not meant to undercut the importance of these approaches.
-Previous work has long acknowledged the panoply of ways in which iterative learning or other model-based decision making can go astray due to conflicting incentives, implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
-Here, the problem is more fundamental. 
+The forecast trap is not the only mechanism by which some model-choice methods lead to worse outcomes.
+Previous work has long acknowledged the panoply of ways in which model-based decision making can go astray due to conflicting incentives, implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
+Another widely recognized problem is that of over-fitting [@Burnham1998], in which the model that best fits historical data fails to best predict future data [@Ginzburg2004]. 
+Under such circumstances, it is easy to see how an over-fit model would also lead to bad outcomes.
+However, over-fitting plays no role in the forecast trap, where model predictions are assessed only using probabilistic forecasts, and not observations which had previously been used to fit the models. 
+Formally, these scores satisfy the 'proper scoring' rule of @Gneiting2007, which proves no other probabilistic prediction $Q(x)$ will have a better expected score than that of the generative process $P(x)$. 
+@Gneiting2007's proof of proper scoring has since become a critical tool to avoid over-fitting when choosing models to make decisions, but as I illustrate, will not prevent the forecast trap.
+
+# From Predictive Models to Decision Policies
+
+How do we translate a model-based forecast into a decision?
+It is impossible to discuss outcomes associated with a forecast without first agreeing on this process.
+In practice, decision-makers may use a forecast in a wide variety of ways in selecting a course of action, including ways which may run counter to the stated objectives of management [@Ludwig1993].
+In principle at least, the field of decision theory provides a formal mechanism for determining the optimal strategy given a model forecast.
+For instance, a wide range of ecological conservation and management problems can be expressed as a Markov Decision Process (MDP) problems [@Marescot2013].
+Existing computer algorithms such as stochastic dynamic programming (SDP) take a probabilistic model _forecast_ (more precisely, the probability $P(x_{t+1} | x_t, a_t)$ of the system being in state $x_{t+1}$ in the next iteration given that it was previously in state $x_t$ and the manager selected action $a_t$) and the _desired management objective_ (i.e. the maximize the expected biomass of species protected or the expected dollar profit of a fishery [see @Clark1990; @Halpern2013]) as input, and return the _decision policy_ which maximizes that objective [@Marescot2013].
+This provides a principled way to associate a decision policy with any given forecast model.
+
+Two features of this approach are worth emphasizing. 
+First, the resulting decision is derived directly from the forecast model and the desired objective.
+The SDP algorithm is a reasonable description of the approach any ideal manager would use -- considering all possible outcomes from all possible sequences of actions and selecting the best sequence.
+For complex models this process is too laborious even for a computer, and is often simplified by considering only a selection of predetermined policies (as in Management Strategy Evaluation, MSE, @Punt2016), or scenarios (as in scenario analysis, @Polasky2011).
+Such shortcuts are often necessary for complex real-world models, but open additional room for error: the policy we derive from a given forecast may perform poorly not because the model forecast was at fault, but because of those simplifying assumptions about possible policies. 
+To ensure that the forecast trap is not a result of such assumptions about possible policies, we will consider a problem simple enough to solve directly with SDP. 
+This leads to the second point: the resulting decision policy is optimal, so long as the forecast model is correct.
+In this way, the SDP merely stands in for a mathematically precise way in which forecasts are turned into decisions.
+Recognizing that the SDP-derived policy (A) comes directly from the forecast model, and (B) gives the optimal policy for said forecast, seems to suggest that the whatever model makes the better forecast will surely also lead to better outcomes (as measured in terms of whatever utility we have chosen to maximize). 
+While this intuition is no doubt _often_ accurate, our purpose here is to demonstrate that it is by no means _guaranteed_:
+it is also possible for the model which makes the better forecast to lead to worse outcomes. 
+
+# Ecological Models
 
 I illustrate this problem using an example from fisheries management. 
 Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
@@ -113,8 +127,6 @@ For example, the strategies of constant mortality [@Schaefer1954] and constant e
 While more complex models are often required for specific applications, such models both share features with and are guided by theory built on much more general, simpler models [@Levins1966],
 from the Maximum Sustainable Yield of @Schaefer1954 or the epidemiological reproductive number, $R_0$ of @Kermack1927. 
 
-
-# Ecological Models
 
 The sustainable harvest decision problem can be stated as follows: The fish stock is observed to be in state $X_t$ at time $t$, and is then subjected to some harvest $H_t$ before recruiting new fish, subject to stochastic environmental noise $\xi_t$, to bring the stock to $X_t+1$,
 
@@ -164,6 +176,10 @@ with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
 The task of deciding whether Model 1 or model 2 would be the better choice for decision making is thus perhaps the simplest example of the much studied issue of model uncertainty that we can pose. 
 As in any real world scenario, neither model is the true model, but nevertheless this model set contains a good enough approximation of the true model to make good decisions.
 However, any of the well-developed approaches for decision-making under model uncertainty will prefer model 2 over model 1, despite the fact that the optimal policy under model 2 leads to much worse outcomes ecologically and economically.
+
+
+
+
 
 
 # Methods for Managing Under Model Uncertainty 
@@ -229,8 +245,7 @@ fig1ab + fig1cd +
 ```
 
 
-In Scenario B (actively harvest), I have first solved for the optimal management strategy for both model 1 and model 2 [Fig 1b].
-For small noise and concave functions with linear reward structure this can be done analytically [see proof in @Reed1979], or solved more generally by stochastic dynamic programming [see review by @Marescot2013, details in Appendix].
+In Scenario B (actively harvest), I have first solved for the optimal management strategy for both model 1 and model 2 [Fig 1b] using SDP, [see @Marescot2013 or code in the Appendix].
 Under this scenario, replicate simulations of the stock are harvested at each time step using the optimal quota dictated by either model 1 and model 2.
 The resulting stock sizes in the time-step following this harvest are once again compared to the probabilities predicted by each model using Eq \eqref{proper}.
 Model 2 unequivocally outperforms model 1 in both scenarios of passive observation and active harvest.
