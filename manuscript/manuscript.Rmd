@@ -80,7 +80,7 @@ The value of iterative learning has long been reflected in the theory of adaptiv
 But, do iterative learning approaches always lead to better decisions?
 
 In this paper, I demonstrate that the model that makes the better prediction (rigorously defined as a strictly proper score, @Gneiting2007) is not necessarily the model that makes the better policy (rigorously defined in terms of utility, e.g. expected net present value, @Clark1990).
-I show that methods for learning about model structure or parameters by repeatedly comparing forecasts to observations can be counter-productive.
+I show that our best methods for learning about model structure or parameters by repeatedly comparing forecasts to observations can be counter-productive.
 Put another way, the value of information (VOI, as measured by the expected utility given that information minus the utility without it; see @Howard1966; @Katz1987), can actually be negative.
 When VOI is negative, the decision-maker may become trapped into accepting mediocre outcomes derived from a model that makes accurate forecasts, even when a less accurate model that would generate better outcomes is available.
 In our example, the manager will decide the fishery in question simply has low productivity, because such a model yields better predictions, rather than realizing that the low productivity observed is in fact a consequence of the over-harvesting.
@@ -117,16 +117,26 @@ Recognizing that the SDP-derived policy (A) comes directly from the forecast mod
 While this intuition is no doubt _often_ accurate, our purpose here is to demonstrate that it is by no means _guaranteed_:
 it is also possible for the model which makes the better forecast to lead to worse outcomes. 
 
+
 # Ecological Models
+
 
 I illustrate this problem using an example from fisheries management. 
 Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
 Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
+
+While methods such as iterative forecasting [@Deitze2018] and adaptive management [@Walters1978] can be _applied_ to real-world using empirical data, we can only _evaluate_ their potential in hypothetical examples when the true model is known, e.g. through numerical simulation.
+That approach allows us to compare both predictions and outcomes across implementations in independent identical replicate worlds.
+As noted above, we will assume our underlying model simple enough to solve by SDP, ensuring any poor outcomes from a given forecast are not merely an artifact of an imperfect decision process.
+Simple models also have the virtue in being accessible to closed form analysis, which, as we shall see, can give greater insight into when and why this forecast trap arises.
+That insight will in turn will allow us to examine if the same problem is likely to arise under more complex models.
+
+<!--
 While modern fisheries management frequently relies on complex models which may contain over 100 parameters to reflect the specific age or stage structure of a specific fish stock [@ramlegacy2018; @ram], fisheries management and research has always appreciated the central insights offered by simpler one-dimensional models which continue to underpin both the theory and practice.
 For example, the strategies of constant mortality [@Schaefer1954] and constant escapement [@Clark1973; @Reed1979] are built on the same class of models considered here, which also continue to underpin global analyses of stock-rebuilding [e.g. @Costello2016; @Memarzadeh2019] and the foundations of adaptive management [e.g. @Walters1978; @Smith1981; @Walters1981].
 While more complex models are often required for specific applications, such models both share features with and are guided by theory built on much more general, simpler models [@Levins1966],
 from the Maximum Sustainable Yield of @Schaefer1954 or the epidemiological reproductive number, $R_0$ of @Kermack1927. 
-
+-->
 
 The sustainable harvest decision problem can be stated as follows: The fish stock is observed to be in state $X_t$ at time $t$, and is then subjected to some harvest $H_t$ before recruiting new fish, subject to stochastic environmental noise $\xi_t$, to bring the stock to $X_t+1$,
 
@@ -142,28 +152,34 @@ subject to discount rate $\delta$ [@Clark1973]:
 \sum_{t=0}^{t=\infty} U(X_t, H_t) \delta^t \label{utility}
 \end{equation}
 
-For simplicity and comparison with prior work, we will assume a fixed price of fish $p$ with no additional cost on additional harvest, $U(X_t, H_t) = p \min(H_t, X_t)$ (noting that realized harvest cannot exceed the stock size). Without loss of generality we will set the price $p = 1$ and modest discount $\delta = 0.99$.
+We will assume we have been given a fixed price of fish $p=1$ with no additional cost on additional harvest, $U(X_t, H_t) = p \min(H_t, X_t)$ modest discount $\delta = 0.99$.
 
-We further imagine that the function $f$ is not known precisely.
-We restrict ourselves to two simple candidate models $f_1$ and $f_2$.
-Both share the same underlying structure of logistic recruitment (known as the Gordon-Schaefer model in fisheries context owing to groundbreaking work independently by @Schaefer1954 and @Gordon1954), differing only in their choice of certain parameters:
+
+Let us assume that our set of candidate models are simply the possible parameterizations of a stochastic version of the classic Gordon-Schaefer model [@Schaefer1954; @Gordon1954]:
 
 \begin{equation}
-f_i(Y) = Y + r_i Y \left( 1 - \frac{Y}{K_i} \right) * \xi_t(\sigma)
+f_i(Y_{t+1}) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
 \end{equation}
 
-Let us assume $\xi_t(\sigma)$ represents log-normal random noise with a mean of unity and log-standard-deviation $\sigma_i$ for each model.
-Model 1 is given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, Model 2 by $r_2 = 0.5$, $K_2 = 10$, $\sigma = 0.075$ (in dimensionless units).
-Having both the larger growth rate and the larger carrying capacity, model 1 is clearly the more optimistic of the two choices. 
+Where $Y$ is the population size after harvest, $Y_t = X_t-H_t$  and $\xi_t(\sigma)$ represents log-normal random noise with a mean of unity and log-standard-deviation $\sigma_i$.
 
-Selecting between model 1 and model 2 can thus be considered the simplest illustration of the model uncertainty problem.
-This is a subset of the more general problem of selecting model parameters, assuming a logistic growth, which itself is a subset of estimating the best structural form (e.g. Ricker, Beverton-Holt, etc).
-There is no need to consider these more complicated versions of the model uncertainty problem here, since they all inherit the same issue.
-Reducing the model selection problem to these two models simplifies the presentation and will aid intuition at no loss of generality.
+<!--
+This is where most fisheries biologists will probably stop reading.
+Modern stock assessment models frequently have over 100 parameters.
+However, the goal of exercise understand how a good forecast can lead to a bad decision even when we use these iterative forecasting methods correctly, not predict the safe harvest levels of Pacific Anchovy in 2022.
+If any method fails to select the better model in the simplest cases, it does not often do better in more complex ones, even though the problems are harder to detect.
+-->
 
-The only additional assumption we will need is that the "true" model is not among the suite of models under consideration.
-Mathematical models are, at best, approximations of the underlying processes.
-Ecological processes are much too complex to ever be modeled exactly.
+Each possible parameterization of the model will generate a different forecast, and thus require a it's own SDP solution to determine the corresponding policy.
+We will consider a larger suite of these logistic models in a moment, but first let us draw out only two such parameterizations from this larger suite.
+This will let us focus our attention on two of the most interesting regions of that are already included within that larger parameter space of all possible values for $r$, $K$, and $\sigma$.
+Thus, let us take "Model 1" as being given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, "Model 2" by $r_2 = 0.5$, $K_2 = 10$, $\sigma_2 = 0.075$. 
+We can imagine our comparison of these two models as a microcosm of the larger comparison between all possible paremeterizations. 
+
+Ecologists will rightly scoff at the simplicity of these models -- the real world is much more complicated.
+So it is important to bear in mind that these are not models that seek to approximate the stock dynamics of real world fisheries, only to approximate whatever "true model" we are using to drive the simulation.
+In recognition of the fact that real world is always more complex than even our best ecological models, we will assume a "true model" for the simulations that is not in the Gordon-Schaefer class (i.e. our candidate models will never contain the true model), but is not so rich that a Gordon-Schaefer curve would seem a hopelessly poor approximation.
+
 For illustrative purposes, we will thus assume the "true" process to be given by Model 3, which is unknown to the decision-maker, but similar enough to at least one of the candidate models might be considered a reasonable approximation:
 
 \begin{equation}
@@ -173,14 +189,8 @@ f_3(Y) = Y + r_3 Y^4 \left( 1 - \frac{Y}{K_3} \right)
 with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$. 
 
 
-The task of deciding whether Model 1 or model 2 would be the better choice for decision making is thus perhaps the simplest example of the much studied issue of model uncertainty that we can pose. 
-As in any real world scenario, neither model is the true model, but nevertheless this model set contains a good enough approximation of the true model to make good decisions.
-However, any of the well-developed approaches for decision-making under model uncertainty will prefer model 2 over model 1, despite the fact that the optimal policy under model 2 leads to much worse outcomes ecologically and economically.
-
-
-
-
-
+Certainly, the challenge of choosing which model to base a decision policy on in the real world is much harder than this binary choice between two models, and yet it is sufficient to illustrate the trap. 
+We will see later why making the models much more complex does not guarantee that the task becomes easier or that the trap may be ruled out.
 
 # Methods for Managing Under Model Uncertainty 
 
@@ -301,8 +311,6 @@ In practice, we never have access to the generating model, so it is reasonable t
 As we see here, the best approximation for forecasting future states does not in fact lead to better outcomes.
 
 
-
-
 One obvious limitation in this comparison is that scenario B treats each model as fixed over the entire course of the simulation.
 It would be possible to generate forecasts for the next $n$ steps, but these forecasts would also be conditional on the management action (i.e. harvest quota) selected at each step.
 To evaluate two-step-ahead predictions we must consider each possible action under each possible state predicted by the step-ahead forecast, weighted by probability of the state given the model and the probability of the model.
@@ -359,10 +367,8 @@ Consequently, each iteration the managers are only more firmly convinced that th
 <!-- quick summary of what was demonstrated -->
 Given this simple decision problem in which one of the two models leads to effectively optimal ecological and economic outcomes, current approaches invariably choose the other.
 Moreover, a decision maker employing an adaptive management or iterative forecasting assessment such as those considered here would have no way of realizing that the outcomes they experienced were in fact sub-optimal.
-In both approaches, the manager quickly concludes that model 1 is entirely implausible, while finding that model 2 is remarkably accurate at predicting future values.
+In both approaches, the manager quickly concludes that model 1 is entirely implausible, while finding that model 2 is remarkably accurate at predicting future values -- the manager is unknowing trapped into bad outcomes.
 This problem is not addressed by re-estimating parameters (equivalently, considering a larger suite of models spanning a wide range of possible $K$ and $r$ values): which improves only marginally over the outcome of considering only two models [Fig 3B].
-Both iterative forecast evaluation and the adaptive management approaches to reducing model uncertainty lead to management becoming trapped in a self-fulfilling prophecy:
-holding the fish population at an unproductively low biomass suggested by model 2 while becoming ever more convinced that model is suitable. 
 Without access to the true model, none of our methods for model choice or reducing model uncertainty can break this trap.
 This should not be mistaken as a critique of adaptive management or iterative forecasting specifically -- other model choice approaches such as goodness-of-fit, information criteria or cross-validation would all prefer model 2 as well. 
 
@@ -373,11 +379,29 @@ Plotting the growth rate functions of each model, [Fig 4A], it is hardly surpris
 Nevertheless, decisions based on model 1 are nearly indistinguishable from those based on the true model [Fig 4B], while model 2 leads to over-harvesting.
 The explanation comes from noticing that the stock size corresponding to the maximum growth rate under model 1 (the peak of the curve) falls at almost exactly the same stock size as that of the peak growth rate for model 3.
 Meanwhile, the peak of model 2 occurs at a substantially lower stock size.
-While the optimal control solution appears to depend only on a step-ahead forecast accuracy (indeed, the SDP solution method used here takes only step-ahead forecast probabilities as input, [@Marescot2013]), mathematical analysis showed long ago [@Reed1979] that the optimal solution for this problem depends only on keeping the biomass at the value responsible for the maximum growth rate.
+While the optimal control solution appears to depend only on a step-ahead forecast accuracy (recall that the SDP solution method used here takes only step-ahead forecast probabilities as input, [@Marescot2013]), mathematical analysis showed long ago [@Reed1979] that the optimal solution for this problem depends only on keeping the biomass at the value responsible for the maximum growth rate.[^1]
+Consequently, many models can share the same optimal solution, regardless of their forecast performance.
+
+This result may appear surprising, and begs the question as to whether the non-uniqueness of the optimal solution is not merely an artifact of the simple models considered here. 
+Surely more any realistically complex model would require a comparably more complex management policy such that the likelihood that any of our candidate models shares the same optimal policy would be vanishingly small?
+The intuition sounds reasonable
+
+
+
+
+
+[^1]: This is only approximately accurate. @Reed1979 demonstrates 
+
+
 This realization is quite general: for most decision problems, simple models will exist under which the optimal decision is the same as it would be for the true model, even when that simple model is wrong in most other ways.
+
+
 
 <!-- Intuition for it's not just this example -->
 Situations similar to this example, in which a model can lead to the optimal decision while producing a poor forecast, are likely to be widespread.
+
+
+<!--
 For example, marine fisheries typically restrict a Management Strategy Evaluation [MSE; @Punt2016] to constant mortality, (defined as harvest per unit biomass, $F = H/B$).
 Constant mortality is technically only optimal in a deterministic model [@Clark1973]; but is easier to solve for than the SDP methods for constant escapement shown here,
 which in practice is used mostly in salmon fisheries and the resource economics literature [see @pomdp-intro, @Costello2016].
@@ -385,12 +409,7 @@ While Model 1 used here will not lead to a good constant-mortality policy, it is
 In the example shown above, Model 1 achieves optimal results by choosing $K$ such that $K/2$ matches the peak growth rate under the true model [@Reed1979.
 Under constant mortality, we instead choose a logistic model with $r$ such that $r/4$ matches the optimal constant mortality under the true model [@Schaefer1954].
 Everything else about our choice of Model 1 can be far from the true model, and yet it will give optimal results, just as above.
-Examples in which decisions depend a subset or ratio of model parameters can be found everywhere.
-In @Dee2017, the optimal number of non-critical species to protect in order to conserve critical species is given by a ratio of model parameters.
-In the SIR model of @Kermack1927 the basic reproductive number that determines if an infection spreads is the ratio of contact rate over the recovery rate, $R_0 = \beta / \gamma$.
-In general, there will be many models that can lead to the same decision, and thus the possibility of a similar scenario to the one seen here.
-Likewise there will always be infinitely many models like Model 2, which can fit very close to the data [Fig 4] while leading to a very
-different decision policy.
+-->
 
 ```{r figure4, fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth. Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
 # Fig 4
@@ -414,23 +433,23 @@ plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 ```
 
 
-<!-- Not just overfitting -->
-Note that the mechanism shown here has nothing to do with the much more familiar issue of over-fitting, in which a better-fitting model will also lead to worse outcomes [@Burnham1998].
-In fact, a model which has been over-fit will gradually be rejected by either the iterative forecasting or adaptive management approaches shown here, as these approaches continually confront the models with new data to which they had not been previously fit.
-The ability to avoid overfitting is one of the greatest appeals of any iterative management strategy.
-In the example here, both model 1 and model 2 have the same structural complexity.
-The better decision performance of model 1 is a consequence of capturing the key attribute needed for a good decision, which is perhaps surprisingly an all-together different criteria than fit.
-Note that other methods of model selection not considered here, including goodness-of-fit metrics such as $r^2$ or information criteria [@Burnham1998], will all prefer Model 2 over Model 1 for the same reason.
-
-<!-- Not just "get more models"
-wrong!
-
--->
  
-This simple example can be resolved by including a model that closely approximates both the location of the peak and the shape of the curve of our "true" model.
-Given sufficient data, either adaptive management or iterative forecasting will prefer such a model (as guaranteed by @Gneiting2007's theorem), while having the correct peak location means the model will also lead to the optimal policy in this case (as guaranteed by @Reed1979's theorem).
-Yet the larger problem remains unresolved.
+This simple example can be resolved by including our true model in the candidate set, or any class of models flexible enough to 'span' the true model, such as a Gaussian Process [e.g. see @Boettiger2015].  
+Given sufficient data, either approach shown here will prefer the true model over any other (as guaranteed by @Gneiting2007's theorem), and thus discover the optimal policy.
+While it is not difficult to image a candidate set of models flexible enough to include the very simple "true model" from Eq (4), it is much more unlikely that our model candidates truly span the generative processes of the real world.
+
+
+
+This example demonstrates that it is possible for a model to give quite good forecasts while leading to marginal outcomes, and conversely, that is possible for a model to give optimal outcomes while making terrible forecasts.
+This result may be particularly surprising given that the policy is derived directly from the forecast.
+
+
+
+
+
 In most realistic management scenarios, we do not have the benefit of a theorem similar to Reed's to identify what features are most critical to approximate well and what are not.
+
+
 For instance, the theorem no longer holds if stock estimates are uncertain [@pomdp-intro].
 Absent the guidance of such results, iterative learning over even relatively rich possible candidate models can move us towards worse outcomes than not learning at all.
 
@@ -442,6 +461,7 @@ For example, active adaptive management is premised on the observation that futu
 Others have also noted that even big improvements in predictive accuracy could have negligible improvement on the decision outcomes, which motivates quantifying the Value of Information (VOI) [@Katz1987].
 But in both cases, the worst outcome is wasted effort.
 In the scenario considered here, the VOI is negative: any learning over the proposed model uncertainty leads to lower expected net utility than not learning.
+
 
 
 Worse, absent the counter-factual of non-adaptive management to compare to, this deterioration in outcomes is invisible. 
