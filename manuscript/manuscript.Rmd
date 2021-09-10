@@ -255,9 +255,9 @@ fig1ab + fig1cd +
 ```
 
 
-In Scenario B (actively harvest), I have first solved for the optimal management strategy for both model 1 and model 2 [Fig 1b] using SDP, [see @Marescot2013 or code in the Appendix].
-Under this scenario, replicate simulations of the stock are harvested at each time step using the optimal quota dictated by either model 1 and model 2.
-The resulting stock sizes in the time-step following this harvest are once again compared to the probabilities predicted by each model using Eq \eqref{proper}.
+In Scenario B (actively harvest), I have first solved for the optimal management strategy using the forecast-matrices of both model 1 and model 2 [Fig 1b] using SDP [@Marescot2013; code in the Appendix].
+Replicate simulations of the stock are harvested at each time step using the optimal quota dictated by either model's forecasts, according to the SDP. 
+The resulting stock sizes in the subsequent timestep are scored against the forecast probabilities of each model using Eq \eqref{proper}.
 Model 2 unequivocally outperforms model 1 in both scenarios of passive observation and active harvest.
 
 Despite the clearly superior predictive accuracy of model 2 in both scenarios, the outcomes from management under model 2 are substantially worse.
@@ -307,24 +307,25 @@ plot_ecology + plot_econ
 In both scenarios, the careful comparison through proper scoring rules has led us to select the worse-performing model.
 Crucially, a manager operating under this selection would have little indication that their model was flawed: both future stock sizes and expected harvest yields consistently match model predictions.
 Had we been able to include Model 3 in our forecast comparisons, it would equal or outperform the forecasting skill of both model 1 and model 2 (as guaranteed by the theorem of @Gneiting2007), while also matching or out-performing their economic utility (as guaranteed by the theorem of @Reed1979).
-In practice, we never have access to the generating model, so it is reasonable to expect model selection to determine the best approximation.
-As we see here, the best approximation for forecasting future states does not in fact lead to better outcomes.
+In practice, we never have access to the generating model, so it is reasonable to expect model selection to determine the better approximation.
+As we see here, the better approximation for forecasting future states does not in fact lead to better outcomes.
 
 
-One obvious limitation in this comparison is that scenario B treats each model as fixed over the entire course of the simulation.
-It would be possible to generate forecasts for the next $n$ steps, but these forecasts would also be conditional on the management action (i.e. harvest quota) selected at each step.
-To evaluate two-step-ahead predictions we must consider each possible action under each possible state predicted by the step-ahead forecast, weighted by probability of the state given the model and the probability of the model.
-This rapidly expanding set of possibilities is addressed by adaptive management for sequential decision problems [e.g. @Smith1981], which I employ in the next section.
+One obvious limitation in this comparison is that scenario B treats each model as fixed over the entire course of the management simulation.
+In reality, managers will typically re-estimate model parameters after each subsequent observation.
+And rather than consider each model/parameter combination in isolation, managers will generate forecasts which reflect the current uncertainty as to which model or parameter values are most likely. 
+Re-estimating model parameters results in adjusting those probabilities.
+This approach is characterized by adaptive management for sequential decision problems [e.g. @Smith1981], which I employ in the next section.
 
 ## Decision-Theoretic Approaches
 
 Any adaptive management strategy updates posterior distributions over model uncertainty [@Punt2016; @Ludwig1982].
-Unfortunately, any such adaptive updating leads to worse outcomes than the equivalent non-adaptive strategy, in which model uncertainty is held fixed.
+Unfortunately, in this case, any such adaptive updating leads to worse outcomes than the equivalent non-adaptive strategy, in which model uncertainty is held fixed.
 I illustrate the application of a passive adaptive management strategy to this simple example, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty.
 Passive adaptive management for a simple sequential decision problem is straightforward to implement over a discrete set of states and actions using dynamic programming with iterative updates [@Smith1981, example code in Appendix].
 To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.
-After a single iteration of learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A].
-I compare these results to 
+After a single iteration of adaptive learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A].
+
 As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
 
 ```{r figure3, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
@@ -352,7 +353,8 @@ fig3b <- am_multi %>%
 fig3a + fig3b
 ```
 
-
+So far we have considered only two alternative combinations of the parameters $r$, $K$ and $\sigma$. 
+This simplifies the calculations, because each unique parameter value combination requires a new run of the SDP algorithm to determine the optimal policy from the corresponding forecast.
 Increasing the space of possible models to cover a whole plausible range of parameters $r$ and $K$ does little to resolve this problem [Fig 3B]. 
 Iterative updates again quickly dismiss the parameter values assumed by model 1, though with more options to choose from, this probability is spread over a range of seemingly plausible candidate models instead of a single alternative model (see Appendix).
 While the adaptive management of additional actions and observations slowly narrow this subset of plausible models, decisions based on this uncertainty prevent fish stocks from recovering fully, and realize lower harvests as a result.
@@ -363,35 +365,65 @@ Consequently, each iteration the managers are only more firmly convinced that th
 
 # Discussion
 
-
 <!-- quick summary of what was demonstrated -->
-Given this simple decision problem in which one of the two models leads to effectively optimal ecological and economic outcomes, current approaches invariably choose the other.
-Moreover, a decision maker employing an adaptive management or iterative forecasting assessment such as those considered here would have no way of realizing that the outcomes they experienced were in fact sub-optimal.
-In both approaches, the manager quickly concludes that model 1 is entirely implausible, while finding that model 2 is remarkably accurate at predicting future values -- the manager is unknowing trapped into bad outcomes.
-This problem is not addressed by re-estimating parameters (equivalently, considering a larger suite of models spanning a wide range of possible $K$ and $r$ values): which improves only marginally over the outcome of considering only two models [Fig 3B].
-Without access to the true model, none of our methods for model choice or reducing model uncertainty can break this trap.
-This should not be mistaken as a critique of adaptive management or iterative forecasting specifically -- other model choice approaches such as goodness-of-fit, information criteria or cross-validation would all prefer model 2 as well. 
-
+Given this simple decision problem in which one of the two models leads to better ecological and economic outcomes, current approaches invariably choose the wrong one.
+Moreover, despite continuing to collect new observations, the decision maker has no way of realizing their mistake.
+The manager is trapped into believing whichever model produces the better forecast, even when this results in decidedly worse objective outcomes.
+Re-estimating parameters with as new observations accumulate only reinforces the problem [Fig 3A], and
+introducing a larger suite of models, such as our wide range of $r$ and $K$ values, does not escape this trap either [Fig 3B].
+Other model choice approaches such as goodness-of-fit, information criteria or cross-validation would all prefer model 2 as well.
+Only by including the true model in our set of candidates can we be certain that forecast-based methods will converge on optimal outcomes.
 
 <!-- Intuition, Figure 4 -->
 The reason for model 1's seemingly contradictory ability to make good decisions but bad forecasts becomes obvious once we compare both curves to that of the underlying model, model 3.
-Plotting the growth rate functions of each model, [Fig 4A], it is hardly surprising that no method exists which would not prefer the closely overlapping model 2 to the no-where-close model 1 as the better approximation of model 3.
-Nevertheless, decisions based on model 1 are nearly indistinguishable from those based on the true model [Fig 4B], while model 2 leads to over-harvesting.
+Looking at plots of the growth rate curves for each model [Fig 4A], it is hardly surprising that all model selection approaches prefer the closely overlapping curve of model 2 to the no-where-close curve of model 1 as the better approximation of model 3.
+Nevertheless, the decision policy derived from model 1 forecasts is indistinguishable from that based on the true model [Fig 4B], while the policy derived from model 2 forecasts lead to over-harvesting.
+Being closest to the true model's forecast skill never guarantees that we are closest to the true model's optimal policy.
+
+Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2017].
+And we are clearly considering different goals: forecast skill (a unitless statistical measure) vs policy outcomes (be they measured in dollars or fish in the ocean).
+Yet the result is surprising all the same. 
+The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Deitze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
+Nor can we say the same model can never be best at both goals -- obviously the 'true' model always optimizes both objectives [^1]. 
+It is natural to assume from this that the candidate with the closest forecast will also be the one with the closest policy.
+The example presented here proves this is by no means guaranteed, but also begs the question -- how common is this forecast trap?
+
+[^1]: With enough data from enough of the state space, an SDP algorithm using a Gaussian Process prior [@Boettiger2015], which spans the "true model" given by Eq 4, will escape the forecast trap, as guaranteed by @Gneiting2007's theorem.
+However, real ecological systems are much more complex than Eq 4, and not so easily spanned by mathematical models.
+
+
+The forecast trap can occur whenever two conditions are met: 
+(1) our candidate models do not include the true model, and
+(2) the optimal policy of the true model is not unique to that model.
+The first condition is widely accepted as common-place -- ecological processes will always be more complex than our models [@Getz2017].  
+The second condition is more subtle: the fact that both curves for model 1 and model 3 produce exactly the same management policy (Fig 4B) under the SDP algorithm may be surprising.
+Fortunately, the models we have chosen to focus on here are simple enough to be analytically tractable -- that is, we can solve for the optimal policy without the brute-force numerical approach of SDP.
+That solution was first provided by @Reed1979, who demonstrated the optimal policy would be a so-called "bang-bang" strategy, in which the manager seeks to bring the fish stock to some target biomass as quickly as possible whenever it deviates from that size. 
+The precise value of that target biomass depends of course on the details of the model -- but importantly not all the details.
+Intuitively one can think of this as maintaining the biomass at the most productive size: the maximum population growth rate (position of the peak of the growth curves in Fig 4A), though this is only precisely true without discounting ($\delta = 1$): the optimal stock size $\hat x$ is the solution to $f(\hat x) = \hat x/\delta$ when stochasticity is sufficiently small [@Reed1979].
+Thus, all models in which the peak growth rate occurs at the same stock size will have the same optimal policy.
+While the SDP is able to discover this same policy numerically by examining the forecast probabilities, Reed's theorem makes it intuitive why that policy is shared between models 1 and 3.
+
+However, Reed's proof considered only one-dimensional growth models $f(x)$, and so tells us nothing about models with stage structure or interacting species.
+It is easy to believe that the simple and thus non-unique optimal policy studied by @Reed1979 is an artifact of the simple growth model: surely the intuition provided will not extend to two or more species? 
+Fortunately, recent work in the mathematics literature has finally been able to extend Reed's results.
+@Hening2021 proves under comparable assumptions that the optimal strategy
+
+
+
+<!---
 The explanation comes from noticing that the stock size corresponding to the maximum growth rate under model 1 (the peak of the curve) falls at almost exactly the same stock size as that of the peak growth rate for model 3.
 Meanwhile, the peak of model 2 occurs at a substantially lower stock size.
 While the optimal control solution appears to depend only on a step-ahead forecast accuracy (recall that the SDP solution method used here takes only step-ahead forecast probabilities as input, [@Marescot2013]), mathematical analysis showed long ago [@Reed1979] that the optimal solution for this problem depends only on keeping the biomass at the value responsible for the maximum growth rate.[^1]
 Consequently, many models can share the same optimal solution, regardless of their forecast performance.
 
+
 This result may appear surprising, and begs the question as to whether the non-uniqueness of the optimal solution is not merely an artifact of the simple models considered here. 
 Surely more any realistically complex model would require a comparably more complex management policy such that the likelihood that any of our candidate models shares the same optimal policy would be vanishingly small?
 The intuition sounds reasonable
 
-
-
-
-
 [^1]: This is only approximately accurate. @Reed1979 demonstrates 
-
+-->
 
 This realization is quite general: for most decision problems, simple models will exist under which the optimal decision is the same as it would be for the true model, even when that simple model is wrong in most other ways.
 
@@ -431,12 +463,6 @@ plot_policies <- policies %>%
 
 plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 ```
-
-
- 
-This simple example can be resolved by including our true model in the candidate set, or any class of models flexible enough to 'span' the true model, such as a Gaussian Process [e.g. see @Boettiger2015].  
-Given sufficient data, either approach shown here will prefer the true model over any other (as guaranteed by @Gneiting2007's theorem), and thus discover the optimal policy.
-While it is not difficult to image a candidate set of models flexible enough to include the very simple "true model" from Eq (4), it is much more unlikely that our model candidates truly span the generative processes of the real world.
 
 
 
