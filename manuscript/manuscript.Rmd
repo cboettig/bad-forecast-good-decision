@@ -398,18 +398,58 @@ The forecast trap can occur whenever two conditions are met:
 The first condition is widely accepted as common-place -- ecological processes will always be more complex than our models [@Getz2017].  
 The second condition is more subtle: the fact that both curves for model 1 and model 3 produce exactly the same management policy (Fig 4B) under the SDP algorithm may be surprising.
 Fortunately, the models we have chosen to focus on here are simple enough to be analytically tractable -- that is, we can solve for the optimal policy without the brute-force numerical approach of SDP.
-That solution was first provided by @Reed1979, who demonstrated the optimal policy would be a so-called "bang-bang" strategy, in which the manager seeks to bring the fish stock to some target biomass as quickly as possible whenever it deviates from that size. 
-The precise value of that target biomass depends of course on the details of the model -- but importantly not all the details.
+
+Analytical solutions offer more insight as to when and why very different forecasts can generate the identical policy.
+Such a solution was first provided by @Reed1979, who demonstrated the optimal policy would be a so-called "bang-bang", in which the manager always seeks to bring the fish stock to some fixed target biomass as quickly as possible.
+The precise value of that target biomass depends of course on the details of the model -- but crucially, only on some of those details.
 Intuitively one can think of this as maintaining the biomass at the most productive size: the maximum population growth rate (position of the peak of the growth curves in Fig 4A), though this is only precisely true without discounting ($\delta = 1$): the optimal stock size $\hat x$ is the solution to $f(\hat x) = \hat x/\delta$ when stochasticity is sufficiently small [@Reed1979].
 Thus, all models in which the peak growth rate occurs at the same stock size will have the same optimal policy.
-While the SDP is able to discover this same policy numerically by examining the forecast probabilities, Reed's theorem makes it intuitive why that policy is shared between models 1 and 3.
+While the SDP is able to discover this same policy numerically by examining the forecast probabilities, Reed's theorem explains why that policy is shared between models 1 and 3.
+Because Reed's theorem leads to a policy that is so obviously independent of forecast skill, it is easy to forget the connection and think of it as nothing more than some arbitrary rule-of-thumb policy.  
+But Reed's theorem shows this intuitive strategy is neither more nor less than the best possible policy an idealized decision maker would come up with given a perfect probabilistic forecast.
 
-However, Reed's proof considered only one-dimensional growth models $f(x)$, and so tells us nothing about models with stage structure or interacting species.
-It is easy to believe that the simple and thus non-unique optimal policy studied by @Reed1979 is an artifact of the simple growth model: surely the intuition provided will not extend to two or more species? 
-Fortunately, recent work in the mathematics literature has finally been able to extend Reed's results.
-@Hening2021 proves under comparable assumptions that the optimal strategy
+It is tempting to think that the simplicity of the optimal control policy in this case is a direct consequence of the simple models involved.
+We might expect that more biologically realistic models than Eq 1-4 would always have more complex optimal control rules, which might make it much more unlikely that we would ever consider a model such as model 1 which just happened to share the optimal solution of the underlying process.
+Non-uniqueness is certainly harder to prove in more complex models. 
+For instance, Reed's results, while quite general, are nevertheless limited to one-dimensional models and therefore tell us nothing about the all-important models with stage structure or interacting species.
+Perhaps the forecast trap is merely an artifact of overly simple models -- surely we could never achieve optimal management of a real-world system with an obviously simple model?
+Without rigorous analysis, the veracity of that assertion is difficult to establish either way.
+Fortunately, recent work in mathematics has finally been able to extend Reed's results to stage structured and multi-species models [@Holden2015; @Hening2019; @Hening2021].
+Like @Reed1979, these results make it clear that the optimal control solution is not unique to the generative model: both very simple and more complex models will share the same optimal policy despite producing very different dynamics.
+Thus, the forecast trap is not limited to the one-dimensional models of @Reed1979, but can also exist when the unknown true model is a stage structured, predator prey, or competition model. 
 
 
+In fact, non-uniqueness of the optimal solution is even more likely in real world systems due to the constraints under which most managers operate.
+While ecological processes often involve a very high-dimensional space, the space of possible actions a manager can take is often much more limited. 
+Managers may be limited to relatively static strategies, because policy adjustments are often costly [@Boettiger2016].
+Such constraints make it only more likely that the optimal solution is not unique.
+For instance, for any optimal policy is expressed as an ann total allowable catch, 
+
+Such constraints only make it easier to discover simple models that would make poor forecasts but lead to the same optimal policy.
+For any value of an annual total allowable catch, there will be plenty of simple models like Model 1 whose forecasts could generate precisely the same decision policy despite terrible forecast accuracy. 
+
+Reed's insights illustrate that this happens not because "bad" models sometimes get lucky, but because they capture the key features of the decision process.
+This is the goal of all modeling. 
+Models are simplifying abstractions which capture the details important to the task at hand.
+In Reed's case, that key feature is quiet intuitive -- the peak growth rate of the curve (if we ignore discounting). 
+But we do not need to know and understand that feature for it to exist.
+For example, if the true model were the predator-prey model of @Hening2021 or the stage-structured model of @Holden2015;
+the simple heuristic would not apply
+Even in the results of @Holden2015 and @Hening2021, the target stock-size of the bang-bang solution does not permit quite so concise and intuitive explanation as @Reed1979's.
+While analytic solutions for even more complex models are likely intractable, it would be rash to assume  
+
+But for the reasons outlined above, it is very possible, even likely, that our candidate models include those which have the same or nearly the same optimal policy as the true model.
+And we cannot be certain that these will also be the models which give the best forecasts.
+This problem may become more likely as better and better forecasts can be achieved by statistical and machine learning models, which may be simultaneously less likely to reflect those unknown key features than the more mechanistic models they out-forecast.
+Filtering or weighting models based on forecast skill alone
+
+Other fields have already recognized the potential to achieve optimal decisions without the pursuit of ever more accurate predictive models. 
+The leading artificial intelligence algorithms used in robotic automation and game-playing [@starcraftii; @atari] no longer attempt to estimate a predictive model which is then used to select an action.
+In the past several years, so-called "Model-Free" approaches have come to dominate Deep Reinforcement Learning.
+These algorithms have no predictive capacity at all; instead, they try to learn the most effective policy rules directly.
+
+Instead of estimating a predictive model the cutting edge, algorithms which make no attempt to learn the policy directly.
+Decision makers do not need to predict the future, they only need to know what to do about it.
 
 <!---
 The explanation comes from noticing that the stock size corresponding to the maximum growth rate under model 1 (the peak of the curve) falls at almost exactly the same stock size as that of the peak growth rate for model 3.
