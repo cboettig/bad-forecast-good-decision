@@ -128,7 +128,7 @@ I illustrate this problem using an example from fisheries management.
 Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
 Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
 
-While methods such as iterative forecasting [@Deitze2018] and adaptive management [@Walters1978] can be _applied_ to real-world using empirical data, we can only _evaluate_ their potential in hypothetical examples when the true model is known, e.g. through numerical simulation.
+While methods such as iterative forecasting [@Dietze2018] and adaptive management [@Walters1978] can be _applied_ to real-world using empirical data, we can only _evaluate_ their potential in hypothetical examples when the true model is known, e.g. through numerical simulation.
 That approach allows us to compare both predictions and outcomes across implementations in independent identical replicate worlds.
 As noted above, we will assume our underlying model simple enough to solve by SDP, ensuring any poor outcomes from a given forecast are not merely an artifact of an imperfect decision process.
 Simple models also have the virtue in being accessible to closed form analysis, which, as we shall see, can give greater insight into when and why this forecast trap arises.
@@ -410,7 +410,7 @@ plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2017].
 And we are clearly considering different goals: forecast skill (a unitless statistical measure) vs policy outcomes (be they measured in dollars or fish in the ocean).
 Yet the result is surprising all the same. 
-The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Deitze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
+The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Dietze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
 Nor can we say the same model can never be best at both goals -- obviously the 'true' model always optimizes both objectives [^1]. 
 It is natural to assume from this that the candidate with the closest forecast will also be the one with the closest policy.
 The example presented here proves this is by no means guaranteed, but also begs the question -- how common is this forecast trap?
@@ -434,7 +434,7 @@ In more complex models, such features are more difficult or impossible to identi
 
 Do more complex models lead to more complex control rules?
 The theorems of @Reed1979, while quite general, say nothing about structured models or those with predator-prey or competitive interactions.
-Yet recent mathematical breakthroughs such as @Holden2015, @Hennig2019, and @Henning2021 have finally been able to extend Reed's theorem to such cases more generally. 
+Yet recent mathematical breakthroughs such as @Holden2015, @Hening2019, and @Hening2021 have finally been able to extend Reed's theorem to such cases more generally. 
 As with Reed's result, these recent proofs make it clear that the optimal strategy for managing these more complex models is not unique, but will be shared by many much simpler models.
 So while the true population dynamics may be given by very complex non-linear functions of the interacting species, there will be simple two species models and even un-coupled, one-species models which would lead to the identical optimal policy.
 It may be more likely that our candidate set contains a model which matches the optimal policy than that it contains a model which matches the generative process.  
