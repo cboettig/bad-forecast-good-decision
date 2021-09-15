@@ -1,8 +1,8 @@
 ---
-title: 'The forecast trap'
-- name: Carl Boettiger
-  email: cboettig@berkeley.edu
-  affiliation: a,1
+title: "The forecast trap"
+name: Carl Boettiger
+email: "cboettig@berkeley.edu"
+affiliation: a,1
 date: "`r Sys.Date()`"
 
 abstract: |
@@ -42,6 +42,9 @@ journal: Ecology Letters
 - number of words in main text: 4998
 - number of cited references: 33
 - number of tables & figures: 4 Figures
+
+
+
 
 \pagebreak
 
@@ -170,10 +173,11 @@ However, the goal of exercise understand how a good forecast can lead to a bad d
 If any method fails to select the better model in the simplest cases, it does not often do better in more complex ones, even though the problems are harder to detect.
 -->
 
-Each possible parameterization of the model will generate a different forecast, and thus require a it's own SDP solution to determine the corresponding policy.
-We will consider a larger suite of these logistic models in a moment, but first let us draw out only two such parameterizations from this larger suite.
-This will let us focus our attention on two of the most interesting regions of that are already included within that larger parameter space of all possible values for $r$, $K$, and $\sigma$.
-Thus, let us take "Model 1" as being given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, "Model 2" by $r_2 = 0.5$, $K_2 = 10$, $\sigma_2 = 0.075$. 
+Before this or any other model can generate a forecast, we must first come up with some parameter estimates.
+Because the model includes (log-normal) stochastic growth, no amount of data will make any parameter combination impossible, though certain parameter values are more likely than others.
+Remember too that parameter estimates may be derived in other ways than than model fitting, especially when parameters are amenable to biological interpretation. 
+We will consider the whole range of possible parameters in a moment, but for simplicity, let us begin by focusing in around two of the most interesting regions of that are already included within that larger parameter space of all possible values for $r$, $K$, and $\sigma$.
+Let us take "Model 1" as being given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, "Model 2" by $r_2 = 0.5$, $K_2 = 10$, $\sigma_2 = 0.075$. 
 We can imagine our comparison of these two models as a microcosm of the larger comparison between all possible paremeterizations. 
 
 Ecologists will rightly scoff at the simplicity of these models -- the real world is much more complicated.
@@ -323,7 +327,7 @@ Any adaptive management strategy updates posterior distributions over model unce
 Unfortunately, in this case, any such adaptive updating leads to worse outcomes than the equivalent non-adaptive strategy, in which model uncertainty is held fixed.
 I illustrate the application of a passive adaptive management strategy to this simple example, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty.
 Passive adaptive management for a simple sequential decision problem is straightforward to implement over a discrete set of states and actions using dynamic programming with iterative updates [@Smith1981, example code in Appendix].
-To demonstrate that the behavior is not driven by failure to explore sufficiently, (which might be addressed by an active adaptive management), I will assign initial probability that model 2 is true at 1%.
+To demonstrate that the behavior is not driven by failure to explore sufficiently, (active adaptive management), I will assign initial probability that model 2 is true at 1%.
 After a single iteration of adaptive learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A].
 
 As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
@@ -380,108 +384,6 @@ Looking at plots of the growth rate curves for each model [Fig 4A], it is hardly
 Nevertheless, the decision policy derived from model 1 forecasts is indistinguishable from that based on the true model [Fig 4B], while the policy derived from model 2 forecasts lead to over-harvesting.
 Being closest to the true model's forecast skill never guarantees that we are closest to the true model's optimal policy.
 
-Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2017].
-And we are clearly considering different goals: forecast skill (a unitless statistical measure) vs policy outcomes (be they measured in dollars or fish in the ocean).
-Yet the result is surprising all the same. 
-The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Deitze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
-Nor can we say the same model can never be best at both goals -- obviously the 'true' model always optimizes both objectives [^1]. 
-It is natural to assume from this that the candidate with the closest forecast will also be the one with the closest policy.
-The example presented here proves this is by no means guaranteed, but also begs the question -- how common is this forecast trap?
-
-[^1]: With enough data from enough of the state space, an SDP algorithm using a Gaussian Process prior [@Boettiger2015], which spans the "true model" given by Eq 4, will escape the forecast trap, as guaranteed by @Gneiting2007's theorem.
-However, real ecological systems are much more complex than Eq 4, and not so easily spanned by mathematical models.
-
-
-The forecast trap can occur whenever two conditions are met: 
-(1) our candidate models do not include the true model, and
-(2) the optimal policy of the true model is not unique to that model.
-The first condition is widely accepted as common-place -- ecological processes will always be more complex than our models [@Getz2017].  
-The second condition is more subtle: the fact that both curves for model 1 and model 3 produce exactly the same management policy (Fig 4B) under the SDP algorithm may be surprising.
-Fortunately, the models we have chosen to focus on here are simple enough to be analytically tractable -- that is, we can solve for the optimal policy without the brute-force numerical approach of SDP.
-
-Analytical solutions offer more insight as to when and why very different forecasts can generate the identical policy.
-Such a solution was first provided by @Reed1979, who demonstrated the optimal policy would be a so-called "bang-bang", in which the manager always seeks to bring the fish stock to some fixed target biomass as quickly as possible.
-The precise value of that target biomass depends of course on the details of the model -- but crucially, only on some of those details.
-Intuitively one can think of this as maintaining the biomass at the most productive size: the maximum population growth rate (position of the peak of the growth curves in Fig 4A), though this is only precisely true without discounting ($\delta = 1$): the optimal stock size $\hat x$ is the solution to $f(\hat x) = \hat x/\delta$ when stochasticity is sufficiently small [@Reed1979].
-Thus, all models in which the peak growth rate occurs at the same stock size will have the same optimal policy.
-While the SDP is able to discover this same policy numerically by examining the forecast probabilities, Reed's theorem explains why that policy is shared between models 1 and 3.
-Because Reed's theorem leads to a policy that is so obviously independent of forecast skill, it is easy to forget the connection and think of it as nothing more than some arbitrary rule-of-thumb policy.  
-But Reed's theorem shows this intuitive strategy is neither more nor less than the best possible policy an idealized decision maker would come up with given a perfect probabilistic forecast.
-
-It is tempting to think that the simplicity of the optimal control policy in this case is a direct consequence of the simple models involved.
-We might expect that more biologically realistic models than Eq 1-4 would always have more complex optimal control rules, which might make it much more unlikely that we would ever consider a model such as model 1 which just happened to share the optimal solution of the underlying process.
-Non-uniqueness is certainly harder to prove in more complex models. 
-For instance, Reed's results, while quite general, are nevertheless limited to one-dimensional models and therefore tell us nothing about the all-important models with stage structure or interacting species.
-Perhaps the forecast trap is merely an artifact of overly simple models -- surely we could never achieve optimal management of a real-world system with an obviously simple model?
-Without rigorous analysis, the veracity of that assertion is difficult to establish either way.
-Fortunately, recent work in mathematics has finally been able to extend Reed's results to stage structured and multi-species models [@Holden2015; @Hening2019; @Hening2021].
-Like @Reed1979, these results make it clear that the optimal control solution is not unique to the generative model: both very simple and more complex models will share the same optimal policy despite producing very different dynamics.
-Thus, the forecast trap is not limited to the one-dimensional models of @Reed1979, but can also exist when the unknown true model is a stage structured, predator prey, or competition model. 
-
-
-In fact, non-uniqueness of the optimal solution is even more likely in real world systems due to the constraints under which most managers operate.
-While ecological processes often involve a very high-dimensional space, the space of possible actions a manager can take is often much more limited. 
-Managers may be limited to relatively static strategies, because policy adjustments are often costly [@Boettiger2016].
-Such constraints make it only more likely that the optimal solution is not unique.
-For instance, for any optimal policy is expressed as an ann total allowable catch, 
-
-Such constraints only make it easier to discover simple models that would make poor forecasts but lead to the same optimal policy.
-For any value of an annual total allowable catch, there will be plenty of simple models like Model 1 whose forecasts could generate precisely the same decision policy despite terrible forecast accuracy. 
-
-Reed's insights illustrate that this happens not because "bad" models sometimes get lucky, but because they capture the key features of the decision process.
-This is the goal of all modeling. 
-Models are simplifying abstractions which capture the details important to the task at hand.
-In Reed's case, that key feature is quiet intuitive -- the peak growth rate of the curve (if we ignore discounting). 
-But we do not need to know and understand that feature for it to exist.
-For example, if the true model were the predator-prey model of @Hening2021 or the stage-structured model of @Holden2015;
-the simple heuristic would not apply
-Even in the results of @Holden2015 and @Hening2021, the target stock-size of the bang-bang solution does not permit quite so concise and intuitive explanation as @Reed1979's.
-While analytic solutions for even more complex models are likely intractable, it would be rash to assume  
-
-But for the reasons outlined above, it is very possible, even likely, that our candidate models include those which have the same or nearly the same optimal policy as the true model.
-And we cannot be certain that these will also be the models which give the best forecasts.
-This problem may become more likely as better and better forecasts can be achieved by statistical and machine learning models, which may be simultaneously less likely to reflect those unknown key features than the more mechanistic models they out-forecast.
-Filtering or weighting models based on forecast skill alone
-
-Other fields have already recognized the potential to achieve optimal decisions without the pursuit of ever more accurate predictive models. 
-The leading artificial intelligence algorithms used in robotic automation and game-playing [@starcraftii; @atari] no longer attempt to estimate a predictive model which is then used to select an action.
-In the past several years, so-called "Model-Free" approaches have come to dominate Deep Reinforcement Learning.
-These algorithms have no predictive capacity at all; instead, they try to learn the most effective policy rules directly.
-
-Instead of estimating a predictive model the cutting edge, algorithms which make no attempt to learn the policy directly.
-Decision makers do not need to predict the future, they only need to know what to do about it.
-
-<!---
-The explanation comes from noticing that the stock size corresponding to the maximum growth rate under model 1 (the peak of the curve) falls at almost exactly the same stock size as that of the peak growth rate for model 3.
-Meanwhile, the peak of model 2 occurs at a substantially lower stock size.
-While the optimal control solution appears to depend only on a step-ahead forecast accuracy (recall that the SDP solution method used here takes only step-ahead forecast probabilities as input, [@Marescot2013]), mathematical analysis showed long ago [@Reed1979] that the optimal solution for this problem depends only on keeping the biomass at the value responsible for the maximum growth rate.[^1]
-Consequently, many models can share the same optimal solution, regardless of their forecast performance.
-
-
-This result may appear surprising, and begs the question as to whether the non-uniqueness of the optimal solution is not merely an artifact of the simple models considered here. 
-Surely more any realistically complex model would require a comparably more complex management policy such that the likelihood that any of our candidate models shares the same optimal policy would be vanishingly small?
-The intuition sounds reasonable
-
-[^1]: This is only approximately accurate. @Reed1979 demonstrates 
--->
-
-This realization is quite general: for most decision problems, simple models will exist under which the optimal decision is the same as it would be for the true model, even when that simple model is wrong in most other ways.
-
-
-
-<!-- Intuition for it's not just this example -->
-Situations similar to this example, in which a model can lead to the optimal decision while producing a poor forecast, are likely to be widespread.
-
-
-<!--
-For example, marine fisheries typically restrict a Management Strategy Evaluation [MSE; @Punt2016] to constant mortality, (defined as harvest per unit biomass, $F = H/B$).
-Constant mortality is technically only optimal in a deterministic model [@Clark1973]; but is easier to solve for than the SDP methods for constant escapement shown here,
-which in practice is used mostly in salmon fisheries and the resource economics literature [see @pomdp-intro, @Costello2016].
-While Model 1 used here will not lead to a good constant-mortality policy, it is just as easy to construct a model which gives optimal decisions and bad forecasts.
-In the example shown above, Model 1 achieves optimal results by choosing $K$ such that $K/2$ matches the peak growth rate under the true model [@Reed1979.
-Under constant mortality, we instead choose a logistic model with $r$ such that $r/4$ matches the optimal constant mortality under the true model [@Schaefer1954].
-Everything else about our choice of Model 1 can be far from the true model, and yet it will give optimal results, just as above.
--->
 
 ```{r figure4, fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth. Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
 # Fig 4
@@ -505,19 +407,91 @@ plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 ```
 
 
+Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2017].
+And we are clearly considering different goals: forecast skill (a unitless statistical measure) vs policy outcomes (be they measured in dollars or fish in the ocean).
+Yet the result is surprising all the same. 
+The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Deitze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
+Nor can we say the same model can never be best at both goals -- obviously the 'true' model always optimizes both objectives [^1]. 
+It is natural to assume from this that the candidate with the closest forecast will also be the one with the closest policy.
+The example presented here proves this is by no means guaranteed, but also begs the question -- how common is this forecast trap?
 
-This example demonstrates that it is possible for a model to give quite good forecasts while leading to marginal outcomes, and conversely, that is possible for a model to give optimal outcomes while making terrible forecasts.
-This result may be particularly surprising given that the policy is derived directly from the forecast.
+[^1]: With enough data from enough of the state space, an SDP algorithm using a Gaussian Process prior [@Boettiger2015], which spans the "true model" given by Eq 4, will escape the forecast trap, as guaranteed by @Gneiting2007's theorem.
+However, real ecological systems are much more complex than Eq 4, and not so easily spanned by mathematical models.
+
+It may seem reasonable to expect that the forecast trap would be rare in real world situations:
+the chance that the candidate set of models would include anything coming close to the optimal policy of the (unknown) true model without also providing a good forecast seems like it ought to be vanishingly small.
+In our example, we were only able to capture the optimal policy with a Gordon-Schafer model because it turned out the optimal policy boiled down to a very simple rule. 
+Surely this does not happen in the more complex models of the real world?
+Surprisingly, more complex models offer no such guarantee, while real-world constraints make this situation *more* likely, not less.
+
+How can the very different forecasts from model 1 and model 3 could produce exactly the same optimal management policy (Fig 4B) under the SDP algorithm?
+Analytic solutions offer more insight as to when and why very different forecasts can generate the identical policy.
+Such a solution was first provided by @Reed1979, who demonstrated the optimal policy in the case considered here would be a so-called "bang-bang" policy.
+Intuitively one can think of this as maintaining the biomass at the most productive size: the maximum population growth rate (position of the peak of the growth curves in Fig 4A), though this is only precisely true without discounting ($\delta = 1$): the optimal stock size $\hat x$ is the solution to $f(\hat x) = \hat x/\delta$ when stochasticity is sufficiently small [@Reed1979].
+Thus, all models in which the peak growth rate occurs at the same stock size will have the same optimal policy.
+These are not merely "bad models getting lucky" -- all such models correctly capture the crucial feature relevant to the decision.
+In more complex models, such features are more difficult or impossible to identify analytically; but just because we cannot intuit the optimal policy does not mean it is uniquely complex.
+
+Do more complex models lead to more complex control rules?
+The theorems of @Reed1979, while quite general, say nothing about structured models or those with predator-prey or competitive interactions.
+Yet recent mathematical breakthroughs such as @Holden2015, @Hennig2019, and @Henning2021 have finally been able to extend Reed's theorem to such cases more generally. 
+As with Reed's result, these recent proofs make it clear that the optimal strategy for managing these more complex models is not unique, but will be shared by many much simpler models.
+So while the true population dynamics may be given by very complex non-linear functions of the interacting species, there will be simple two species models and even un-coupled, one-species models which would lead to the identical optimal policy.
+It may be more likely that our candidate set contains a model which matches the optimal policy than that it contains a model which matches the generative process.  
+
+Real world considerations actually make this situation more likely, not less likely.
+Managers cannot resort to arbitrarily complex policies, regardless of how complex their models.  
+Policy adjustments are costly [@Boettiger2016] and the space of available actions is usually far more limited than the space of available states.
+In some ecological decision-making contexts, a manager may only be able to select between a handful of alternative actions.
+Such constraints make it much more likely that the optimal policy will be replicated by a much simpler model.
+Most well-managed marine fisheries are constrained to constant or simple piecewise-linear harvest control rules [@Punt2010]. 
+This ensures that an infinite number of possible models will share the optimal solution with the true model.
+
+
+<!--
+Reed's insights illustrate that this happens not because "bad" models sometimes get lucky, but because they capture the key features of the decision process.
+This is the goal of all modeling: 
+models are simplifying abstractions which capture the details important to the task at hand.
+In Reed's case, that key feature is quiet intuitive -- the peak growth rate of the curve (if we ignore discounting). 
+That simple intuition does not extend to the more complex cases examined by @Hening2021 and certainly in even richer models where the optimal policy is not tractable.
+Consequently, these results do not provide a short-cut for finding an optimal policy without knowing the true model: we cannot merely look for the harvest that generates the peak growth rate (even in Reed's case that would not be optimal due to the role of discounting).
+All the same, they are a reminder of why simple, processed based models can lead us to the optimal policy without providing accurate forecasts.
+Meanwhile, filtering out or weighing models based on forecast skill _alone_ can precipitate the forecast trap by decreasing any prior belief in such simple but effective models in favor of those with greater forecast skill.
+-->
+
+
+The forecast trap may become a more acute issue as the simple, process-based models that have historically underpinned ecology and conservation policy are challenged by more accurate forecasts from statistical and machine learning tools.  
+Buoyed by the rapid expansion of available data and computational power, complex and increasingly opaque models are becoming more common [].
+Evaluating such models based on forecast skill will not only reduce concerns about over-fitting, but will make a compelling illustration of their viability as a tool for informing policy.
+In many cases, these more accurate forecasts may very well prove invaluable in delivering better (or less bad) real-world outcomes.
+But this paper is a reminder that such outcomes are by no means an inevitable consequence of better forecasts.
+These more accurate predictions are still not the true model, and it so it is always possible to improve predictive accuracy while less accurately reflecting the unknown key features that really drive the policy decision.
+I hope this simple and intuitive logic of Figure 4 will provide a ready reminder as to why the model that produces the best forecast will not always produce the best decision.
+
+
+<!--
+Other fields have already recognized the potential to achieve optimal decisions without the pursuit of ever more accurate predictive models. 
+The leading artificial intelligence algorithms used in robotic automation and game-playing [@starcraftii; @atari] no longer attempt to estimate a predictive model which is then used to select an action.
+In the past several years, so-called "Model-Free" approaches have come to dominate Deep Reinforcement Learning.
+These algorithms have no predictive capacity at all; instead, they try to learn the most effective policy rules directly.
+Instead of estimating a predictive model the cutting edge, algorithms which make no attempt to learn the policy directly.
+Decision makers do not need to predict the future, they only need to know what to do about it.
+-->
 
 
 
 
+<!--
+For example, marine fisheries typically restrict a Management Strategy Evaluation [MSE; @Punt2016] to constant mortality, (defined as harvest per unit biomass, $F = H/B$).
+Constant mortality is technically only optimal in a deterministic model [@Clark1973]; but is easier to solve for than the SDP methods for constant escapement shown here,
+which in practice is used mostly in salmon fisheries and the resource economics literature [see @pomdp-intro, @Costello2016].
+While Model 1 used here will not lead to a good constant-mortality policy, it is just as easy to construct a model which gives optimal decisions and bad forecasts.
+In the example shown above, Model 1 achieves optimal results by choosing $K$ such that $K/2$ matches the peak growth rate under the true model [@Reed1979.
+Under constant mortality, we instead choose a logistic model with $r$ such that $r/4$ matches the optimal constant mortality under the true model [@Schaefer1954].
+Everything else about our choice of Model 1 can be far from the true model, and yet it will give optimal results, just as above.
+-->
 
-In most realistic management scenarios, we do not have the benefit of a theorem similar to Reed's to identify what features are most critical to approximate well and what are not.
-
-
-For instance, the theorem no longer holds if stock estimates are uncertain [@pomdp-intro].
-Absent the guidance of such results, iterative learning over even relatively rich possible candidate models can move us towards worse outcomes than not learning at all.
+<!--
 
 That potential for long-term deterioration in management outcomes due to adaptive learning has not been widely acknowledged before.
 Certainly the limitations of any modeling approach to improve management outcomes due to the human context of competing interests, imperfect enforcement, etc., is readily appreciated [@Ludwig1993].
@@ -527,9 +501,9 @@ For example, active adaptive management is premised on the observation that futu
 Others have also noted that even big improvements in predictive accuracy could have negligible improvement on the decision outcomes, which motivates quantifying the Value of Information (VOI) [@Katz1987].
 But in both cases, the worst outcome is wasted effort.
 In the scenario considered here, the VOI is negative: any learning over the proposed model uncertainty leads to lower expected net utility than not learning.
+-->
 
-
-
+<!--
 Worse, absent the counter-factual of non-adaptive management to compare to, this deterioration in outcomes is invisible. 
 All the information available to our manager reinforces the conviction that this deteriorated ecological state is in fact the natural, sustainably managed equilibrium of our fish population.
 By responding in any way to future observations to reduce model uncertainty, our manager is caught in a trap of self-fulfilling prophecy:
@@ -543,26 +517,7 @@ Only by comparing the net utility derived from management under model 1 for many
 This raises several questions.
 Do such methods of learning and reducing model uncertainty ever lead us towards worse long-term outcomes in the real world? 
 If so, How would we know, and what should we do about it?
-
-<!-- **Is it just a unicorn?** -->
-Do models which give nearly optimal performance while at the same time making wildly wrong predictions really exist?
-It is tempting to argue that model 1 is a kind of unicorn, a mythical creature existing only in theory. But that is a difficult assertion to prove.
-Examples of serious forecasts that widely fail to predict future observations abound wherever forecasts are common, from elections to economics to environmental change [e.g. @Tetlock2015].
-If there is no shortage of bad forecasts, then could any of them be useful? 
-The premise that a model need not perfectly capture reality to be useful is at the very heart of modeling. 
-It is also important to note that in many cases, any models being used in decision-making are not necessarily being subjected to the rigorous evaluation and updating steps proposed by adaptive management [@Walters1978] or iterative forecasting [@Dietze2018].
-This makes it more likely that such models could persist in practice until now. 
-While iterations that revise these models will no doubt improve decision outcomes in many cases, it is worth bearing in mind from the example here that such improvement is not guaranteed.
-
-<!-- So what? -->
-If these unicorns do exist in real world management, then what do we do about them?
-I believe this is an open question, but that our first step must be to recognize it as such.
-We have seen that the problem cannot be resolved by more data alone, and is not the result of over-fitting.
-Introducing more models into our candidate set is only helpful to the extent that such models can capture features important to the decision, which as we have seen can be quite different from the feature which matter most to prediction.
-We have also seen how not updating our uncertainty estimates, or doing so less frequently, can reveal a unicorn model before it is discounted by further iterations.
-Approaches such as iterative forecasting or adaptive management that can reduce model uncertainty over time remain promising and important techniques, and essential strategies to avoid the very real problem of model over-fitting.
-But their very success in selecting models which give the most accurate predictions can also be trap.
-How that is best done in general is an open question.
+-->
 
 
 ## Acknowledgements
