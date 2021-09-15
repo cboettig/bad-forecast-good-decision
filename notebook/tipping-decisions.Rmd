@@ -112,22 +112,6 @@ sim %>% mutate(state = states[state], action = 20*actions[action]) %>%
 
 ```
 
-unmanaged 
-
-
-```{r}
-nothing <- rep(1, length(states))
-m <- matrices[[3]]
-x0 = which.min(abs(states - 17))
-sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
-                   policy = nothing, x0 = x0, Tmax = 1000)
-sim %>% mutate(state = states[state], action = actions[action]) %>% 
-  ggplot(aes(time, state)) + geom_point()+geom_path() + 
-  geom_point(aes(time, action), col="blue")
-
-
-
-```
 
 
 
@@ -154,5 +138,5 @@ df %>%
   ggplot(aes(x, f)) + 
     geom_line(aes(group = a, col = a), lwd = 1) +
     geom_line(data=dplyr::filter(df, near(a, 0.215)), col = "purple", lwd = 1) +
-    geom_hline(aes(yintercept = 0)) + coord_cartesian(ylim = c(-.2, .1))
+    geom_hline(aes(yintercept = 0)) + coord_cartesian(ylim = c(-.2, .1), xlim=c(0,1.5))
 ```

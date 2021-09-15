@@ -57,6 +57,10 @@ alt  <- function(x, h = 0, r = .095, K = 20){
 
 
 
+
+
+
+
 bh <- 
   function(x, h = 0){
     y = x+h
@@ -66,16 +70,8 @@ bh <-
       y * A / (1 + y / B),  
       0)
   }
-# Matches the optimal policy under these settings (depends on sigma, among others)
-logistic <- 
-  function(x, h = 0){
-    y = x + h
-    r <- p$r - .9
-    K <- p$K - 4
-    pmax(
-      y + y * r * (1 - y / K),  
-      0)
-  }
+
+
 logistic_2 <- function(x, h = 2) logistic(x,h)
 may_2 <- function(x, h = 2) may(x,h)
 may_10 <- function(x, h = 10) may(x,h)
@@ -84,20 +80,25 @@ may_10 <- function(x, h = 10) may(x,h)
 
 
 ```{r}
+## True model is May,
+alt2  <- function(x, h = 0, r = .05, K = 10){
+  s <- pmax(x - h, 0)
+  s + s ^ 2 * r * (1 - s / K)
+}
 
-
-landscape <- map_dfr(list(logistic_1, alt, may), 
+models <- list(logistic_1 = logistic_1, alt = alt, may =  may, alt2=alt2)
+landscape <- map_dfr(models, 
                      function(f) tibble(state = states, f = f(states) -states),
                      .id = "model")
 
-landscape %>% ggplot(aes(state, f, col=model)) + geom_point() + ylim(-5,10) + xlim(0,5)
+landscape %>% ggplot(aes(state, f, col=model)) + geom_point(alpha=0.8) + geom_line() + ylim(-5,10) + xlim(0,5)
 ```
 
 ## Optimal management
 
 
 ```{r}
-matrices <- lapply(list(logistic_1, alt, may), 
+matrices <- lapply(models, 
        function(f) fisheries_matrices(states, actions, observations, reward_fn, 
                         f, sigma_g, sigma_m, noise = "lognormal")
 )
@@ -124,7 +125,7 @@ df
 
 
 ```{r}
-df %>% ggplot(aes(state, action, col=model)) + geom_line(alpha=0.5) 
+df %>% ggplot(aes(state, action, col=model)) + geom_line(alpha=0.7) + geom_point(alpha=0.6) + ggtitle("Policy Functions")
 
 #+
 #  geom_line(aes(state, f), col = "red")  + 
@@ -133,36 +134,35 @@ df %>% ggplot(aes(state, action, col=model)) + geom_line(alpha=0.5)
 
 
 
-```{r}
+```{r fig.cap="Under the true model, agressive conservation in Year 1 is optimal, restoring the system to the desirable stable point"}
 m <- matrices[[3]]
-x0 = which.min(abs(states - 0.05))
+x0 = which.min(abs(states - 3.5))
 sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
                    policy = solns[[3]]$policy, x0 = x0, Tmax = 100)
 sim %>% mutate(state = states[state], action = actions[action]) %>% 
   ggplot(aes(time, state)) + geom_point()+geom_path() + 
-  geom_point(aes(time, action), col="blue")
+  geom_point(aes(time, action), col="blue") +
+  ggtitle("Optimal management under the true model")
 
 
 
 ```
 
-unmanaged 
 
-
-```{r}
-nothing <- rep(1, length(states))
-m <- matrices[[3]]
-x0 = which.min(abs(states - 17))
+```{r }
+m <- matrices[[3]] # generative process
+x0 = which.min(abs(states - 3.5))
 sim <- mdp_planning(m$transition, m$reward, discount, model_prior = c(1), 
-                   policy = nothing, x0 = x0, Tmax = 1000)
+                   policy = solns[[2]]$policy, x0 = x0, Tmax = 100)
+
 sim %>% mutate(state = states[state], action = actions[action]) %>% 
   ggplot(aes(time, state)) + geom_point()+geom_path() + 
-  geom_point(aes(time, action), col="blue")
+  geom_point(aes(time, action), col="blue") +
+  ggtitle("Optimal management under the true model")
 
 
 
 ```
-
 
 
 # Tipping
@@ -188,5 +188,5 @@ df %>%
   ggplot(aes(x, f)) + 
     geom_line(aes(group = a, col = a), lwd = 1) +
     geom_line(data=dplyr::filter(df, near(a, 0.215)), col = "purple", lwd = 1) +
-    geom_hline(aes(yintercept = 0)) + coord_cartesian(ylim = c(-.2, .1))
+    geom_hline(aes(yintercept = 0)) + coord_cartesian(ylim = c(-.2, .1), xlim = c(0,1.5))
 ```
