@@ -1,5 +1,5 @@
 ---
-title: "The forecast trap"
+title: "The Forecast Trap"
 name: Carl Boettiger
 email: "cboettig@berkeley.edu"
 affiliation: a,1
