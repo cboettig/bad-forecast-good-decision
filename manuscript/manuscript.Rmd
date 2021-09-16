@@ -35,6 +35,7 @@ layout: 3p
 journal: Ecology Letters
 ---
 
+
 - abbreviated running title: "The Forecast Trap"
 - Authorship statement: _This is a single-author paper_
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
