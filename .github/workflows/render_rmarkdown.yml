@@ -1,6 +1,6 @@
 on:
   push:
-    paths: ['**.Rmd', ".github/workflows/render_rmarkdown.yml"]
+    paths: ['**.Rmd', ".github/workflows/render_rmarkdown.yml", "renv.lock"]
 
 name: render-rmarkdown
 
