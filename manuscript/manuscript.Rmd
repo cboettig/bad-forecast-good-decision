@@ -35,11 +35,11 @@ layout: 3p
 journal: Ecology Letters
 ---
 
-- abbreviated running title: "The forecast trap"
+- abbreviated running title: "The Forecast Trap"
 - Authorship statement: _This is a single-author paper_
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
-- number of words in the abstract: 116
-- number of words in main text: 4998
+- number of words in the abstract: 172
+- number of words in main text: 4967
 - number of cited references: 33
 - number of tables & figures: 4 Figures
 
@@ -61,7 +61,6 @@ library(patchwork)
 library(styler)
 extrafont::loadfonts(quiet = TRUE)
 ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
-
 scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
 scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
 pal <- ggthemes::solarized_pal()(8)
@@ -78,7 +77,7 @@ Global change issues are complex and outcomes are difficult to predict [@Clark20
 To guide decisions in an uncertain world, researchers and decision makers may consider a range of alternative plausible models to better reflect what we do and do not know about the processes involved [@Polasky2011].
 Forecasts or predictions from possible models can indicate what outcomes are most likely to result under what decisions or actions.
 This has made model-based forecasts a cornerstone for scientifically based decision making.
-By comparing outcomes predicted by a model to future observations, a decision maker can not only _plan_ for the uncertainty, but also _learn_ which models are most trustworthy. 
+By comparing outcomes predicted by a model to future observations, a decision maker can not only _plan_ for the uncertainty, but also _learn_ which models are most trustworthy.
 The value of iterative learning has long been reflected in the theory of adaptive management [@Walters1978] as well as in actual adaptive management practices such as Management Strategy Evaluation (MSE) [@Punt2016] used in fisheries, and is a central tenet of a rapidly growing interest in ecological forecasting [@Dietze2018].
 But, do iterative learning approaches always lead to better decisions?
 
@@ -108,23 +107,23 @@ For instance, a wide range of ecological conservation and management problems ca
 Existing computer algorithms such as stochastic dynamic programming (SDP) take a probabilistic model _forecast_ (more precisely, the probability $P(x_{t+1} | x_t, a_t)$ of the system being in state $x_{t+1}$ in the next iteration given that it was previously in state $x_t$ and the manager selected action $a_t$) and the _desired management objective_ (i.e. the maximize the expected biomass of species protected or the expected dollar profit of a fishery [see @Clark1990; @Halpern2013]) as input, and return the _decision policy_ which maximizes that objective [@Marescot2013].
 This provides a principled way to associate a decision policy with any given forecast model.
 
-Two features of this approach are worth emphasizing. 
+Two features of this approach are worth emphasizing.
 First, the resulting decision is derived directly from the forecast model and the desired objective.
 The SDP algorithm is a reasonable description of the approach any ideal manager would use -- considering all possible outcomes from all possible sequences of actions and selecting the best sequence.
 For complex models this process is too laborious even for a computer, and is often simplified by considering only a selection of predetermined policies (as in Management Strategy Evaluation, MSE, @Punt2016), or scenarios (as in scenario analysis, @Polasky2011).
-Such shortcuts are often necessary for complex real-world models, but open additional room for error: the policy we derive from a given forecast may perform poorly not because the model forecast was at fault, but because of those simplifying assumptions about possible policies. 
-To ensure that the forecast trap is not a result of such assumptions about possible policies, we will consider a problem simple enough to solve directly with SDP. 
+Such shortcuts are often necessary for complex real-world models, but open additional room for error: the policy we derive from a given forecast may perform poorly not because the model forecast was at fault, but because of those simplifying assumptions about possible policies.
+To ensure that the forecast trap is not a result of such assumptions about possible policies, we will consider a problem simple enough to solve directly with SDP.
 This leads to the second point: the resulting decision policy is optimal, so long as the forecast model is correct.
 In this way, the SDP merely stands in for a mathematically precise way in which forecasts are turned into decisions.
-Recognizing that the SDP-derived policy (A) comes directly from the forecast model, and (B) gives the optimal policy for said forecast, seems to suggest that the whatever model makes the better forecast will surely also lead to better outcomes (as measured in terms of whatever utility we have chosen to maximize). 
+Recognizing that the SDP-derived policy (A) comes directly from the forecast model, and (B) gives the optimal policy for said forecast, seems to suggest that the whatever model makes the better forecast will surely also lead to better outcomes (as measured in terms of whatever utility we have chosen to maximize).
 While this intuition is no doubt _often_ accurate, our purpose here is to demonstrate that it is by no means _guaranteed_:
-it is also possible for the model which makes the better forecast to lead to worse outcomes. 
+it is also possible for the model which makes the better forecast to lead to worse outcomes.
 
 
 # Ecological Models
 
 
-I illustrate this problem using an example from fisheries management. 
+I illustrate this problem using an example from fisheries management.
 Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
 Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
 
@@ -164,7 +163,7 @@ Let us assume that our set of candidate models are simply the possible parameter
 f_i(Y_{t+1}) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
 \end{equation}
 
-Where $Y$ is the population size after harvest, $Y_t = X_t-H_t$  and $\xi_t(\sigma)$ represents log-normal random noise with a mean of unity and log-standard-deviation $\sigma_i$.
+Where $Y$ is the population size after harvest, $Y_t = X_t-H_t$ and $\xi_t(\sigma)$ represents log-normal random noise with a mean of unity and log-standard-deviation $\sigma_i$.
 
 <!--
 This is where most fisheries biologists will probably stop reading.
@@ -328,9 +327,7 @@ Unfortunately, in this case, any such adaptive updating leads to worse outcomes 
 I illustrate the application of a passive adaptive management strategy to this simple example, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty.
 Passive adaptive management for a simple sequential decision problem is straightforward to implement over a discrete set of states and actions using dynamic programming with iterative updates [@Smith1981, example code in Appendix].
 To demonstrate that the behavior is not driven by failure to explore sufficiently, (active adaptive management), I will assign initial probability that model 2 is true at 1%.
-After a single iteration of adaptive learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A].
-
-As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
+After a single iteration of adaptive learning, these probabilities are completely reversed, with the manager deciding that model 2 is almost certainly correct [Fig 3A]. As before, this results in a management practice with much worse ecological and economic outcomes than would have been realized by a manager who stubbornly clung to model 1 without updating, which achieves a net present value that only 31% that expected under management using model 1 alone [Fig 2]. 
 
 ```{r figure3, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
 am <- read_csv("../data/am.csv")
@@ -407,7 +404,7 @@ plot_models + labs(subtitle="A") + plot_policies + labs(subtitle="B")
 ```
 
 
-Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2017].
+Perhaps this should not be surprising: ecologists have long observed that all models are wrong and the choice of better model depends on the the modeling goals [@Levins1966; @Walters1978; @Ludwig1993; @Getz2018].
 And we are clearly considering different goals: forecast skill (a unitless statistical measure) vs policy outcomes (be they measured in dollars or fish in the ocean).
 Yet the result is surprising all the same. 
 The forecast isn't just some other arbitrary modeling objective; it is a central input into the decision making process, both in the real world [@Clark2001; @Dietze2018] and in our idealized decision-making algorithm, SDP [@Marescot2013].
@@ -429,7 +426,7 @@ Analytic solutions offer more insight as to when and why very different forecast
 Such a solution was first provided by @Reed1979, who demonstrated the optimal policy in the case considered here would be a so-called "bang-bang" policy.
 Intuitively one can think of this as maintaining the biomass at the most productive size: the maximum population growth rate (position of the peak of the growth curves in Fig 4A), though this is only precisely true without discounting ($\delta = 1$): the optimal stock size $\hat x$ is the solution to $f(\hat x) = \hat x/\delta$ when stochasticity is sufficiently small [@Reed1979].
 Thus, all models in which the peak growth rate occurs at the same stock size will have the same optimal policy.
-These are not merely "bad models getting lucky" -- all such models correctly capture the crucial feature relevant to the decision.
+These are not merely bad models getting lucky -- all such models correctly capture the crucial feature relevant to the decision.
 In more complex models, such features are more difficult or impossible to identify analytically; but just because we cannot intuit the optimal policy does not mean it is uniquely complex.
 
 Do more complex models lead to more complex control rules?
@@ -440,33 +437,24 @@ So while the true population dynamics may be given by very complex non-linear fu
 It may be more likely that our candidate set contains a model which matches the optimal policy than that it contains a model which matches the generative process.  
 
 Real world considerations actually make this situation more likely, not less likely.
-Managers cannot resort to arbitrarily complex policies, regardless of how complex their models.  
+Managers cannot resort to arbitrarily complex policies, regardless of how complex their models.
 Policy adjustments are costly [@Boettiger2016] and the space of available actions is usually far more limited than the space of available states.
 In some ecological decision-making contexts, a manager may only be able to select between a handful of alternative actions.
 Such constraints make it much more likely that the optimal policy will be replicated by a much simpler model.
 Most well-managed marine fisheries are constrained to constant or simple piecewise-linear harvest control rules [@Punt2010]. 
 This ensures that an infinite number of possible models will share the optimal solution with the true model.
 
+Because even complex models frequently have simple control rules or else we are constrained to simple control rules as a practical matter, it is much more likely that any set of candidate models includes parameterizations that reproduce the true optimal policy than that they reproduce the optimal forecast.
+When data is initially limited, those simple models that could generate optimal outcomes may have non-negligible probabilities associated with them.
+This sets the stage for the forecast trap, adjustments with additional data or comparisons against alternative models that produce more accurate forecasts erodes those probabilities in favor of models which lead to less desirable outcomes.
 
-<!--
-Reed's insights illustrate that this happens not because "bad" models sometimes get lucky, but because they capture the key features of the decision process.
-This is the goal of all modeling: 
-models are simplifying abstractions which capture the details important to the task at hand.
-In Reed's case, that key feature is quiet intuitive -- the peak growth rate of the curve (if we ignore discounting). 
-That simple intuition does not extend to the more complex cases examined by @Hening2021 and certainly in even richer models where the optimal policy is not tractable.
-Consequently, these results do not provide a short-cut for finding an optimal policy without knowing the true model: we cannot merely look for the harvest that generates the peak growth rate (even in Reed's case that would not be optimal due to the role of discounting).
-All the same, they are a reminder of why simple, processed based models can lead us to the optimal policy without providing accurate forecasts.
-Meanwhile, filtering out or weighing models based on forecast skill _alone_ can precipitate the forecast trap by decreasing any prior belief in such simple but effective models in favor of those with greater forecast skill.
--->
-
-
-The forecast trap may become a more acute issue as the simple, process-based models that have historically underpinned ecology and conservation policy are challenged by more accurate forecasts from statistical and machine learning tools.  
-Buoyed by the rapid expansion of available data and computational power, complex and increasingly opaque models are becoming more common [].
+The forecast trap may become a more acute issue as the simple, process-based models that have historically underpinned ecology and conservation policy are challenged by more accurate forecasts from statistical and machine learning tools.
+Buoyed by the rapid expansion of available data and computational power, complex and increasingly opaque models are becoming more common [@Desjardins2019].
 Evaluating such models based on forecast skill will not only reduce concerns about over-fitting, but will make a compelling illustration of their viability as a tool for informing policy.
 In many cases, these more accurate forecasts may very well prove invaluable in delivering better (or less bad) real-world outcomes.
 But this paper is a reminder that such outcomes are by no means an inevitable consequence of better forecasts.
 These more accurate predictions are still not the true model, and it so it is always possible to improve predictive accuracy while less accurately reflecting the unknown key features that really drive the policy decision.
-I hope this simple and intuitive logic of Figure 4 will provide a ready reminder as to why the model that produces the best forecast will not always produce the best decision.
+I hope this simple and intuitive example will provide a ready reminder as to why the model that produces the best forecast will not always produce the best decision.
 
 
 <!--
@@ -478,46 +466,6 @@ Instead of estimating a predictive model the cutting edge, algorithms which make
 Decision makers do not need to predict the future, they only need to know what to do about it.
 -->
 
-
-
-
-<!--
-For example, marine fisheries typically restrict a Management Strategy Evaluation [MSE; @Punt2016] to constant mortality, (defined as harvest per unit biomass, $F = H/B$).
-Constant mortality is technically only optimal in a deterministic model [@Clark1973]; but is easier to solve for than the SDP methods for constant escapement shown here,
-which in practice is used mostly in salmon fisheries and the resource economics literature [see @pomdp-intro, @Costello2016].
-While Model 1 used here will not lead to a good constant-mortality policy, it is just as easy to construct a model which gives optimal decisions and bad forecasts.
-In the example shown above, Model 1 achieves optimal results by choosing $K$ such that $K/2$ matches the peak growth rate under the true model [@Reed1979.
-Under constant mortality, we instead choose a logistic model with $r$ such that $r/4$ matches the optimal constant mortality under the true model [@Schaefer1954].
-Everything else about our choice of Model 1 can be far from the true model, and yet it will give optimal results, just as above.
--->
-
-<!--
-
-That potential for long-term deterioration in management outcomes due to adaptive learning has not been widely acknowledged before.
-Certainly the limitations of any modeling approach to improve management outcomes due to the human context of competing interests, imperfect enforcement, etc., is readily appreciated [@Ludwig1993].
-The problem here goes deeper, to the limits of models and learning from data even in a toy example free from other real world challenges.
-Previous work has acknowledged that iterative learning may not always be feasible and that it may not always be beneficial [@Polasky2011], but has failed to recognize the possibility that it can potentially be detrimental.
-For example, active adaptive management is premised on the observation that future observations may be too uninformative to distinguish between alternatives [@Walters1978].
-Others have also noted that even big improvements in predictive accuracy could have negligible improvement on the decision outcomes, which motivates quantifying the Value of Information (VOI) [@Katz1987].
-But in both cases, the worst outcome is wasted effort.
-In the scenario considered here, the VOI is negative: any learning over the proposed model uncertainty leads to lower expected net utility than not learning.
--->
-
-<!--
-Worse, absent the counter-factual of non-adaptive management to compare to, this deterioration in outcomes is invisible. 
-All the information available to our manager reinforces the conviction that this deteriorated ecological state is in fact the natural, sustainably managed equilibrium of our fish population.
-By responding in any way to future observations to reduce model uncertainty, our manager is caught in a trap of self-fulfilling prophecy:
-believing ever more firmly in models that make more accurate predictions while driving decisions that prevent the fish stock from recovering.
-The only way to avoid this trap is to _forego learning_ with each new observation, to avoid iterative updates.
-It may seem that the adaptive management approach fails because posterior probabilities are updated according to Bayes rule.
-Like iterative forecasting, this favors models which better predict the data, despite the fact that under the adaptive management approach, the overall optimization is conditioned on actual utility and not model fit.
-However, this issue is not easily avoided.
-For example, so-called greedy optimization techniques that favor actions with higher immediate reward do even worse in this context, since such an algorithm would obviously maximize the immediate harvest and therefore collapse the stock.
-Only by comparing the net utility derived from management under model 1 for many iterations to the net utility derived under model 2 after many iterations can we determine that model 1 leads to better outcomes.
-This raises several questions.
-Do such methods of learning and reducing model uncertainty ever lead us towards worse long-term outcomes in the real world? 
-If so, How would we know, and what should we do about it?
--->
 
 
 ## Acknowledgements
