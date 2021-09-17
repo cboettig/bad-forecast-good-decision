@@ -39,7 +39,7 @@ journal: Ecology Letters
 - abbreviated running title: "The Forecast Trap"
 - Authorship statement: _This is a single-author paper_
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
-- number of words in the abstract: 172
+- number of words in the abstract: 149
 - number of words in main text: 4967
 - number of cited references: 33
 - number of tables & figures: 4 Figures
