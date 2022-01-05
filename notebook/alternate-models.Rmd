@@ -1,0 +1,135 @@
+---
+output: github_document
+---
+
+
+- Define a model
+- Define action space. Under the assumption of fixed action, problem is not MDP and trivial to solve by sweep through possible fixed actions.
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+# these dynamics are nonsense
+# predator pop goes to Inf if prey is extinct
+# prey = sp 1, predator= sp 2
+R1 <- R2 <- 3
+A1 <- A2 <- 2
+B1 <- 0.5
+B2 <- -0.3
+Tmax <- 50
+omega1 <- rnorm(Tmax, 0, 0.001)
+omega2 <- rnorm(Tmax, 0, 0.001)
+
+u1 <- u2 <- s1 <- s2 <- x1 <- x2 <- numeric(Tmax)
+x1[1] <- 1
+x2[1] <- 1
+
+# or, constant strategy
+u1 <- rep(.2, Tmax)
+u2 <- rep(.5, Tmax)
+
+for (t in 1:(Tmax-1)) {
+    s1[t] <- x1[t] * (1 - u1[t])
+    s2[t] <- x2[t] * (1 - u2[t])
+    x1[t+1] <- s1[t] * exp(R1 - A1 * s1[t] - B1 * s2[t] + omega1[t])
+    x2[t+1] <- s2[t] * exp(R2 - A2 * s1[t] - B2 * s1[t] + omega2[t])
+}
+
+df <- data.frame(time = 1:Tmax, x1, x2, u1, u2)
+
+
+```
+
+
+```{r}
+ggplot(df) +
+ geom_path(aes(time, x1)) + 
+ geom_path(aes(time, x2), col="red")
+```
+
+## Five species
+
+```{r}
+
+model_5sp <- function(u_prey = 0.45, u_pred = .66) {
+    Tmax <- 50
+    x1 <- x2 <- x3 <- x4 <- x5 <- numeric(Tmax)
+    s1 <- s2 <- s3 <- s4 <- numeric(Tmax)
+    xi1 <- rnorm(Tmax, 0, 0.01)
+    xi2 <- rnorm(Tmax, 0, 0.01)
+    xi3 <- rnorm(Tmax, 0, 0.01)
+    xi4 <- rnorm(Tmax, 0, 0.01)
+    xi5 <- rnorm(Tmax, 0, 0.01)
+
+    x1[1] <- x2[1] <- x3[1] <- 1
+    x4[1] <- x5[1] <- .5
+   
+    for (t in 1:(Tmax-1)) {
+        s1[t] <- x1[t] * (1 - u_prey)
+        s2[t] <- x2[t] * (1 - u_prey)
+        s3[t] <- x3[t] * (1 - u_prey)
+        s4[t] <- x4[t] * (1 - u_pred)
+
+        x1[t+1] = s1[t]*exp(1.0213 - s1[t] - 0.0861*s2[t] - 0.3141*s3[t] - 0.7252*s4[t] - 0.2445*x5[t] + xi1[t])
+        x2[t+1] = s2[t]*exp(1.0289 - 0.4765*s1[t] - s2[t] - 0.1370*s3[t] - 0.9811*s4[t] - 0.0915*x5[t] + xi2[t])
+        x3[t+1] = s3[t]*exp(1.0207 - 0.3193*s1[t] - 0.3461*s2[t] - s3[t] - 0.6367*s4[t] - 0.8716*x5[t] + xi3[t])
+        x4[t+1] = s4[t]*exp(0.7252*s1[t] + 0.9811*s2[t] + 0.6367*s3[t] - s4[t] + xi4[t])
+        x5[t+1] = x5[t]*exp(0.2445*s1[t] + 0.0915*s2[t] + 0.8716*s3[t] - x5[t] +  xi5[t])
+
+    }
+    df <- tibble(t = 1:Tmax, x1, x2, x3, x4, x5)
+    df
+}
+
+df <- model_5sp()
+
+df %>%
+    pivot_longer(tidyselect::starts_with("x"),
+                    names_to = "species",
+                    values_to = "population") %>%
+    ggplot(aes(t, population, col= species)) + geom_path()
+```
+
+```{r}
+clip <- function(x, lower=0, upper=1) {
+    x[x <= lower] <- lower
+    x[x >= upper] <- upper
+    x
+}
+
+utility <- function(x) {
+    delta <- 0.99
+    w1 <- 0.25
+    w2 <- 0.25
+    w3 <- 1 - (w1 + w2)
+    u_prey <- clip(x[1], 0, 1)
+    u_pred <- clip(x[2], 0, 1)
+    df <- model_5sp(u_prey, u_pred)
+    R <- 
+        w1 * u_prey * (df$x1 + df$x2 + df$x3) +
+        w2 * u_pred * df$x4 +
+        w3 * x5
+    t <- seq_along(R)
+    - as.numeric(R %*% delta ^ t)
+    }
+
+-utility(c(0.5,0.5))
+-utility(c(0,1))
+-utility(c(1,0))
+
+o <- optim(c(0.5,0.5), utility, method="L-BFGS-B", lower = c(0,0), upper = c(1,1))
+o$par
+o$value
+
+o <- optim(c(0.5,0.5), utility, method="SANN")
+clip(o$par, 0, 1)
+o$value
+
+```
+
+
+- Determine n alternate models over the same state space. Consider structurally different models, ideally with structures consistent with
+  common forecast / inference models
