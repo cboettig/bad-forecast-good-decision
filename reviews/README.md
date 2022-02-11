@@ -28,8 +28,8 @@ gpg::gpg_recv("3908E1CFD28B380C") # import, needed only once
     ##          1          0          0          0          0
 
 ``` r
-msg <- gpg_encrypt("review-reply.Rmd", receiver =  "3908E1CFD28B380C")
-writeLines(msg, "review-reply.Rmd.gpg")
+msg <- gpg_encrypt("review-reply-round2.Rmd", receiver =  "3908E1CFD28B380C")
+writeLines(msg, "review-reply-round2.Rmd.gpg")
 ```
 
 ## decrypt
