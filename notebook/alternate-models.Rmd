@@ -3,6 +3,9 @@ output: github_document
 ---
 
 
+- Model 1: A reasonable approximation model that does not produce very accurate forecasts, but nevertheless leads to good management decisions.
+- Model 2: A reasonable approximation model that produces more accurate forecasts but leads to substantially worse management outcomes
+- Model 3: The "True" Model: five-species model; functional forms and parameter values are never disclosed to the 'manager' but are used to simulate all data and management scenarios.
 
 
 - Define a model
@@ -13,68 +16,85 @@ library(tidyverse)
 ```
 
 
+```{r}
+## helper funs
+format_sim <- function(df) {
+  df %>%  
+  transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3, r=r) %>%
+  pivot_longer(any_of(c("cormorant", "bass", "herring")),
+                  names_to = "species",
+                  values_to = "biomass")
+}
+```
+
+
 
 ## Five species
 
-```{r}
-
+```{r model_5sp}
+# x1,x2,x3 Herring (Prey)
+# x4 Bass (predator)
+# x5 Cormorant (conservation target, predator)
 model_5sp <- function(u_prey = 0.5,
                       u_pred = 0.5,
-                      sigma = 0.05,
-                      x1o = 0.44, # unfushed equib
+                      sigma = 0.01,
+                      x1o = 0.44, # unfished equib
                       x2o = 0.17,
                       x3o = 0.186,
                       x4o = 0.600,
                       x5o = 0.280,
-                      Tmax = 50) {
-    x1 <- x2 <- x3 <- x4 <- x5 <- numeric(Tmax)
-    s1 <- s2 <- s3 <- s4 <- numeric(Tmax)
-    xi1 <- rnorm(Tmax, 0, sigma)
-    xi2 <- rnorm(Tmax, 0, sigma)
-    xi3 <- rnorm(Tmax, 0, sigma)
-    xi4 <- rnorm(Tmax, 0, sigma)
-    xi5 <- rnorm(Tmax, 0, sigma)
-
-    x1[1] <- x1o
-    x2[1] <- x2o
-    x3[1] <- x3o
-    x4[1] <- x4o
-    x5[1] <- x5o
-   
-    for (t in 1:(Tmax-1)) {
-        s1[t] <- x1[t] * (1 - u_prey)
-        s2[t] <- x2[t] * (1 - u_prey)
-        s3[t] <- x3[t] * (1 - u_prey)
-        s4[t] <- x4[t] * (1 - u_pred)
-
-        x1[t+1] = s1[t]*exp(1.0213 - s1[t] - 0.0861*s2[t] - 0.3141*s3[t] - 0.7252*s4[t] - 0.2445*x5[t] + xi1[t])
-        x2[t+1] = s2[t]*exp(1.0289 - 0.4765*s1[t] - s2[t] - 0.1370*s3[t] - 0.9811*s4[t] - 0.0915*x5[t] + xi2[t])
-        x3[t+1] = s3[t]*exp(1.0207 - 0.3193*s1[t] - 0.3461*s2[t] - s3[t] - 0.6367*s4[t] - 0.8716*x5[t] + xi3[t])
-        x4[t+1] = s4[t]*exp(0.7252*s1[t] + 0.9811*s2[t] + 0.6367*s3[t] - s4[t] + xi4[t])
-        x5[t+1] = x5[t]*exp(0.2445*s1[t] + 0.0915*s2[t] + 0.8716*s3[t] - x5[t] +  xi5[t])
-
+                      Tmax = 50,
+                      reps = 40) {
+    df <- tibble()
+    for(r in 1:reps){
+      x1 <- x2 <- x3 <- x4 <- x5 <- numeric(Tmax)
+      s1 <- s2 <- s3 <- s4 <- numeric(Tmax)
+      xi1 <- rnorm(Tmax, 0, sigma)
+      xi2 <- rnorm(Tmax, 0, sigma)
+      xi3 <- rnorm(Tmax, 0, sigma)
+      xi4 <- rnorm(Tmax, 0, sigma)
+      xi5 <- rnorm(Tmax, 0, sigma)
+  
+      x1[1] <- x1o
+      x2[1] <- x2o
+      x3[1] <- x3o
+      x4[1] <- x4o
+      x5[1] <- x5o
+     
+      for (t in 1:(Tmax-1)) {
+          s1[t] <- x1[t] * (1 - u_prey)
+          s2[t] <- x2[t] * (1 - u_prey)
+          s3[t] <- x3[t] * (1 - u_prey)
+          s4[t] <- x4[t] * (1 - u_pred)
+  
+          x1[t+1] = s1[t]*exp(1.0213 - s1[t] - 0.0861*s2[t] - 0.3141*s3[t] - 0.7252*s4[t] - 0.2445*x5[t] + xi1[t])
+          x2[t+1] = s2[t]*exp(1.0289 - 0.4765*s1[t] - s2[t] - 0.1370*s3[t] - 0.9811*s4[t] - 0.0915*x5[t] + xi2[t])
+          x3[t+1] = s3[t]*exp(1.0207 - 0.3193*s1[t] - 0.3461*s2[t] - s3[t] - 0.6367*s4[t] - 0.8716*x5[t] + xi3[t])
+          x4[t+1] = s4[t]*exp(0.7252*s1[t] + 0.9811*s2[t] + 0.6367*s3[t] - s4[t] + xi4[t])
+          x5[t+1] = x5[t]*exp(0.2445*s1[t] + 0.0915*s2[t] + 0.8716*s3[t] - x5[t] +  xi5[t])
+  
+      }
+      df <- dplyr::bind_rows(tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r), df)
     }
-    df <- tibble(time = 1:Tmax, x1, x2, x3, x4, x5)
     df
 }
 
 ```
 
-```{r}
+```{r utility}
 clip <- function(x, lower=0, upper=1) {
     x[x <= lower] <- lower
     x[x >= upper] <- upper
     x
 }
-```
 
-```{r}
-
+## Compute the reward associated with a given simulation df given 
+## rates for prey and predator species (x[1],x[2])
 reward <- function(df,
                    x,
-                   w3 = 0.5,
-                   w2 = 0.25,
-                   w1 = 1 - (w2+w3),
+                   w3 = 0.5,              # Conservation value
+                   w2 = 0.25,             # Predator harvest value
+                   w1 = 1 - (w2+w3),      # Prey harvest value
                    delta = 0.999
                   ) {
     u_prey <- clip(x[1], 0, 1)
@@ -87,13 +107,16 @@ reward <- function(df,
     as.numeric(R %*% delta ^ t)
 }
 
-utility <- function(x, f = model_5sp) {
+# Function to be optimized for fixed choice of harvest rates x[1],x[2]
+utility <- function(x, f = model_5sp, ...) {
 
     u_prey <- clip(x[1], 0, 1)
     u_pred <- clip(x[2], 0, 1)
-    ## ought to average over many replicates!
-    df <- f(u_prey, u_pred)
+    df <- f(u_prey, u_pred, ...)
 
+    # average accross the reps    
+    df <- df %>% group_by(time) %>% summarise(across(.fns=mean))
+    
     # negative since optimizer minimizes
     - reward(df, x)
 }
@@ -104,22 +127,18 @@ utility <- function(x, f = model_5sp) {
 
 
 ```{r}
--utility(c(0.5,0.5))
--utility(c(0,1))
--utility(c(1,0))
--utility(c(0,0))
 
-o <- optim(c(0.,0.), utility, method="L-BFGS-B", lower = c(0,0), upper = c(1,1))
+o <- optim(c(0.01,0.5), utility, method="L-BFGS-B", lower = c(0,0), upper = c(1,1))
 o$par
 o$value
 
-o <- optim(c(0.5,0.1), utility)
+o <- optim(c(0.01,0.5), utility)
 clip(o$par, 0, 1)
 o$value
 
-#o <- optim(c(0.5,0.5), utility, method="SANN")
-#clip(o$par, 0, 1)
-#o$value
+x <- c(0.0,.58)
+utility(x)
+
 
 ```
 
@@ -127,14 +146,28 @@ For the sake of argument, let us allow the model of Brias & Munch to represent t
 As researchers, we only have access to data derived from observations from the model. 
 Let us consider a sample simulation of such data:
 
+
 ```{r}
-df <- model_5sp(0, .6, sigma = 0.01)
+df <- model_5sp(0, .0, sigma = 0.01)
 
 df %>%
     pivot_longer(tidyselect::starts_with("x"),
                     names_to = "species",
                     values_to = "biomass") %>%
-    ggplot(aes(time, biomass, col= species)) + geom_path()
+    ggplot(aes(time, biomass, group= interaction(species,r), col=species)) + geom_path() + ggtitle("Unfished")
+```
+
+Starting from the unfished equilibrium,
+
+```{r}
+df <- model_5sp(0, .58, sigma = 0.01)
+
+df %>%
+    pivot_longer(tidyselect::starts_with("x"),
+                    names_to = "species",
+                    values_to = "biomass") %>%
+    ggplot(aes(time, biomass, group= interaction(species,r), col=species)) + 
+  geom_path() + ggtitle("Optimally managed")
 ```
 
 There are many other models, including process-based models, statistical models or even black-box machine learning models
@@ -143,15 +176,22 @@ which 5 dimensional state-space and two-dimensional action space.
 
 
 ```{r}
-## Three-species 'view' of the underlying dynamics, unfished
+## Three-species 'view' of the underlying dynamics, without fishing, starting all species from a low level
 
-df <- model_5sp(0, 0., sigma = 0.01, x1o =.1, x2o = .1, x3o = .1, x4o = .1, x5o = .1)
-df %>%
-    transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3) %>%
+#true_observations <- model_5sp(0, 0., sigma = 0.05, x1o =.033, x2o = .033, x3o = .033, x4o = .1, x5o = .1, Tmax = 50)
+true_observations <- model_5sp(0, 0, sigma = 0.05)
+
+
+obs <- true_observations %>% 
+  transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3, r=r) %>%
     pivot_longer(any_of(c("cormorant", "bass", "herring")),
                     names_to = "species",
-                    values_to = "biomass") %>%
-    ggplot(aes(time, biomass, col= species)) + geom_path()
+                    values_to = "biomass") 
+  
+
+obs %>%
+    ggplot(aes(time, biomass, col = species, group = interaction(species,r))) +
+    geom_path(alpha=0.4)
 ```
 
 
@@ -176,47 +216,89 @@ model_3sp <- function(u_prey = 0,
                       A1 = 2,
                       R1 = 1.6,
                       A2 = 2.75,
-                      R2 = 1.6,
+                      R2 = 1.45,
                       Tmax = 50,
-                      x1o = .8, # Herring
-                      x2o = .6, # Bass
-                      x3o = 0.15, # Cormorant
-                      sigma = 0.01) {
-
+                      x1o = 0.44, # unfished equib
+                      x2o = 0.17,
+                      x3o = 0.186,
+                      x4o = 0.600,
+                      x5o = 0.280,
+                      sigma = 0.01,
+                      reps=40) {
+    df <- tibble()
+    for(r in 1:reps){
     omega1 <- rnorm(Tmax, 0, sigma)
     omega2 <- rnorm(Tmax, 0, sigma)
     omega3 <- rnorm(Tmax, 0, sigma)
 
     s1 <- x1 <- numeric(Tmax)
-    s2 <- x2 <- numeric(Tmax)
-    x3 <- numeric(Tmax)
-    x1[1] <- x1o
-    x2[1] <- x2o
-    x3[1] <- x3o
+    s4 <- x4 <- numeric(Tmax)
+    x2 <- x3 <- numeric(Tmax)
+    x5 <- numeric(Tmax)
+    
+    x1[1] <- x1o + x2o + x3o
+    x4[1] <- x4o
+    x5[1] <- x5o
 
     for (t in 1:(Tmax-1)) {
         s1[t] <- x1[t] * (1 - 10*u_prey)
-        s2[t] <- x2[t] * (1 - u_predator)
+        s4[t] <- x4[t] * (1 - u_predator)
 
         x1[t+1] <- s1[t] * exp(R1 - s1[t] * A1 + omega1[t])
-        x2[t+1] <- s2[t] * exp(R2 - s2[t] * A2 + omega2[t])
-        x3[t+1] <- .25 * x1[t]
+        x4[t+1] <- s4[t] * exp(R2 - s4[t] * A2 + omega2[t])
+        x5[t+1] <- .25 * x1[t]
     }
 
-    df <- tibble(time = 1:Tmax, x1, x4 = x2, x5 = x3, x2 = 0, x3 = 0)
+    df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
+    }
+  df
 }
+```
+
+
+
+Does this model produce good forecasts?
+
+```{r}
+# unfished equilibrium
+m1_forecast <- model_3sp(0, 0.0, sigma = 0.05,  Tmax = 50)
+  
+predictions <- m1_forecast %>%
+  transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3, r=r) %>%
+  pivot_longer(any_of(c("cormorant", "bass", "herring")),
+                  names_to = "species",
+                  values_to = "biomass") %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+
+predictions %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd)) +
+  geom_point(data = filter(obs, r==1))
 ```
 
 ```{r}
 # unfished equilibrium
-df <- model_3sp(0, 0)
-df %>%
-    transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3) %>%
+m1_forecast <- model_3sp(0, 0.58, sigma = 0.05,  Tmax = 50)
+
+predictions <-   
+m1_forecast %>%
+    transmute(time = time, cormorant = x5, bass = x4, herring = x1, r=r) %>%
     pivot_longer(any_of(c("cormorant", "bass", "herring")),
                     names_to = "species",
-                    values_to = "biomass") %>%
-    ggplot(aes(time, biomass, col= species)) + geom_path()
+                    values_to = "biomass") %>% 
+    group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+
+predictions %>%
+ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd)) +
+  geom_point(data = filter(obs, r==1))
 ```
+
+
 
 ```{r}
 # Optimal policy under identical utility
@@ -229,42 +311,51 @@ clip(m3sp$par, 0, 1)
 ```
 
 
-Alternate model, better forecast, worse decision:
+Alternate model, also mistakenly treats the three species of herring as a single species, but does a better job capturing the predator-prey relationships.  This model also happens to produce better forecasts, but leads to worse decision:
 
 
 ```{r}
 model_B <- function(u_prey = 0.5,
                       u_pred = 0.5,
                       sigma = 0.05,
-                      x1o = 0.796, # unfushed equib
+                      x1o = 0.44, # unfished equib
+                      x2o = 0.17,
+                      x3o = 0.186,
                       x4o = 0.600,
                       x5o = 0.280,
                       Tmax = 50,
-                      R1 = 1.0213,
+                      R1 =  1.15, #1.0213,
                       A11 = 1,
-                      A14 = 0.7252,
-                      A15 = 0.2445,
-                      A41 = 0.7252,
-                      A51 = 0.2445) {
-    x1 <- x4 <- x5 <- numeric(Tmax)
-    s1 <-  s4 <- numeric(Tmax)
-    xi1 <- rnorm(Tmax, 0, sigma)
-    xi4 <- rnorm(Tmax, 0, sigma)
-    xi5 <- rnorm(Tmax, 0, sigma)
-
-    x1[1] <- x1o
-    x4[1] <- x4o
-    x5[1] <- x5o
-   
-    for (t in 1:(Tmax-1)) {
-        s1[t] <- x1[t] * (1 - u_prey)
-        s4[t] <- x4[t] * (1 - u_pred)
-        x1[t+1] = s1[t]*exp(R1 - A11*s1[t] - A14*s4[t] - A15 * x5[t] + xi1[t])
-        x4[t+1] = s4[t]*exp(A41*s1[t] - s4[t] + xi4[t])
-        x5[t+1] = x5[t]*exp(A51*s1[t] - x5[t] +  xi5[t])
-
+                      A14 = 0.1, # 0.7252,
+                      A15 = 0.1, # 0.2445,
+                      A41 =  0.8, #0.7252,
+                      A51 = 0.3, # 0.2445,
+                    reps = 40) {
+  
+    df <- tibble()
+    for(r in 1:reps){
+    
+      x1 <- x4 <- x5 <- numeric(Tmax)
+      s1 <-  s4 <- numeric(Tmax)
+      x2 <- x3 <- numeric(Tmax)
+      xi1 <- rnorm(Tmax, 0, sigma)
+      xi4 <- rnorm(Tmax, 0, sigma)
+      xi5 <- rnorm(Tmax, 0, sigma)
+  
+      x1[1] <- x1o + x2o + x3o
+      x4[1] <- x4o
+      x5[1] <- x5o
+     
+      for (t in 1:(Tmax-1)) {
+          s1[t] <- x1[t] * (1 - u_prey)
+          s4[t] <- x4[t] * (1 - u_pred)
+          x1[t+1] = s1[t]*exp(R1 - A11*s1[t] - A14*s4[t] - A15 * x5[t] + xi1[t])
+          x4[t+1] = s4[t]*exp(A41*s1[t] - s4[t] + xi4[t])
+          x5[t+1] = x5[t]*exp(A51*s1[t] - x5[t] +  xi5[t])
+  
+      }
+      df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
     }
-    df <- tibble(time = 1:Tmax, x1, x4, x5, x2 =0, x3 = 0)
     df
 }
 ```
@@ -273,65 +364,90 @@ model_B <- function(u_prey = 0.5,
 ```{r}
 # Optimal policy under identical utility
 u_B <- function(x) utility(x, f = model_B)
-u_B(c(0, .63))
+u_B(c(0, .58))
 #optim(c(0.5,0.1), u_B, method = "L-BFGS-B", lower=0, upper=1)
 
 B <- optim(c(0.5,0.1), u_B)
 B$value
-clip(B$par, 0, 1)
-
-
-```
-
-
-```{r}
-
-utility( c(clip(o$par[[1]]), clip(o$par[[2]])) )
-
-utility( c(clip(m3sp$par[[1]]), clip(m3sp$par[[2]])) )
-
-utility( c(clip(B$par[[1]]), clip(B$par[[2]])) )
-
+model_B_policy <- clip(B$par, 0, 1)
+model_B_policy
 
 ```
-
 
 Run the simulation using management policy of each
 
 
+
 ```{r}
 
-## Generate replicate predictions from each model at each step.
-## compute CRPS of an observation from the "true" model vs those distributions
+
+Tmax <- 20
+x <- model_B_policy
+#x <- c(0.,0.58)  # Following the optimal policy under model_B
+
+obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
 
 
-function(est, f) {
-    u_prey <- clip(est$par[[1]])
-    u_pred <- clip(est$par[[2]])
-    map_dfr(1:100, function(i) {
-    df <- f(u_prey, u_pred, x1o = .1, x2o = .1, x3o = .1, x4o = .1, x5o = .1)
-    df %>%
-        transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3) %>%
-        pivot_longer(any_of(c("cormorant", "bass", "herring")),
-                        names_to = "species",
-                        values_to = "biomass")
-    }, .id = "rep")
-                    
-}
+
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+predict_stats_B <- predict_B %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+
+predict_stats_B %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
+  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
+
 
 ```
 
 
 
 ```{r}
-# management of true model under optimal pars for model_3sp
-df <- model_5sp(clip(m3sp$par[[1]],0,1),
-                clip(m3sp$par[[2]],0,1),
-                 x1o = .1, x4o = .1, x5o = .1)
-df %>%
-    transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3) %>%
-    pivot_longer(any_of(c("cormorant", "bass", "herring")),
-                    names_to = "species",
-                    values_to = "biomass") %>%
-    ggplot(aes(time, biomass, col= species)) + geom_path()
+## True observations vs forecasts, 5 steps ahead, while following the Optimal / Model 1 policy, starting with default initial condition
+Tmax <- 5
+x <- c(0,0.58)
+
+obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+predict_stats <- predict %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+## dotted are forecasted values, solid are observed values
+
+
+predict_stats %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
+  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
+
+```
+
+
+```{r}
+score_me <- function(x = c(0,0.58), process=model_5sp, forecast=model3p, Tmax=5) {
+  
+  
+  obs <- process(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+  predict <- forecast(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+  
+  #scoringRules::crps_sample(predict$x1, )
+  
+  
+}
+
 ```
