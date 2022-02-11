@@ -1,24 +1,37 @@
+on:
+  push:
+    paths: ['**.Rmd', ".github/workflows/render_rmarkdown.yml", "renv.lock"]
 
-on: push
-      
-name: Render manuscript
+name: render-rmarkdown
 
 jobs:
-  render:
-    name: Render RMarkdown
-    runs-on: ubuntu-18.04
+  render-rmarkdown:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v1
-      - uses: r-lib/actions/setup-r@v1
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          
       - uses: r-lib/actions/setup-pandoc@v1
+        
+      - uses: r-lib/actions/setup-r@v1
+        
       - uses: r-lib/actions/setup-tinytex@master
-      - name: Install system dependencies
-        if: runner.os == 'Linux'
+        
+      - uses: r-lib/actions/setup-renv@v1
+
+      - name: Render Rmarkdown files
         run: |
-          sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev
-      - name: Install Package Dependencies
-        run: |-
-          Rscript -e "install.packages('remotes', repos = 'https://demo.rstudiopm.com/all/__linux__/bionic/latest')"
-          Rscript -e "remotes::install_deps(dependencies = TRUE, repos = 'https://demo.rstudiopm.com/all/__linux__/bionic/latest')"
-      - name: Render mansucript
-        run: |-
+          RMD_PATH=($(ls manuscript/* | grep '[.]Rmd$'))
+#          Rscript -e 'for (f in commandArgs(TRUE)) if (file.exists(f)) rmarkdown::render(f)' ${RMD_PATH[*]}
+
+      - name: Commit results
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git commit ${RMD_PATH[*]/.Rmd/.md} -m 'Re-build Rmarkdown files' || echo "No changes to commit"
+          git push origin || echo "No changes to commit"
+        

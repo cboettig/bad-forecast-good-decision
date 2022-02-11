@@ -21,7 +21,7 @@ header-includes:
 ---
 
 
-Because the methods applied here: Stochastic Dynamic Programming, Iterative Forecasts assessed with Proper Scoring Rules, or Adaptive Management, are not themselves novel, the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulas or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulas presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in MatLab [@Marescot2013; @MDPtoolbox].  
+The methods applied here -- stochastic dynamic programming, iterative forecasts assessed with proper scoring rules, and adaptive management -- are not themselves novel, thus the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulas or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulas presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in MatLab [@Marescot2013; @MDPtoolbox].  
 
 
 Below, I provide carefully annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
@@ -291,7 +291,7 @@ stepahead_unfished <- stepahead_unfished  %>%
   filter(model != "3") %>% 
   mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
   rowwise() %>%
-  mutate(expected = transitions[[model]][state_index, , 1]  %*% states,
+  mutate(expected = as.numeric( transitions[[model]][state_index, , 1]  %*% states),
          var = transitions[[model]][state_index, , 1]  %*% states ^ 2 - expected ^ 2,
          low = states[max(which(cumsum(transitions[[model]][state_index,,1]) < 0.025)) ],
          high = states[min(which(cumsum(transitions[[model]][state_index,,1]) > 0.975)) ],
@@ -310,7 +310,7 @@ stepahead_fished <- sims %>%
   mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
   rowwise() %>%
   mutate(prob =  transitions[[model]][state_index, next_state, action_index],
-         expected = transitions[[model]][state_index, , action_index]  %*% states,
+         expected = as.numeric( transitions[[model]][state_index, , action_index]  %*% states ),
          var = transitions[[model]][state_index, , action_index]  %*% states ^ 2 - expected ^ 2,
          low = states[max(which(cumsum(transitions[[model]][state_index,,action_index]) < 0.025)) ],
          high = states[min(which(cumsum(transitions[[model]][state_index,,action_index]) > 0.975)) ],
@@ -327,7 +327,7 @@ forecasts under both the un-fished and actively managed scenario for each model:
 
 ```{r proper_scores, message = FALSE}
 # Gneiting & Raferty (2007), eq27
-scoring_fn <- function(x, mu, sigma){ -(mu - x )^2 / sigma^2  - log(sigma)}
+scoring_fn <- function(x, mu, sigma){ as.numeric( -(mu - x )^2 / sigma^2  - log(sigma) )}
 
 stepahead_unfished <- stepahead_unfished %>%
   mutate(sd = sqrt(var),
