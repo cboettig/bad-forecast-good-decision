@@ -2,6 +2,10 @@
 output: github_document
 ---
 
+The model which gives the best forecast does not always lead to the best decision. 
+
+
+
 
 - Model 1: A reasonable approximation model that does not produce very accurate forecasts, but nevertheless leads to good management decisions.
 - Model 2: A reasonable approximation model that produces more accurate forecasts but leads to substantially worse management outcomes
@@ -257,6 +261,243 @@ model_3sp <- function(u_prey = 0,
 
 
 
+
+```{r}
+# Optimal policy under identical utility
+u_3sp <- function(x) utility(x, f = model_3sp)
+
+m3sp <- optim(c(0.5,0.1), u_3sp)
+m3sp$value
+clip(m3sp$par, 0, 1)
+
+```
+
+
+Alternate model, also mistakenly treats the three species of herring as a single species, but does a better job capturing the predator-prey relationships.  This model also happens to produce better forecasts, but leads to worse decision:
+
+
+```{r}
+model_B <- function(u_prey = 0.5,
+                      u_pred = 0.5,
+                      sigma = 0.05,
+                      x1o = 0.44, # unfished equib
+                      x2o = 0.17,
+                      x3o = 0.186,
+                      x4o = 0.600,
+                      x5o = 0.280,
+                      Tmax = 50,
+                      R1 =  3, #1.15, #1.0213,
+                      A11 = 8,
+                      A14 = 0.9, # 0.7252,
+                      A15 = 0.9, # 0.2445,
+                      A41 =  0.1, #0.7252,
+                      A51 = 0.3, # 0.2445,
+                    reps = 40) {
+  
+    df <- tibble()
+    for(r in 1:reps){
+    
+      x1 <- x4 <- x5 <- numeric(Tmax)
+      s1 <-  s4 <- numeric(Tmax)
+      x2 <- x3 <- numeric(Tmax)
+      xi1 <- rnorm(Tmax, 0, sigma)
+      xi4 <- rnorm(Tmax, 0, sigma)
+      xi5 <- rnorm(Tmax, 0, sigma)
+  
+      x1[1] <- x1o + x2o + x3o
+      x4[1] <- x4o
+      x5[1] <- x5o
+     
+      for (t in 1:(Tmax-1)) {
+          s1[t] <- x1[t] * (1 - u_prey)
+          s4[t] <- x4[t] * (1 - u_pred)
+          x1[t+1] = s1[t]*exp(R1 - A11*s1[t] - A14*s4[t] - A15 * x5[t] + xi1[t])
+          x4[t+1] = s4[t]*exp(A41*s1[t] - s4[t] + xi4[t])
+          x5[t+1] = x5[t]*exp(A51*s1[t] - x5[t] +  xi5[t])
+  
+      }
+      df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
+    }
+    df
+}
+```
+
+
+```{r}
+# Optimal policy under identical utility
+u_B <- function(x) utility(x, f = model_B)
+u_B(c(0, .58))
+#optim(c(0.5,0.1), u_B, method = "L-BFGS-B", lower=0, upper=1)
+
+B <- optim(c(.2,0.01), u_B)
+model_B_policy <- clip(B$par, 0, 1)
+model_B_policy
+
+```
+
+Run the simulation using management policy of each
+
+
+
+```{r}
+
+
+Tmax <- 20
+x <- model_B_policy
+#x <- c(0.,0.58)  # Following the optimal policy under model_B
+
+sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax, sigma= 0.05)
+obs <- sim %>% format_sim()
+predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+reward(df = sim, x = x) / 40
+```
+
+```{r}
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
+
+predict_stats_B <- predict_B %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted_B")
+
+bind_rows(obs_stats, predict_stats_B) %>% 
+  filter(species != "herring") %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_point(aes(shape=type)) +
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd, lty=type))
+
+```
+
+
+
+
+
+
+
+
+```{r}
+## True observations vs forecasts, 5 steps ahead, while following the Optimal / Model 1 policy, starting with default initial condition
+Tmax <- 10
+x <- c(0,0.58)
+
+sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax, sigma=0.05)
+obs <- sim %>% format_sim()
+predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+reward(df = sim, x = x) / 40
+```
+
+
+```{r}
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
+
+predict_stats <- predict %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted_A")
+
+bind_rows(obs_stats, predict_stats) %>% 
+  filter(species != "herring") %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_point(aes(shape=type)) +
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd, lty=type))
+```
+
+```{r}
+score_me <- function(x = c(0,0.58), process=model_5sp, forecast=model3p, Tmax=5) {
+  
+  obs <- process(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+  predict <- forecast(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+  
+}
+```
+
+
+
+
+
+
+
+
+
+## unfished
+
+
+```{r}
+## True observations vs forecasts, 5 steps ahead, unfished, starting with default initial condition
+Tmax <- 20
+x <- c(0,0.)
+
+obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], sigma=0.05, Tmax = Tmax) %>% format_sim()
+predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+predict_stats <- predict %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+## dotted are forecasted values, solid are observed values
+
+
+predict_stats %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
+  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
+
+```
+
+
+
+
+
+```{r}
+
+
+Tmax <- 5
+x <- c(0,0)
+x <- model_B_policy
+#x <- c(0.,0.58)  # Following the optimal policy under model_B
+
+obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+
+
+
+obs_stats <- obs %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+predict_stats_B <- predict_B %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass))
+
+
+predict_stats_B %>%
+  ggplot(aes(time, biomass, col= species)) + 
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
+  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
 Does this model produce good forecasts?
 
 ```{r}
@@ -296,158 +537,4 @@ predictions %>%
 ggplot(aes(time, biomass, col= species)) + 
   geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd)) +
   geom_point(data = filter(obs, r==1))
-```
-
-
-
-```{r}
-# Optimal policy under identical utility
-u_3sp <- function(x) utility(x, f = model_3sp)
-
-m3sp <- optim(c(0.5,0.1), u_3sp)
-m3sp$value
-clip(m3sp$par, 0, 1)
-
-```
-
-
-Alternate model, also mistakenly treats the three species of herring as a single species, but does a better job capturing the predator-prey relationships.  This model also happens to produce better forecasts, but leads to worse decision:
-
-
-```{r}
-model_B <- function(u_prey = 0.5,
-                      u_pred = 0.5,
-                      sigma = 0.05,
-                      x1o = 0.44, # unfished equib
-                      x2o = 0.17,
-                      x3o = 0.186,
-                      x4o = 0.600,
-                      x5o = 0.280,
-                      Tmax = 50,
-                      R1 =  1.15, #1.0213,
-                      A11 = 1,
-                      A14 = 0.1, # 0.7252,
-                      A15 = 0.1, # 0.2445,
-                      A41 =  0.8, #0.7252,
-                      A51 = 0.3, # 0.2445,
-                    reps = 40) {
-  
-    df <- tibble()
-    for(r in 1:reps){
-    
-      x1 <- x4 <- x5 <- numeric(Tmax)
-      s1 <-  s4 <- numeric(Tmax)
-      x2 <- x3 <- numeric(Tmax)
-      xi1 <- rnorm(Tmax, 0, sigma)
-      xi4 <- rnorm(Tmax, 0, sigma)
-      xi5 <- rnorm(Tmax, 0, sigma)
-  
-      x1[1] <- x1o + x2o + x3o
-      x4[1] <- x4o
-      x5[1] <- x5o
-     
-      for (t in 1:(Tmax-1)) {
-          s1[t] <- x1[t] * (1 - u_prey)
-          s4[t] <- x4[t] * (1 - u_pred)
-          x1[t+1] = s1[t]*exp(R1 - A11*s1[t] - A14*s4[t] - A15 * x5[t] + xi1[t])
-          x4[t+1] = s4[t]*exp(A41*s1[t] - s4[t] + xi4[t])
-          x5[t+1] = x5[t]*exp(A51*s1[t] - x5[t] +  xi5[t])
-  
-      }
-      df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
-    }
-    df
-}
-```
-
-
-```{r}
-# Optimal policy under identical utility
-u_B <- function(x) utility(x, f = model_B)
-u_B(c(0, .58))
-#optim(c(0.5,0.1), u_B, method = "L-BFGS-B", lower=0, upper=1)
-
-B <- optim(c(0.5,0.1), u_B)
-B$value
-model_B_policy <- clip(B$par, 0, 1)
-model_B_policy
-
-```
-
-Run the simulation using management policy of each
-
-
-
-```{r}
-
-
-Tmax <- 20
-x <- model_B_policy
-#x <- c(0.,0.58)  # Following the optimal policy under model_B
-
-obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-
-
-obs_stats <- obs %>%
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-predict_stats_B <- predict_B %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-
-predict_stats_B %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
-  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
-
-
-```
-
-
-
-```{r}
-## True observations vs forecasts, 5 steps ahead, while following the Optimal / Model 1 policy, starting with default initial condition
-Tmax <- 5
-x <- c(0,0.58)
-
-obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-
-obs_stats <- obs %>%
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-predict_stats <- predict %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-## dotted are forecasted values, solid are observed values
-
-
-predict_stats %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
-  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
-
-```
-
-
-```{r}
-score_me <- function(x = c(0,0.58), process=model_5sp, forecast=model3p, Tmax=5) {
-  
-  
-  obs <- process(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-  predict <- forecast(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-  
-  #scoringRules::crps_sample(predict$x1, )
-  
-  
-}
-
 ```
