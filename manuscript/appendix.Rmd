@@ -26,15 +26,6 @@ The methods applied here -- stochastic dynamic programming, iterative forecasts 
 
 Below, I provide carefully annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
 
-```{r setup, message=FALSE}
-library(tidyverse)
-library(MDPtoolbox)
-library(expm)
-# remotes::install_github("boettiger-lab/mdplearning")
-library(mdplearning)
-```
-
-
 
 # Optimal quotas as a Markov Decision Process (MDP) problem
 
@@ -55,62 +46,117 @@ To solve this optimization, we must also know the dynamics of $X_t$, describing 
 X_{t+1} = f(X_t, H_t)
 \end{equation}
 
-This problem is already well studied, and it is worth noting that even under the simple utility function which assigns no value to fish that are not harvested, the optimal strategy still seeks to sustain the fish population indefinitely; as @Clark1973 shows for the deterministic function $f$ and @Reed1979 extended to the stochastic case.  As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.  The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation. This technique, known as stochastic dynamic programming (SDP) is widely used in conservation decision problems [e.g. @Mangel1985, @Marescot2013].
+This problem is already well studied in 1 dimension (i.e. a single species without age structure):
+@Clark1973 solves the optimization when $f$ is a deterministic function $f$ and @Reed1979 extended that result to the stochastic case.  
+It is worth noting that even under the simple utility function which assigns no value to fish that are not harvested, the optimal strategy still seeks to sustain the fish population indefinitely.
+As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.  
+The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation. 
+This technique, known as stochastic dynamic programming (SDP) is widely used in conservation decision problems [e.g. @Mangel1985, @Marescot2013].
 
-It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.  In the case of a deterministic model at equilibrium, these policies are identical.  Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain.  These issues are discussed in detail in @pomdp-intro.  For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries.  The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.  
+It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.  
+In the case of a deterministic model at equilibrium, these policies are identical.  Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain.  These issues are discussed in detail in @pomdp-intro.  
+For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries.The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.  
 
 Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.  Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.  
 
+
+
+
+
+
+
 ## Solving MDP via SDP
 
-To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.  The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
 
-```{r model_definitions}
-states <- seq(0,24, length.out = 240)
-actions <- states
-obs <- states
-```
+To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.
+The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  
+Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
 
-The utility (reward) of an action is set to the (realized) harvest (e.g.
-a fixed price per unit fish, with no cost applied to harvest effort).  Future
-utility is discounted by fixed factor of $0.99$. Classic maximum sustainable 
+
+
+The utility (reward) of an action is set to the (realized) harvest (e.g. a fixed price per unit fish, with no cost applied to harvest effort), ensuring no harvest can exceed the available stock.
+
+$$U(x_t, h_t) = p \min(x_t, h_t) $$
+
+Future utility is discounted by fixed factor of $\delta = 0.99$. Classic maximum sustainable 
 yield models [@Schaefer1954] ignore discounting, while modern economic optimization
 models insist on it, so a small discount conforms to the latter while reasonably
 approximating the former.  The qualitative conclusion is not sensitive to the 
 discounting rate. 
 
-```{r}
-reward_fn <- function(x,h) pmin(x,h)
-discount <- 0.99
-```
-
-Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions.  This reward function is a limiting case of any more complex reward, and corresponds both to classic work that does not model utility explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions typically made in more recent models [@Reed1979]. Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.  
+Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions. 
+This reward function is a limiting case of any more complex reward, and corresponds both to classic work that does not model utility explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions typically made in more recent models [@Reed1979]. 
+Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.  
 
 
 ## Ecological Model Definitions
 
-The manager chooses between two different logistic growth models, each of which
-can be thought of as an approximation to the underlying "true" population model:
+
+
+Let us assume that our set of candidate models are simply the possible parameterizations of a stochastic version of the classic Gordon-Schaefer model [@Schaefer1954; @Gordon1954]:
 
 \begin{equation}
-f_i(Y) = Y + Y r_i \left( 1 - \frac{Y}{K_i} \right) \xi_i(t)
+f_i(Y_{t+1}) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
 \end{equation}
 
 where $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.  
 
-Model 1 has $r_1 = 2$, $K = 16$, and $\sigma_1 = 0.05$.
-Model 2 has $r_2 = 0.5, K_2 = 10$, and $\sigma_2 = 0.075$.
+Before this or any other model can generate a forecast, we must first come up with some parameter estimates.
+Because the model includes (log-normal) stochastic growth, no amount of data will make any parameter combination impossible, though certain parameter values are more likely than others.
+Remember too that parameter estimates may be derived in other ways than than model fitting, especially when parameters are amenable to biological interpretation. 
+We will consider the whole range of possible parameters in a moment, but for simplicity, let us begin by focusing in around two of the most interesting regions of that are already included within that larger parameter space of all possible values for $r$, $K$, and $\sigma$.
+Let us take "Model 1" as being given by $r_1 = 2$, $K_1 = 16$, $\sigma_1 = 0.05$, "Model 2" by $r_2 = 0.5$, $K_2 = 10$, $\sigma_2 = 0.075$. 
+We can imagine our comparison of these two models as a microcosm of the larger comparison between all possible paremeterizations. 
 
-Meanwhile, the true population growth rate is simulated using a function with
-non-linear per-capita growth:
+Ecologists will rightly scoff at the simplicity of these models -- the real world is much more complicated.
+So it is important to bear in mind that these are not models that seek to approximate the stock dynamics of real world fisheries, only to approximate whatever "true model" we are using to drive the simulation.
+In recognition of the fact that real world is always more complex than even our best ecological models, we will assume a "true model" for the simulations that is not in the Gordon-Schaefer class (i.e. our candidate models will never contain the true model), but is not so rich that a Gordon-Schaefer curve would seem a hopelessly poor approximation.
+
+For illustrative purposes, we will thus assume the "true" process to be given by Model 3, which is unknown to the decision-maker, but similar enough to at least one of the candidate models might be considered a reasonable approximation:
 
 \begin{equation}
-f_i(Y) = Y + Y^4 r_i \left( 1 - \frac{Y}{K_i} \right)
+f_3(Y) = Y + r_3 Y^4 \left( 1 - \frac{Y}{K_3} \right)
 \end{equation}
 
-with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$.
+with $r_3 = 0.002$, $K_3 = 10$ and $\sigma_3 = 0.05$. 
 
 
+Certainly, the challenge of choosing which model to base a decision policy on in the real world is much harder than this binary choice between two models, and yet it is sufficient to illustrate the trap. 
+We will see later why making the models much more complex does not guarantee that the task becomes easier or that the trap may be ruled out.
+
+
+
+
+
+
+
+
+# Methods for Managing Under Model Uncertainty 
+
+I will use this example to illustrate two alternative approaches for iterative learning over model uncertainty: iterative forecasting and adaptive management.
+The central difference in the approaches is that iterative forecasting is premised on the ability to score the predictions of alternative models.
+Iterative forecasting is silent on the issue of what to do with those scores, this is left up to the decision-maker.
+Adaptive management approaches, by contrast, explicitly seek to integrate probabilities over all candidate models to reach a decision.
+I consider each in turn.
+
+## Statistical approaches: Forecasting under "Proper" Scoring Rules
+
+Like many decision problems, the task of setting a sustainable harvest quota appears to hinge on having an accurate forecast: if we can predict to what size the fish stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can sustainably harvest $X_{t+1} - X_t$ without decreasing the biomass over the long term.
+Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of overfitting by comparing model predictions to later observations that were not used to estimate the model [@Gneiting2014].
+
+I illustrate the process of model selection by strictly proper scoring rules using two scenarios.
+In Scenario A (passive observation) the fish stock is unharvested and allowed to recover towards carrying capacity (as simulated under our "true" model, Model 3) while comparing the observed stock size in each subsequent time step to the distribution predicted under model 1 and model 2 respectively [Fig 1].
+The mean, $\mu_t$ and variance, $\sigma_t$ of the forecast are compared against the true observation $x_t$ using a proper scoring rule given by @Gneiting2007, 
+
+\begin{equation}
+S(x_t|\mu_t,\sigma_t) = -(\mu_t - x_t )^2 / \sigma_t^2 - \log(\sigma_t) \label{proper}
+\end{equation}
+
+for each prediction over 100 replicate simulations of 100 time steps each [Fig 1].
+
+
+
+# Analysis
 
 
 ```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
@@ -136,7 +182,24 @@ knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = F
 ```
 
 
-```{r}
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(MDPtoolbox)
+library(expm)
+# remotes::install_github("boettiger-lab/mdplearning")
+library(mdplearning)
+```
+
+
+
+```{r model_definitions}
+states <- seq(0,24, length.out = 240)
+actions <- states
+obs <- states
+reward_fn <- function(x,h) pmin(x,h)
+discount <- 0.99
+
 # K is at twice max of f3; 8 * K_3 / 5
 f1 <- function(x, h = 0, r = 2, K = 10 * 8 / 5){
   s <- pmax(x - h, 0)
@@ -194,9 +257,9 @@ transition_matrices <- function(f, states, actions, sigma_g){
 This follows the standard setup for standard stochastic dynamic programming, see @Marescot2013. Having defined a function to compute the transition matrix, we can use it to create matrices corresponding to each of the three models:
 
 ```{r}
-transitions <- lapply(seq_along(models), function(i) 
+P <- lapply(seq_along(models), function(i) 
   transition_matrices(models[[i]], states, actions, model_sigmas[[i]]))
-names(transitions) <- c("1", "2", "3")
+names(P) <- c("1", "2", "3")
 
 ```
 
@@ -227,7 +290,7 @@ mdp <- memoise::memoise(mdp_value_iteration,
                         cache = memoise::cache_filesystem("cache/"))
 
 policies <- 
-  map_dfr(transitions, 
+  map_dfr(P, 
           function(P){
     soln <- mdp(P, reward, discount = discount, 
                 epsilon = 0.01, max_iter = 2000, V0 = rep(0,dim(P)[[1]]))
@@ -255,14 +318,14 @@ set.seed(12345)
 
 ## Simulate each policy reps times, with `3` as the true model:
 simulate_policy <- function(i, policy){
-  mdp_planning(transitions[[true_model]], reward, discount,
+  mdp_planning(P[[true_model]], reward, discount,
            policy = policy, x0 = x0, Tmax = Tmax) %>%
     select(value, state_index = state, time, action_index = action)  %>% 
     mutate(state = states[state_index])
 }
 
 sims <- 
-  map_dfr(names(transitions), 
+  map_dfr(names(P), 
           function(m){
             policy <- policies %>% filter(model == m) %>% pull(policy)
             map_dfr(1:reps, simulate_policy, policy = policy, .id = "reps")
@@ -272,6 +335,8 @@ sims <-
 
 write_csv(sims, "../data/sims.csv")
 ```
+
+
 
 Using the transition matrices directly, we can examine what each model would 
 have forecast the future stock size to be in the following year when no fishing
@@ -287,14 +352,15 @@ confidence interval.
 stepahead_unfished <- sims
 stepahead_unfished$state_index <- rep(sims$state_index[sims$model == "1"],3)
 
+
 stepahead_unfished <- stepahead_unfished  %>% 
   filter(model != "3") %>% 
   mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
   rowwise() %>%
-  mutate(expected = as.numeric( transitions[[model]][state_index, , 1]  %*% states),
-         var = transitions[[model]][state_index, , 1]  %*% states ^ 2 - expected ^ 2,
-         low = states[max(which(cumsum(transitions[[model]][state_index,,1]) < 0.025)) ],
-         high = states[min(which(cumsum(transitions[[model]][state_index,,1]) > 0.975)) ],
+  mutate(expected = as.numeric( P[[model]][state_index, , 1]  %*% states),
+         var = P[[model]][state_index, , 1]  %*% states ^ 2 - expected ^ 2,
+         low = states[max(which(cumsum(P[[model]][state_index,,1]) < 0.025)) ],
+         high = states[min(which(cumsum(P[[model]][state_index,,1]) > 0.975)) ],
          true = states[next_state ]) 
 ```
 
@@ -309,11 +375,11 @@ stepahead_fished <- sims %>%
   filter(model != "3") %>%
   mutate(next_state = dplyr::lead(state_index), model = as.integer(model)) %>%
   rowwise() %>%
-  mutate(prob =  transitions[[model]][state_index, next_state, action_index],
-         expected = as.numeric( transitions[[model]][state_index, , action_index]  %*% states ),
-         var = transitions[[model]][state_index, , action_index]  %*% states ^ 2 - expected ^ 2,
-         low = states[max(which(cumsum(transitions[[model]][state_index,,action_index]) < 0.025)) ],
-         high = states[min(which(cumsum(transitions[[model]][state_index,,action_index]) > 0.975)) ],
+  mutate(prob =  P[[model]][state_index, next_state, action_index],
+         expected = as.numeric( P[[model]][state_index, , action_index]  %*% states ),
+         var = P[[model]][state_index, , action_index]  %*% states ^ 2 - expected ^ 2,
+         low = states[max(which(cumsum(P[[model]][state_index,,action_index]) < 0.025)) ],
+         high = states[min(which(cumsum(P[[model]][state_index,,action_index]) > 0.975)) ],
          true = states[next_state]) %>%
  select(time, model, true, expected, low, high, var, prob, reps)
 ```
@@ -400,9 +466,9 @@ Here I make use of the `mdplearning` R package, which provides a straight-forwar
 
 ```{r}
 adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
-am1 <- adaptive_management(transitions[1:2], reward, discount, 
+am1 <- adaptive_management(P[1:2], reward, discount, 
                            model_prior = c(0.99, 0.01), x0 = x0, 
-                           Tmax = 50, true_transition = transitions[[3]], 
+                           Tmax = 50, true_transition = P[[3]], 
                             epsilon = 0.001, max_iter = 2000)
 ```
 
@@ -417,7 +483,7 @@ Not surprisingly, the resulting policy is nearly identical to that under model 1
 ```{r}
 # Compute policy using SDP over both models, given fixed prior beliefs
 policy_planning <- memoise::memoise(mdp_compute_policy, cache = memoise::cache_filesystem("cache/"))
-policy <- policy_planning(transitions[1:2],  
+policy <- policy_planning(P[1:2],  
                           reward = reward, 
                           discount = discount,
                           model_prior = c(0.99, 0.01),
@@ -430,7 +496,7 @@ policy <- policy_planning(transitions[1:2],
 
 ```{r}
 # Simulate under true model using fixed planning policy
-non_am <- mdp_planning(transitions[[3]],  
+non_am <- mdp_planning(P[[3]],  
                        reward = reward, 
                        discount = discount,
                        model_prior = c(0.99, 0.01),
@@ -473,10 +539,10 @@ mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
 am_ecology_percent <- round(mean(states[am$state])/mean_state[[1, "state"]]*100)
 ```
 
-Under adaptive management, the manager realizes only `r am_economics_percent`%
-of the economic value that would be achieved under Model 1 alone, and only 
-`r am_ecology_percent`% of the spawning stock biomass that would have been 
-achieved under Model 1 alone. 
+
+
+
+Under adaptive management, the manager realizes only `r am_economics_percent`% of the economic value that would be achieved under Model 1 alone, and only `r am_ecology_percent`% of the spawning stock biomass that would have been achieved under Model 1 alone. 
 
 
 
@@ -622,7 +688,6 @@ model_curves <-
   mutate(state = states) %>%  pivot_longer(names(models), "model")
 
 write_csv(model_curves, "../data/model_curves.csv")
-
 ```
 
 The resulting model curves are shown in the main paper, Fig 4A. 
@@ -631,6 +696,8 @@ The resulting model curves are shown in the main paper, Fig 4A.
 ## Growth models in the many-models case
 
 The corresponding figure for the case of `r n_models` models.  
+
+
 
 
 ```{r plot_many_models, fig.width=7, fig.height=5, fig.cap="growth curves for 42 candidate models, shaded by belief at timestep 20, relative to the true model.  The curve with parameter values corresponding to 'model 1' are recognized in the highest arc, with belief weight of less than 1%."}
