@@ -1,7 +1,7 @@
 ---
-title: 'Appendix'
+title: 'Appendix B: Forecast Trap in Sequential Decision-Making'
 author: Carl Boettiger
-journal: TBD
+journal: Ecology Letters
 layout: 3p
 bibliography: refs.bib
 csl: csl/ecology-letters.csl

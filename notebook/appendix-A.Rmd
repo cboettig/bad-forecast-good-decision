@@ -1,30 +1,128 @@
 ---
-output: pdf_document
-title: Appendix A: Multispecies models
+title: 'Appendix A: Forecast Trap in a multi-species model'
+author: Carl Boettiger
+journal: Ecology Letters
+layout: 3p
+bibliography: refs.bib
+csl: csl/ecology-letters.csl
+#output:
+#  tufte::tufte_handout:
+#    dev: cairo_pdf
+#    latex_engine: xelatex
+output: 
+  hrbrthemes::ipsum_pdf:
+    dev: cairo_pdf
+    latex_engine: xelatex
+
+header-includes:
+  - \usepackage[left]{lineno}
+  - \linenumbers
+
 ---
 
-The model which gives the best forecast does not always lead to the best decision. 
 
-
-We consider a simulated system described by the 5-dimensional model of a herring fishery presented in @Brias2021:
+This appendix illustrates how the forecast trap can emerge in choosing between two alternative three-species models which may be used to manage a partially observed five-species system. 
+The underlying dynamics for the simulated "true" system are based on the five-dimensional model of a herring fishery presented in @Brias2021.
+Following @Brias2021, we assume three species of herring, $X_1$, $X_2$, $X_3$ are preyed upon by 
 
 \begin{align}
+x_{1,t+1} &= s_{1,t} \exp{(1.0213 -        s_{1,t} - 0.0861 s_{2,t} - 0.3141 s_{3,t} - 0.7252 s_{4,t} -0.2445 x_{5,t} +\espilon_{1,t} )}
+x_{2,t+1} &= s_{2,t} \exp{(1.0289 - 0.4765 s_{1,t} -        s_{2,t} - 0.1370 s_{3,t} - 0.9811 s_{4,t} -0.0915 x_{5,t} +\espilon_{2,t} )}
+x_{3,t+1} &= s_{3,t} \exp{(1.0207 - 0.3193 s_{1,t} - 0.3461 s_{2,t} -        s_{3,t} - 0.6367 s_{4,t} -0.8716 x_{5,t} +\espilon_{3,t} )}
+x_{4,t+1} &= s_{4,t} \exp{(         0.7252 s_{1,t} + 0.9811 s_{2,t} + 0.6367 s_{3,t} -        s_{4,t}                 +\espilon_{4,t})}
+x_{5,t+1} &= x_{5,t} \exp{(         0.2445 s_{1,t} + 0.0915 s {2,t} + 0.8716 s {3,t} -                        x_{5,t} +\espilon_{5,t} )}
 \end{align}
+
+where
+
+\begin{equation}
+s_{i,t} = x_{i_t} \left(1 - u_{i,t}\right)
+\end{equation}
+
+\begin{equation}
+\epsilon_{i,t} \stackrel{\texrm{iid}}{\tilde} \mathcal{N(0, \sigma_i)}
+\end{equation}
 
 
 We will assume this is the "true" model, which is unknown to managers.  
 
-While richer numerical models can successfully capture the full complexity of this five-dimensional model, we must remember that reality is always more complex than our models.
-As the term implies, models intentional simplifications of reality. 
+
+Herring are harvested together, $u_1 = u_2 = u_3 = u_{\textrm prey}$, while bass are harvested at effort $u_{\textrm predator}$.
+The manager's utility in year $t$ is given by
+
+\begin{equation}
+R(\vec x_t, \vec u_t) = w_3 x_5 + w_2 x_4 + \sum_i^{1,2,3} w_1 x_i
+\end{equation}
+
+We will consider the case which places 50% of the weight on the cormorant conservation objective, $w_3 = 0.5$, and 25% weight on the harvest of bass and herring respectively, $w_2 = w_1 = 0.25$.
+
+In contrast to @Brias2021, we will assume that the manager must simply select the harvest efforts $u_{\textrm prey} \in [0,1]$ and $u_{\textrm predator} \in [0,1]$ to be used over the duration of the management scenario, rather than being able to adjust these annually.
+In most real-world systems it is not possible to measure all variables which influence the dynamics, some dimensions are treated as latent variables of the model.
+To illustrate this, we will assume that the manager observes only the population abundance of bass $x_{4,t}$, and cormorants, $x_{5,t}$, but not the population size of any of the three species of herring.
 
 
-- Model A: A reasonable approximation model that produces more accurate forecasts but leads to substantially worse management outcomes
-- Model B: A reasonable approximation model that does not produce very accurate forecasts, but nevertheless leads to good management decisions.
-- Model C: The "True" Model: five-species model; functional forms and parameter values are never disclosed to the 'manager' but are used to simulate all data and management scenarios.
+### Model A
+
+Model A is a possible 3-species approximation that produces more accurate forecasts but leads to substantially worse management outcomes
+This model treats the three species of herring collectively as $x_1$. 
+Parameters are estimated consistent with limited historical data of the observed variables, bass biomass $x_4$ and herring biomass $x_5$.  
+
+\begin{equation}
+x_{1,t+1} &= s_{1,t} \exp(3 - 8 s_{1,t} - 0.9 s_4 - 0.9 * x_{5,t} + \espilon_{1,t} )
+x_{4,t+1} &= s_{4,t} \exp(0.1 s_{1,t} - s_{4,t} + \espilon_{4,t}  )
+x_{5,t+1} &= x_{5,t} \exp(0.3 s_{1,t} - x_5  + \espilon_{5,t}  )
+\end{equation}
 
 
-- Define a model
-- Define action space. Under the assumption of fixed action, problem is not MDP and trivial to solve by sweep through possible fixed actions.
+### Model B
+
+Model B is a structurally different model which postulates a further simplification of the dynamics.
+This slightly over-simplified approximation does not produce very accurate forecasts, but nevertheless leads to good management decisions.
+
+\begin{equation}
+x_{1,t+1} &= s_{1,t} \exp(1.60 - 2.00 s_{1,t}  + \espilon_{1,t} )
+x_{4,t+1} &= s_{4,t} \exp(1.45 - 2.75 s_{1,t}  + \espilon_{4,t}  )
+x_{5,t+1} &= 0.25 x_{5,t} 
+\end{equation}
+
+Our alternate model has several oversimplifications:
+(1) it treat all three herring species as a single species,
+(2) it fails to capture the coupled predator-prey dynamics between bass and herring, 
+(3) it oversimplifies the cormorant dynamics, assuming the cormorant population is determined to be a fixed fraction of the herring,
+and ignoring the impact of cormorant's predation on the herring itself.
+(4) Lastly, our model will overestimate the mortality introduced on herring by a given fishing effort.
+These elements are all obviously wrong, but not so arbitrary as to be inconceivable as a candidate model.
+Researchers frequently consider models which make oversimplifications all the time, and rely on model choice processes to weed them out.
+
+The parameterization chosen for the oversimplified 3 species model can reasonably reproduce the un-fished dynamics.
+Under any harvesting regime or other influence that perturbs the system significantly far from the un-fished equilibrium co-existence state of the model quickly reveals the poor forecasting ability of this model.
+Nevertheless, solving for the optimal policy (under the same constraints of constant harvest fractions as we consider for the true model) results in a harvest policy which provides nearly optimal performance.
+
+# Software implementation
+
+
+```{r graphics_setup, message=FALSE, warning=FALSE, include = FALSE}
+## Plotting themes, colors, and fonts 
+## aesthetics choices only, all can be omitted without consequence
+library(ggthemes)
+library(hrbrthemes)
+library(ggplot2)
+library(Cairo)
+library(extrafont)
+library(patchwork)
+library(styler)
+extrafont::loadfonts(quiet = TRUE)
+ggplot2::theme_set(hrbrthemes::theme_ipsum_rc())
+
+scale_colour_discrete <- function(...) ggthemes::scale_colour_solarized()
+scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
+pal <- ggthemes::solarized_pal()(8)
+txtcolor <- "#586e75"
+
+knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
+
+```
+
 
 ```{r}
 library(tidyverse)
@@ -40,11 +138,58 @@ format_sim <- function(df) {
                   names_to = "species",
                   values_to = "biomass")
 }
+
+clip <- function(x, lower=0, upper=1) {
+    x[x <= lower] <- lower
+    x[x >= upper] <- upper
+    x
+}
 ```
 
 
+Define the reward for a given state,action pair and the net utility
 
-## Five species
+```{r utility}
+## Compute the reward associated with a given simulation df given 
+## rates for prey and predator species (x[1],x[2])
+reward <- function(df,
+                   x,
+                   w3 = 0.5,              # Conservation value
+                   w2 = 0.25,             # Predator harvest value
+                   w1 = 1 - (w2+w3),      # Prey harvest value
+                   delta = 0.999
+                  ) {
+    u_prey <- clip(x[1], 0, 1)
+    u_pred <- clip(x[2], 0, 1)
+    R <-
+        w1 * u_prey * (df$x1 + df$x2 + df$x3) +
+        w2 * u_pred * df$x4 +
+        w3 * df$x5
+    t <- seq_along(R)
+    as.numeric(R %*% delta ^ t)
+}
+
+# Function to be optimized for fixed choice of harvest rates x[1],x[2]
+utility <- function(x, f, ...) {
+
+    u_prey <- clip(x[1], 0, 1)
+    u_pred <- clip(x[2], 0, 1)
+    df <- f(u_prey, u_pred, ...)
+
+    # average accross the reps    
+    df <- df %>% group_by(time) %>% summarise(across(.fns=mean))
+    
+    # negative since optimizer minimizes
+    - reward(df, x)
+}
+
+
+```
+
+
+## Model definitions
+
+### True five species-model
 
 ```{r model_5sp}
 # x1,x2,x3 Herring (Prey)
@@ -96,157 +241,12 @@ model_5sp <- function(u_prey = 0.5,
 
 ```
 
-```{r utility}
-clip <- function(x, lower=0, upper=1) {
-    x[x <= lower] <- lower
-    x[x >= upper] <- upper
-    x
-}
 
-## Compute the reward associated with a given simulation df given 
-## rates for prey and predator species (x[1],x[2])
-reward <- function(df,
-                   x,
-                   w3 = 0.5,              # Conservation value
-                   w2 = 0.25,             # Predator harvest value
-                   w1 = 1 - (w2+w3),      # Prey harvest value
-                   delta = 0.999
-                  ) {
-    u_prey <- clip(x[1], 0, 1)
-    u_pred <- clip(x[2], 0, 1)
-    R <-
-        w1 * u_prey * (df$x1 + df$x2 + df$x3) +
-        w2 * u_pred * df$x4 +
-        w3 * df$x5
-    t <- seq_along(R)
-    as.numeric(R %*% delta ^ t)
-}
-
-# Function to be optimized for fixed choice of harvest rates x[1],x[2]
-utility <- function(x, f = model_5sp, ...) {
-
-    u_prey <- clip(x[1], 0, 1)
-    u_pred <- clip(x[2], 0, 1)
-    df <- f(u_prey, u_pred, ...)
-
-    # average accross the reps    
-    df <- df %>% group_by(time) %>% summarise(across(.fns=mean))
-    
-    # negative since optimizer minimizes
-    - reward(df, x)
-}
-
-
-```
-
+### Model A
 
 
 ```{r}
-
-o <- optim(c(0.01,0.5), utility, method="L-BFGS-B", lower = c(0,0), upper = c(1,1))
-o$par
-o$value
-
-o <- optim(c(0.01,0.5), utility)
-clip(o$par, 0, 1)
-o$value
-
-x <- c(0.0,.58)
-utility(x)
-
-
-```
-
-For the sake of argument, let us allow the model of Brias & Munch to represent the "true" model, which is unknown.
-As researchers, we only have access to data derived from observations from the model. 
-Let us consider a sample simulation of such data:
-
-
-There are many other models, including process-based models, statistical models or even black-box machine learning models
-which 5 dimensional state-space and two-dimensional action space. 
-
-
-
-
-Now consider an alternative model which ignores some of this biological complexity:
-Our alternate model has several oversimplifications:
-(1) it treat all three herring species as a single species,
-(2) it fails to capture the coupled predator-prey dynamics between bass and herring, 
-(3) it oversimplifies the cormorant dynamics, assuming the cormorant population is determined to be a fixed fraction of the herring,
-and ignoring the impact of cormorant's predation on the herring itself.
-(4) Lastly, our model will overestimate the mortality introduced on herring by a given fishing effort.
-These elements are all obviously wrong, but not so arbitrary as to be inconceivable as a candidate model.
-Researchers frequently consider models which make oversimplifications all the time, and rely on model choice processes to weed them out.
-
-The parameterization chosen for the oversimplified 3 species model can reasonably reproduce the unfished dynamics.
-Under any harvesting regime or other influence that perturbs the system significantly far from the unfished equilibrium co-existence state of the model quickly reveals the poor forecasting ability of this model.
-Nevertheless, solving for the optimal policy (under the same constraints of constant harvest fractions as we consider for the true model) results in a harvest policy which provides nearly optimal performance.
-
-
-```{r}
-model_3sp <- function(u_prey = 0,
-                      u_predator = 0,
-                      A1 = 2,
-                      R1 = 1.6,
-                      A2 = 2.75,
-                      R2 = 1.45,
-                      Tmax = 50,
-                      x1o = 0.44, # unfished equib
-                      x2o = 0.17,
-                      x3o = 0.186,
-                      x4o = 0.600,
-                      x5o = 0.280,
-                      sigma = 0.01,
-                      reps=40) {
-    df <- tibble()
-    for(r in 1:reps){
-    omega1 <- rnorm(Tmax, 0, sigma)
-    omega2 <- rnorm(Tmax, 0, sigma)
-    omega3 <- rnorm(Tmax, 0, sigma)
-
-    s1 <- x1 <- numeric(Tmax)
-    s4 <- x4 <- numeric(Tmax)
-    x2 <- x3 <- numeric(Tmax)
-    x5 <- numeric(Tmax)
-    
-    x1[1] <- x1o + x2o + x3o
-    x4[1] <- x4o
-    x5[1] <- x5o
-
-    for (t in 1:(Tmax-1)) {
-        s1[t] <- x1[t] * (1 - 10*u_prey)
-        s4[t] <- x4[t] * (1 - u_predator)
-
-        x1[t+1] <- s1[t] * exp(R1 - s1[t] * A1 + omega1[t])
-        x4[t+1] <- s4[t] * exp(R2 - s4[t] * A2 + omega2[t])
-        x5[t+1] <- .25 * x1[t]
-    }
-
-    df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
-    }
-  df
-}
-```
-
-
-
-
-```{r}
-# Optimal policy under identical utility
-u_3sp <- function(x) utility(x, f = model_3sp)
-
-m3sp <- optim(c(0.5,0.1), u_3sp)
-m3sp$value
-clip(m3sp$par, 0, 1)
-
-```
-
-
-Alternate model, also mistakenly treats the three species of herring as a single species, but does a better job capturing the predator-prey relationships.  This model also happens to produce better forecasts, but leads to worse decision:
-
-
-```{r}
-model_B <- function(u_prey = 0.5,
+model_A <- function(u_prey = 0.5,
                       u_pred = 0.5,
                       sigma = 0.05,
                       x1o = 0.44, # unfished equib
@@ -292,218 +292,151 @@ model_B <- function(u_prey = 0.5,
 ```
 
 
-```{r}
-# Optimal policy under identical utility
-u_B <- function(x) utility(x, f = model_B)
-u_B(c(0, .58))
-#optim(c(0.5,0.1), u_B, method = "L-BFGS-B", lower=0, upper=1)
 
-B <- optim(c(.2,0.01), u_B)
-model_B_policy <- clip(B$par, 0, 1)
-model_B_policy
-
-```
-
-Run the simulation using management policy of each
-
-
+### Model B
 
 ```{r}
+model_B <- function(u_prey = 0,
+                      u_predator = 0,
+                      A1 = 2,
+                      R1 = 1.6,
+                      A2 = 2.75,
+                      R2 = 1.45,
+                      Tmax = 50,
+                      x1o = 0.44, # unfished equib
+                      x2o = 0.17,
+                      x3o = 0.186,
+                      x4o = 0.600,
+                      x5o = 0.280,
+                      sigma = 0.01,
+                      reps=40) {
+    df <- tibble()
+    for(r in 1:reps){
+    omega1 <- rnorm(Tmax, 0, sigma)
+    omega2 <- rnorm(Tmax, 0, sigma)
+    omega3 <- rnorm(Tmax, 0, sigma)
 
+    s1 <- x1 <- numeric(Tmax)
+    s4 <- x4 <- numeric(Tmax)
+    x2 <- x3 <- numeric(Tmax)
+    x5 <- numeric(Tmax)
+    
+    x1[1] <- x1o + x2o + x3o
+    x4[1] <- x4o
+    x5[1] <- x5o
 
-Tmax <- 20
-x <- model_B_policy
-#x <- c(0.,0.58)  # Following the optimal policy under model_B
+    for (t in 1:(Tmax-1)) {
+        s1[t] <- x1[t] * (1 - 10*u_prey)
+        s4[t] <- x4[t] * (1 - u_predator)
 
-sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax, sigma= 0.05)
-obs <- sim %>% format_sim()
-predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
+        x1[t+1] <- s1[t] * exp(R1 - s1[t] * A1 + omega1[t])
+        x4[t+1] <- s4[t] * exp(R2 - s4[t] * A2 + omega2[t])
+        x5[t+1] <- .25 * x1[t]
+    }
 
-reward(df = sim, x = x) / 40
-```
-
-```{r}
-obs_stats <- obs %>%
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
-
-predict_stats_B <- predict_B %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted_B")
-
-bind_rows(obs_stats, predict_stats_B) %>% 
-  filter(species != "herring") %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_point(aes(shape=type)) +
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd, lty=type))
-
-```
-
-
-
-
-
-
-
-
-```{r}
-## True observations vs forecasts, 5 steps ahead, while following the Optimal / Model 1 policy, starting with default initial condition
-Tmax <- 10
-x <- c(0,0.58)
-
-sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax, sigma=0.05)
-obs <- sim %>% format_sim()
-predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-reward(df = sim, x = x) / 40
-```
-
-
-```{r}
-obs_stats <- obs %>%
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
-
-predict_stats <- predict %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted_A")
-
-bind_rows(obs_stats, predict_stats) %>% 
-  filter(species != "herring") %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_point(aes(shape=type)) +
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd, lty=type))
-```
-
-```{r}
-score_me <- function(x = c(0,0.58), process=model_5sp, forecast=model3p, Tmax=5) {
-  
-  obs <- process(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-  predict <- forecast(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-  
+    df <- bind_rows(df, tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r=r))
+    }
+  df
 }
 ```
 
+## Optimal decision
 
 
-
-
-
-
-
-
-## unfished
+Determine the optimal policy using Nelder-Meade simplex method provided by the `optim` function:
 
 
 ```{r}
-## True observations vs forecasts, 5 steps ahead, unfished, starting with default initial condition
-Tmax <- 20
-x <- c(0,0.)
-
-obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], sigma=0.05, Tmax = Tmax) %>% format_sim()
-predict <- model_3sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-
-obs_stats <- obs %>%
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-predict_stats <- predict %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-## dotted are forecasted values, solid are observed values
-
-
-predict_stats %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
-  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
-
+u_A <- function(x) utility(x, f = model_A)
+A <- optim(c(.2,0.01), u_A)
+model_A_policy <- clip(A$par, 0, 1)
 ```
 
 
-
+```{r}
+u_B <- function(x) utility(x, f = model_B)
+B <- optim(c(0.5,0.1), u_B)
+model_B_policy <- clip(B$par, 0, 1)
+```
 
 
 ```{r}
+u_true <- function(x) utility(x, f = model_5sp)
+o <- optim(c(0.01,0.5), u_true)
+true_policy <- clip(o$par, 0, 1)
+```
+
+## Simulate scenarios
+
+We simulate the system using the true model, while managing from the policy derived from forecasts of model A:
+
+```{r}
+Tmax <- 10
+resp <- 40
+
+x <- model_A_policy
+sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]],
+                 Tmax = Tmax, sigma= 0.05, reps = reps)
+obs <- sim %>% 
+  format_sim() %>%
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
+
+predict <- model_A(u_prey = x[[1]], u_pred = x[[2]],
+                     Tmax = Tmax, reps = reps) %>%
+  format_sim() %>% 
+  group_by(time, species) %>% 
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted")
 
 
-Tmax <- 5
-x <- c(0,0)
+scenario_A <- bind_rows(obs, predict) %>% 
+  filter(species != "herring") %>% mutate(scenario = "Model A")
+mean_utility_A <- reward(df = sim, x = x) / reps
+```
+
+
+We repeat the simulation over 40 replicates using the policy derived from model B forecasts:
+
+```{r}
 x <- model_B_policy
-#x <- c(0.,0.58)  # Following the optimal policy under model_B
-
-obs <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-predict_B <- model_B(u_prey = x[[1]], u_pred = x[[2]], Tmax = Tmax) %>% format_sim()
-
-
-
-obs_stats <- obs %>%
+sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]], 
+                 Tmax = Tmax, sigma=0.05, reps = reps)
+obs <- sim %>%
+  format_sim() %>%
   group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "observed")
 
-predict_stats_B <- predict_B %>% 
+predict <- model_B(u_prey = x[[1]], u_pred = x[[2]], 
+                   Tmax = Tmax, reps = reps) %>% 
+  format_sim()  %>% 
   group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
+  summarize(sd = sd(biomass), biomass = mean(biomass), type = "predicted")
+
+scenario_B  <- bind_rows(obs, predict) %>% 
+  filter(species != "herring")  %>% mutate(scenario = "Model B")
 
 
-predict_stats_B %>%
-  ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd), lty=2) + 
-  geom_errorbar(data = obs_stats, aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd))
-
-
+mean_utility_B <- reward(df = sim, x = x) / reps
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-Does this model produce good forecasts?
 
 ```{r}
-# unfished equilibrium
-m1_forecast <- model_3sp(0, 0.0, sigma = 0.05,  Tmax = 50)
-  
-predictions <- m1_forecast %>%
-  transmute(time = time, cormorant = x5, bass = x4, herring = x1+x2+x3, r=r) %>%
-  pivot_longer(any_of(c("cormorant", "bass", "herring")),
-                  names_to = "species",
-                  values_to = "biomass") %>% 
-  group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
 
+example1 <- bind_rows(scenario_A, scenario_B)
+write_csv(example1, "../data/example1.csv")
 
-predictions %>%
+example1 %>% 
   ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd)) +
-  geom_point(data = filter(obs, r==1))
+  geom_point(aes(shape=type)) +
+  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd, lty=type)) +
+  facet_wrap(~scenario)
+
 ```
+
+
 
 ```{r}
-# unfished equilibrium
-m1_forecast <- model_3sp(0, 0.58, sigma = 0.05,  Tmax = 50)
-
-predictions <-   
-m1_forecast %>%
-    transmute(time = time, cormorant = x5, bass = x4, herring = x1, r=r) %>%
-    pivot_longer(any_of(c("cormorant", "bass", "herring")),
-                    names_to = "species",
-                    values_to = "biomass") %>% 
-    group_by(time, species) %>% 
-  summarize(sd = sd(biomass), biomass = mean(biomass))
-
-
-predictions %>%
-ggplot(aes(time, biomass, col= species)) + 
-  geom_errorbar(aes(ymin = biomass - 2*sd, ymax = biomass + 2 *sd)) +
-  geom_point(data = filter(obs, r==1))
+mean_utility_A / mean_utility_B
 ```
+
+
