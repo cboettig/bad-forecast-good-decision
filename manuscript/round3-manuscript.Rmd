@@ -6,8 +6,8 @@ affiliation: a,1
 date: "`r Sys.Date()`"
 
 abstract: |
-  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using several classic examples from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (measured by statistical scores) can lead to decidedly worse outcomes (measured by real-world objectives). This can create a forecast trap, in which the outcomes such as fish biomass or economic yield decline while the manager becomes increasingly convinced that these actions are consistent with the best models and data available. The forecast trap is not unique to this example, but possible whenever (1) the optimal management policy is not unique to the generative process, and (2) the generative process is not in our candidate set of models. Existing practices 
-
+  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using several classic examples from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (measured by statistical scores) can sometimes lead to worse outcomes (measured by real-world objectives). This can create a forecast trap, in which the outcomes such as fish biomass or economic yield decline while the manager becomes increasingly convinced that these actions are consistent with the best models and data available. The forecast trap is not unique to this example, but a fundamental consequence of non-uniqueness of models. Existing practices that promote the consideration of a broader set of models _a priori_ rather than rely on forecast skill alone are the best way to avoid the trap. 
+  
 corresponding_author:
   code: 1
   text: "To whom correspondence should be addressed. E-mail: cboettig@berkeley.edu"
@@ -87,16 +87,14 @@ In this paper, I demonstrate that the model that makes the better prediction (de
 I show that our best methods for learning about model structure or parameters by repeatedly comparing forecasts to observations can be counter-productive.
 Put another way, the value of information (VOI, as measured by the expected utility given that information minus the utility without it; see @Howard1966; @Katz1987), can actually be negative.
 When VOI is negative, the decision-maker may become trapped into accepting mediocre outcomes derived from a model that makes accurate forecasts, even when a less accurate model that would generate better outcomes is available.
-I present two examples of this "forecast trap" and examine how it arises.
-This disconcerting situation is possible whenever two conditions are met: (1) the optimal management policy is not unique to the generative process, and (2) the generative process is not included in candidate set of models.
-These conditions do not guarantee the trap will occur, only the circumstances in which it cannot be ruled out entirely.
+I will present two examples of this "forecast trap" and examine how it arises.
 
 The forecast trap is not the only mechanism by which some model-choice methods lead to worse outcomes.
 Previous work has long acknowledged the panoply of ways in which model-based decision making can go astray due to conflicting incentives, implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
 Another widely recognized problem is that of over-fitting [@Burnham1998], in which the model that best fits historical data fails to best predict future data [@Ginzburg2004]. 
 Under such circumstances, it is easy to see how an over-fit model would also lead to bad outcomes.
 However, over-fitting plays no role in the forecast trap, where model predictions are assessed only using probabilistic forecasts, and not observations which had previously been used to fit the models. 
-Formally, these scores satisfy the 'proper scoring' rule of @Gneiting2007, which proves no other probabilistic prediction $Q(x)$ will have a better expected score than that of the generative process $P(x)$. 
+Formally, these scores satisfy the 'proper scoring' rule of @Gneiting2007, which proves no other probabilistic prediction $Q(x)$ will have a better expected score than that of the true model (i.e. generative process), $P(x)$. 
 @Gneiting2007's proof of proper scoring has since become a critical tool to avoid over-fitting when choosing models to make decisions, but as I illustrate, will not prevent the forecast trap.
 
 
@@ -198,7 +196,7 @@ Such shortcuts are often necessary for complex real-world models, but open addit
 To ensure that the forecast trap is not a result of such assumptions about possible policies, we will consider a problem simple enough to solve directly with SDP.
 The resulting decision policy is optimal, so long as the forecast model is correct.
 In this way, the SDP merely stands in for a mathematically precise way in which forecasts are turned into decisions.
-Recognizing that the SDP-derived policy (A) comes directly from the forecast model, and (B) gives the optimal policy for said forecast, seems to suggest that the whatever model makes the better forecast will surely also lead to better outcomes (as measured in terms of whatever utility we have chosen to maximize).
+Recognizing the SDP-derived policy (A) comes directly from the forecast model, and (B) gives the optimal policy for said forecast, seems to suggest that whichever model makes the better forecast will surely also lead to better outcomes (as measured in terms of whatever utility we have chosen to maximize).
 While this intuition is no doubt _often_ accurate, our purpose here is to demonstrate that it is by no means _guaranteed_:
 it is also possible for the model which makes the better forecast to lead to worse outcomes.
 
@@ -216,7 +214,7 @@ Figure 2 compares forecasts generated by two of the candidate models to observat
 As before, these are true forecasts: the model forecasts are generated first, they have not been fit to these observations.
 In the un-fished scenario (top panels), both models try to predicting the same un-fished equilibrium dynamics.
 In the second scenario (lower panel), the manager uses the optimal SDP policy derived from each forecast to determine the TAC for the following year, and compares the observed stock size to that which the model predicted given that fishing quota.
-In both cases, model 2 provides far more accurate forecasts, as seen in the error bars and confirmed by the distribution of proper scores [@Gneiting2007].
+In both cases, model 2 provides far more accurate forecasts, as seen in the error bars and confirmed by the distribution of proper scores [Fig 3C-D; @Gneiting2007].
 Model and simulation details are provided in Appendix B.
 
 
@@ -305,7 +303,7 @@ Had we been able to include Model 3 in our forecast comparisons, it would equal 
 In practice, we never have access to the generating model, so it is reasonable to expect model selection to determine the better approximation.
 As we see here, the better approximation for forecasting future states does not in fact lead to better outcomes.
 
-## Integrated assessments and adaptive management
+## Iterative upates and adaptive management
 
 Rather than select a single best model (or best parameter value), a manager could choose to integrate over possible outcomes generated from all candidate models.
 Updating posterior distributions over parameters and/or weights assigned to different models are examples of this kind of adaptive management [@Punt2016; @Ludwig1982].
@@ -404,18 +402,17 @@ The space of possible models is infinitely large when measured against any a sca
 Perhaps it should be no surprise then that many models will achieve the same policy outcomes or achieve comparable predictive accuracy.
 Just as the forecast skill is not unique, both examples also demonstrated that the optimal policy is not unique to the "true model" -- many models will result in the same policy and achieve the same outcomes; despite making very different forecasts.
 
+
 The forecast trap is likely to be more common in contexts in which systems are more complex, partially observed, and available actions are constrained -- all features which are particularly common to ecological management and conservation.
 Because simplicity of the second example allows analytic theory to reveal a precise explanation, it is tempting to assume the trap is only a consequence of examining overly simple models. 
 In fact, the opposite is true.
-In the second example, the "true" model is simple enough to be covered by a suitable candidate set of models (for instance, a Gaussian Process, @Boettiger2015).
-Given sufficient data, @Gneiting2007's theorem regarding strictly proper scores guarantees we will eventually select the underlying model and achieve the optimal forecast and optimal decision.
+In the second example, the "true" model is simple enough to be covered by a suitable candidate set of models (e.g. a Gaussian Process, @Boettiger2015), which would resolve the trap given sufficient data.
 In reality, our models never span the true process.
 Partially-observed systems increase the space of possible models that achieve comparable predictive accuracy.
 Constraints on action space such as adjustment costs [@Boettiger2016] or piecewise-linear control rules [@Punt2010] increase the space of models which will result in the same policy.
 Both of these aspects make the forecast trap easier to encounter in our opening example.
 
-
-The forecast trap demonstrates that over a given ensemble of candidate models, the value of information (VOI) can be negative. 
+The forecast trap demonstrates that for certain ensembles of candidate models, the value of information (VOI) [@Howard1966; @Katz1987] can in fact be negative. 
 Consequently, methods to select models or re-estimate parameters can lead to worse outcomes than had these new observations simply been ignored.
 Crucially, a manager implementing the optimal policy from the most predictive model sees no indication that their models are wrong -- the declining ecosystem and economic returns observed under model A in the first example or under iterative learning in the second example are completely consistent with and predicted by the models.
 Only by winding back the clock, making decisions based over the original uncertainty without learning (Fig 4), can we see that better outcomes could have been achieved.
@@ -424,28 +421,27 @@ The policy derived without learning reflects greater uncertainty: it is thus mor
 
 ## A way forward
 
-In practice, managers rarely rely only on forecasting skill to assess models, nor determine policies directly from forecasts alone, as in the SDP.
-Such existing principles, frequently reflected in management practice can help avert the forecast trap, but are too often overlooked in research predicated on predict-and-prescribe approaches [@Schindler2015].
-These include 
-(a) emphasizing a better articulation of uncertainty a priori; 
-(b) active exploration of new policies
+In practice, managers rarely rely only on forecasting skill to assess models, nor determine policies directly from forecasts alone.
+In both examples presented above, the forecast trap is most likely in circumstances where the collection of candidate models is insufficiently broad.
+Management practice tends to emphasize approaches which _broaden_ rather than _narrow down_ this candidate set.
+This reflects the view that "the primary values of ecosystem models are as heuristic tools for communication and for developing scenarios to express uncertainties and test policies" rather than as a source of reliable forecasts [@Schindler2015].
+The practices include:
+
+(a) emphasizing a better articulation of uncertainty _a priori_; 
+(b) active exploration of alternative policies can reveal when the model set is inadequate
 (c) methods for generating strategies that are robust to the sort of uncertainty described here.
 
 A central role of models is to help articulate uncertainty around possible outcomes rather than make precise predictions.
-
+As @Schindler2015 notes, "current approaches to verification and validation of ecosystem models likely produce overly optimistic impressions of the reliability of forecasts underlying management and conservation prescriptions."
+Forecasts based on non-mechanistic models such as empirical dynamical modeling [EDM, @Ye2015; @Brias2021] may help in articulating a broader ensemble of scenarios [@Boettiger2015].
+In contrast, if such approaches are selected solely on forecasting skill, they may increase the probability of the forecast trap.
 The danger of an insufficiently broad model ensemble is well understood in many disciplines which use _scenario planning_ to assist policy in accounting for irreducible uncertainties [@Peterson2003].
-Forecasts based on non-mechanistic models such as empirical dynamical modeling [EDM, Ye2015; @Brias2021] may help in articulating a broader ensemble of scenarios.
 
-
-
-
-
-A manager may also escape the forecast trap by exploring actions which are not recommended from any of the available forecasts.
+A manager may also escape the forecast trap by exploring actions which are never recommended from any of the available forecasts.
 For example, a manager looking at the low stocks and poor harvests achieved under model 2, could decide experimentally to reduce fishing quota. 
 This will allow the population to enter a range of state-space where discrepancies between model 2 and observations are more obvious.
 @Runge2016 describes how such "double-loop learning" can be used to identify when the entire model set is inaccurate, a problem which is not solved by "single-loop" adaptive-management in our examples above.
-@Schindler2015 also underscores the value of flexible policies; rather than "managing solely within the range of past variation; active probing is usually needed."
-@Schindler2015 contrasts this to a typical interpretation of the 'precautionary principle' often cited as a reason to avoid exploratory actions.
+@Schindler2015 also underscores the value of flexible policies; rather than "managing solely within the range of past variation; active probing is usually needed," and contrasts this to a typical interpretation of the 'precautionary principle' often cited as a reason to avoid exploratory actions.
 However, just because active exploration can escape the forecast trap does mean it is always a good idea.
 
 Third, managers may emphasize policy robustness over expected net utility. 
@@ -457,12 +453,12 @@ This acts more like a sensitivity analysis of utility with respect to underlying
 Computationally, the former is much simpler, allowing researchers to evaluate the performance of a policy on more complex simulations for which calculating the optimal policy would be prohibitively difficult.
 
 
-Finally, it is worth noting that decisions do not need to be premised on a forecast at all, but can be premised entirely on the basis of past experience.
-If the stock size has gone up, increase harvest slightly, otherwise, decrease slightly.
+Finally, it is worth noting that decisions do not need to be premised on a forecast at all, but can be premised entirely on the basis of past experience:
+'If the fish stock size has gone up, increase harvest slightly, otherwise, decrease slightly.'
 Such a policy is not optimal, but it is robust across a wide range of unimodal stock-recruitment curves without ever estimating a predictive model.
 This is the basis of so-called 'model-free' reinforcement learning algorithms such as DQN [@DQN] and SAC [@SAC], which train deep neural networks to learn a policy without ever attempting to predict future states of the underlying process.
 Training such a artificial intelligence agents across a wide suite of simulations,
-a process known as curriculum learning [@], mimics the scenario analyses and search for . Such approaches have been used to train agents to play 2600 Atari console games at superhuman ability [@], outperform race-car drivers [@] and control nuclear fusion reactions [@].
+a process known as curriculum learning [@curriculum-learning], mimics the scenario analyses and search for . Such approaches have been used to train agents to play 2600 Atari console games at superhuman ability [@], outperform race-car drivers [@sony] and control nuclear fusion reactions [@deepmind-fusion].
 Such approaches are also not yet well understood, and can fail dramatically [@].
 
 

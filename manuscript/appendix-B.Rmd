@@ -146,7 +146,7 @@ Selecting a model based on forecast skill is also justifiable on theoretical gro
 
 I illustrate the process of model selection by strictly proper scoring rules using two scenarios.
 In Scenario A (passive observation) the fish stock is unharvested and allowed to recover towards carrying capacity (as simulated under our "true" model, Model 3) while comparing the observed stock size in each subsequent time step to the distribution predicted under model 1 and model 2 respectively [Fig 1].
-The mean, $\mu_t$ and variance, $\sigma_t$ of the forecast are compared against the true observation $x_t$ using a proper scoring rule given by @Gneiting2007, 
+The mean, $\mu_t$ and variance, $\sigma_t$ of the forecast are compared against the true observation $x_t$ using the log-likelihood proper scoring rule given by @Gneiting2007,  
 
 \begin{equation}
 S(x_t|\mu_t,\sigma_t) = -(\mu_t - x_t )^2 / \sigma_t^2 - \log(\sigma_t) \label{proper}
