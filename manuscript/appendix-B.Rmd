@@ -21,15 +21,19 @@ header-includes:
 ---
 
 
-The methods applied here -- stochastic dynamic programming, iterative forecasts assessed with proper scoring rules, and adaptive management -- are not themselves novel, thus the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.  However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulas or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].  As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>.  While computer code can be more verbose and difficult to read than mathematical formulas presented here, it is also less ambiguous. Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in MatLab [@Marescot2013; @MDPtoolbox].  
+The methods applied here -- stochastic dynamic programming, iterative forecasts assessed with proper scoring rules, and adaptive management -- are not themselves novel, thus the reader is referred to previous reviews and text books which can provide a thorough introduction to methods, in particular, @Marescot2013 and @Smith1981.
+However, implementation of these approaches generally depends on numerical methods, for which even precise mathematical formulas or pseudo-code descriptions can be inadequate to specify unambiguously or to properly facilitate replication [@Barnes2010].
+As such, this appendix includes computer code in the R language, which can also be found in the corresponding R-Markdown document in the paper's GitHub repository, <https://github.com/cboettig/bad-forecast-good-decision>. While computer code can be more verbose and difficult to read than mathematical formulas presented here, it is also less ambiguous.
+Though R is already widely used among ecologists, the implementations concern mostly matrix algebra that can be translated to other languages, and the `MDPtoolbox` package used here is also implemented in MatLab [@Marescot2013; @MDPtoolbox].
 
 
-Below, I provide carefully annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning].  We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>.  The code below generates the data tables required for each plot shown in the main paper.  Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
+Below, I provide carefully annotated code necessary to completely reproduce all of the analysis presented in the main paper. This analysis is run in R [@R] uses `MDPtoolbox` [@MDPtoolbox] for solving Markov Decision Processes (MDP) using stochastic dynamic programming functionality, `expm` for matrix exponentials [@expm], and a few custom MDP functions provided by our package, `mdplearning` [@mdplearning]. We will also use `tidyverse`  packages for basic manipulation and plotting [@tidyverse]. This file is also available as an RMarkdown document [@rmarkdown] at  <https://github.com/cboettig/bad-forecast-good-decision>. The code below generates the data tables required for each plot shown in the main paper.
+Data are stored as `.csv` tables to be accessible to any relevant software program. Plotting commands used in the main paper are embedded in the paper's RMarkdown file at <https://github.com/cboettig/bad-forecast-good-decision>.
 
 
 # Optimal quotas as a Markov Decision Process (MDP) problem
 
-The question of optimal harvest quotas given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context.  @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
+The question of optimal harvest quotas given a population growth model can be posed as a Markov Decision Process (MDP). @Marescot2013 provides an accessible overview of MDP problems and their solutions in conservation context. @Reed1979 provides a formal proof of optimal harvest strategy for stochastic dynamics under the assumption of any concave growth function. The problem can be summarized as follows:
 
 A manager seeks to maximize the sum of the utility derived from such a harvest
 and such a state, $U(X_t,H_t)$, over all time, subject to discount rate $\delta$:
@@ -47,17 +51,19 @@ X_{t+1} = f(X_t, H_t)
 \end{equation}
 
 This problem is already well studied in 1 dimension (i.e. a single species without age structure):
-@Clark1973 solves the optimization when $f$ is a deterministic function $f$ and @Reed1979 extended that result to the stochastic case.  
+@Clark1973 solves the optimization when $f$ is a deterministic function $f$ and @Reed1979 extended that result to the stochastic case. 
 It is worth noting that even under the simple utility function which assigns no value to fish that are not harvested, the optimal strategy still seeks to sustain the fish population indefinitely.
-As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.  
-The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation. 
+As @Reed1979 proves, the optimal strategy can be characterized by a policy of "constant escapement," in which the manager adjusts the harvest effort each year in an effort to ensure the same number or biomass of fish are left in the sea each year.
+The optimization problem can then be solved by dynamic programming, using the recursive Bellman equation.
 This technique, known as stochastic dynamic programming (SDP) is widely used in conservation decision problems [e.g. @Mangel1985, @Marescot2013].
 
-It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.  
-In the case of a deterministic model at equilibrium, these policies are identical.  Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain.  These issues are discussed in detail in @pomdp-intro.  
-For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries.The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.  
+It is worth noting that while constant escapement is used in the management of several important fish stocks such as salmon, most marine fisheries are not managed using this optimal solution for a fluctuating population, but instead rely on a 'constant harvest effort' (or constant "yield") policy.
+In the case of a deterministic model at equilibrium, these policies are identical. Though constant-effort policies are technically sub-optimal for the problem as stated above with stochastic growth, in practice they can be more robust, such as when measurements of the current stock size $X_t$ are uncertain. These issues are discussed in detail in @pomdp-intro.
+For our purposes, it suffices to note that constant escapement policy is relevant both from a theoretical standpoint as the optimal solution for the problem under consideration, and an applied standpoint as a policy that guides management of many salmon fisheries. 
+The optimal control approach using SDP as illustrated here is used in a wide and growing number of conservation problems.
 
-Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.  Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.  
+Bear in mind that in the example presented here, SDP merely serves the role of a convenient and established way for a manager to determine the optimal action, given some model estimation.
+Whether we use SDP or some other way to determine the optimal policy, given the model, is immaterial to the conclusion.
 
 
 
@@ -69,8 +75,8 @@ Bear in mind that in the example presented here, SDP merely serves the role of a
 
 
 To solve the decision problem using SDP, we define the state space and the action space on a discrete grid of 240 points.
-The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.  
-Available harvest actions match the state space, effectively allowing any harvest level to be possible.  
+The maximum state is set well above the largest carrying capacity used in the models, which limits the influence of boundary effects introduced by the transformation to a discrete, finite grid.
+Available harvest actions match the state space, effectively allowing any harvest level to be possible.
 
 
 
@@ -78,15 +84,13 @@ The utility (reward) of an action is set to the (realized) harvest (e.g. a fixed
 
 $$U(x_t, h_t) = p \min(x_t, h_t) $$
 
-Future utility is discounted by fixed factor of $\delta = 0.99$. Classic maximum sustainable 
-yield models [@Schaefer1954] ignore discounting, while modern economic optimization
-models insist on it, so a small discount conforms to the latter while reasonably
-approximating the former.  The qualitative conclusion is not sensitive to the 
-discounting rate. 
+Future utility is discounted by fixed factor of $\delta = 0.99$.
+Classic maximum sustainable yield models [@Schaefer1954] ignore discounting, while modern economic optimization models insist on it, so a small discount conforms to the latter while reasonably approximating the former.
+The qualitative conclusion is not sensitive to the discounting rate. 
 
-Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions. 
+Alternate reward functions with varying price and cost structures are possible but do not qualitatively impact the conclusions.
 This reward function is a limiting case of any more complex reward, and corresponds both to classic work that does not model utility explicitly [e.g. MSY theory, @Schaefer1954], as well as explicit assumptions typically made in more recent models [@Reed1979]. 
-Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.  
+Moreover, using a simple reward function makes it clear that model that performs best is not doing so merely because of particular features baked into the a carefully chosen reward rule.
 
 
 ## Ecological Model Definitions
@@ -99,7 +103,7 @@ Let us assume that our set of candidate models are simply the possible parameter
 X_{t+1} = f_i(Y_t) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
 \end{equation}
 
-where harvest occurs before recruitment, $Y_t = \min(X_t - H_t, 0)$,  $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.  
+where harvest occurs before recruitment, $Y_t = \min(X_t - H_t, 0)$,  $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.
 
 Before this or any other model can generate a forecast, we must first come up with some parameter estimates.
 Because the model includes (log-normal) stochastic growth, no amount of data will make any parameter combination impossible, though certain parameter values are more likely than others.
@@ -225,7 +229,7 @@ true_model <- "3"
 
 
 On a discrete grid of possible states and actions, we can define the growth rate of a given state $X_t$ subject to harvest $H_t$, $f(X_t,H_t)$ as set of matrices.
-Each matrix $i$ gives the transition probabilities for any current state to any future state, given that action $i$ is taken.  
+Each matrix $i$ gives the transition probabilities for any current state to any future state, given that action $i$ is taken.
 
 
 
@@ -282,7 +286,10 @@ for (k in 1:n_s) {
 ## Optimal control solutions
 
 
-We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model. This determines the optimal harvest policy for each possible state, given each model. Because this step is the most computationally intensive routine, we cache the results using memosization conditioned on the transition matrices [@memoise].  Running this code with alternate transition matrices automatically invalidates that cache, reducing the risk of loading spurious results. 
+We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model.
+This determines the optimal harvest policy for each possible state, given each model.
+Because this step is the most computationally intensive routine, we cache the results using memosization conditioned on the transition matrices [@memoise].
+Running this code with alternate transition matrices automatically invalidates that cache, reducing the risk of loading spurious results. 
 
 
 ```{r sdp, results="hide"}
@@ -341,11 +348,10 @@ write_csv(sims, "../data/sims.csv")
 Using the transition matrices directly, we can examine what each model would 
 have forecast the future stock size to be in the following year when no fishing
 occurs (note that for each model, we use the transition matrix that corresponds
-to 'no fishing', `model[[state_index, ,1]]`) (Fig 2A, main text).  
-
+to 'no fishing', `model[[state_index, ,1]]`) (Fig 2A, main text).
 The transition matrices give the full (discretized) probability distribution,
 from which we can easily calculate both the expected value and the 95% 
-confidence interval.  
+confidence interval.
 
 
 ```{r stepahead_unfished}
@@ -461,7 +467,7 @@ $$b_i' = P(M_i | x_j) = P(M_i) P(x_j | M_i) = b_i P(x_j | M_i) $$
 Note that because the transition matrices are now altered after every action and observation, it is necessary to repeat the complete SDP calculation to determine the optimal action given the updated uncertainty.
 While straight forward, this is what makes adaptive management for MDP problems particularly computationally intensive and thus poorly suited for handling a large space of candidate models.
 Nevertheless, our example of two models is most feasible, and even the larger example of 36 models is not unreasonable.
-Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.  
+Here I make use of the `mdplearning` R package, which provides a straight-forward implementation of this algorithm.
 
 
 
@@ -551,7 +557,7 @@ Under adaptive management, the manager realizes only `r am_economics_percent`% o
 
 ## Adaptive management over many models
 
-We repeat the analysis above over a grid of $r$ and $K$ values.  
+We repeat the analysis above over a grid of $r$ and $K$ values.
 
 ```{r}
 # compare over grid set of candidate r and K
@@ -637,7 +643,7 @@ write_csv(am_multi, "../data/am_multi.csv")
 
 With `r n_models` possible models instead of two, the probability weight (belief) in Model 1 does not fully capture the evolution of the belief probabilities over time.
 To better illustrate how these beliefs evolve over the course of the simulation, I plot the marginal probabilities over values of $r$ and $K$ across the models over time.
-Note that Model 1 values, $r = 2$, $K = 16$, are quickly disfavored.  
+Note that Model 1 values, $r = 2$, $K = 16$, are quickly disfavored.
 
 ```{r}
 posteriors <- 
@@ -698,12 +704,12 @@ The resulting model curves are shown in the main paper, Fig 5A.
 
 ## Growth models in the many-models case
 
-The corresponding figure for the case of `r n_models` models.  
+The corresponding figure for the case of `r n_models` models.
 
 
 
 
-```{r plot_many_models, fig.width=7, fig.height=5, fig.cap="growth curves for 42 candidate models, shaded by belief at timestep 20, relative to the true model.  The curve with parameter values corresponding to 'model 1' are recognized in the highest arc, with belief weight of less than 1%."}
+```{r plot_many_models, fig.width=7, fig.height=5, fig.cap="growth curves for 42 candidate models, shaded by belief at timestep 20, relative to the true model. The curve with parameter values corresponding to 'model 1' are recognized in the highest arc, with belief weight of less than 1%."}
 
 final_belief <- posteriors %>% filter(time == max(time)) %>%
   select(model, belief = probability) %>% mutate(type = "candidate") %>%
