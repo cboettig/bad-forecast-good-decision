@@ -1,5 +1,5 @@
 ---
-title: 'Appendix A: Forecast Trap in a multi-species model'
+title: 'Appendix A: Forecast Trap in a Multi-Species Model'
 author: Carl Boettiger
 journal: Ecology Letters
 layout: 3p
@@ -26,23 +26,22 @@ The underlying dynamics for the simulated "true" system are based on the five-di
 Following @Brias2021, we assume three species of herring, $X_1$, $X_2$, $X_3$ are preyed upon by 
 
 \begin{align}
-x_{1,t+1} &= s_{1,t} \exp{(1.0213 -        s_{1,t} - 0.0861 s_{2,t} - 0.3141 s_{3,t} - 0.7252 s_{4,t} -0.2445 x_{5,t} +\espilon_{1,t} )}
-x_{2,t+1} &= s_{2,t} \exp{(1.0289 - 0.4765 s_{1,t} -        s_{2,t} - 0.1370 s_{3,t} - 0.9811 s_{4,t} -0.0915 x_{5,t} +\espilon_{2,t} )}
-x_{3,t+1} &= s_{3,t} \exp{(1.0207 - 0.3193 s_{1,t} - 0.3461 s_{2,t} -        s_{3,t} - 0.6367 s_{4,t} -0.8716 x_{5,t} +\espilon_{3,t} )}
-x_{4,t+1} &= s_{4,t} \exp{(         0.7252 s_{1,t} + 0.9811 s_{2,t} + 0.6367 s_{3,t} -        s_{4,t}                 +\espilon_{4,t})}
-x_{5,t+1} &= x_{5,t} \exp{(         0.2445 s_{1,t} + 0.0915 s {2,t} + 0.8716 s {3,t} -                        x_{5,t} +\espilon_{5,t} )}
+x_{1,t+1} &= s_{1,t} \exp{(1.0213 -        s_{1,t} - 0.0861 s_{2,t} - 0.3141 s_{3,t} - 0.7252 s_{4,t} -0.2445 x_{5,t} +\epsilon_{1,t} )} \\
+x_{2,t+1} &= s_{2,t} \exp{(1.0289 - 0.4765 s_{1,t} -        s_{2,t} - 0.1370 s_{3,t} - 0.9811 s_{4,t} -0.0915 x_{5,t} +\epsilon_{2,t} )} \\
+x_{3,t+1} &= s_{3,t} \exp{(1.0207 - 0.3193 s_{1,t} - 0.3461 s_{2,t} -        s_{3,t} - 0.6367 s_{4,t} -0.8716 x_{5,t} +\epsilon_{3,t} )} \\
+x_{4,t+1} &= s_{4,t} \exp{(         0.7252 s_{1,t} + 0.9811 s_{2,t} + 0.6367 s_{3,t} -        s_{4,t}                 +\epsilon_{4,t})} \\
+x_{5,t+1} &= x_{5,t} \exp{(         0.2445 s_{1,t} + 0.0915 s {2,t} + 0.8716 s {3,t} -                        x_{5,t} +\epsilon_{5,t} )}
 \end{align}
 
 where
 
-\begin{equation}
-s_{i,t} = x_{i_t} \left(1 - u_{i,t}\right)
-\end{equation}
+$$
+s_{i,t} = x_{i_t} \left( 1 - u_{i,t} \right)
+$$
 
-\begin{equation}
-\epsilon_{i,t} \stackrel{\texrm{iid}}{\tilde} \mathcal{N(0, \sigma_i)}
-\end{equation}
-
+$$
+\epsilon_{i,t} \stackrel{iid}{\sim} \mathcal{N}(0, \sigma_i)
+$$
 
 We will assume this is the "true" model, which is unknown to managers.  
 
@@ -67,11 +66,11 @@ Model A is a possible 3-species approximation that produces more accurate foreca
 This model treats the three species of herring collectively as $x_1$. 
 Parameters are estimated consistent with limited historical data of the observed variables, bass biomass $x_4$ and herring biomass $x_5$.  
 
-\begin{equation}
-x_{1,t+1} &= s_{1,t} \exp(3 - 8 s_{1,t} - 0.9 s_4 - 0.9 * x_{5,t} + \espilon_{1,t} )
-x_{4,t+1} &= s_{4,t} \exp(0.1 s_{1,t} - s_{4,t} + \espilon_{4,t}  )
-x_{5,t+1} &= x_{5,t} \exp(0.3 s_{1,t} - x_5  + \espilon_{5,t}  )
-\end{equation}
+\begin{align}
+x_{1,t+1} &= s_{1,t} \exp(3 - 8 s_{1,t} - 0.9 s_4 - 0.9 * x_{5,t} + \epsilon_{1,t} ) \\
+x_{4,t+1} &= s_{4,t} \exp(0.1 s_{1,t} - s_{4,t} + \epsilon_{4,t}  ) \\
+x_{5,t+1} &= x_{5,t} \exp(0.3 s_{1,t} - x_5  + \epsilon_{5,t}  )
+\end{align}
 
 
 ### Model B
@@ -79,11 +78,11 @@ x_{5,t+1} &= x_{5,t} \exp(0.3 s_{1,t} - x_5  + \espilon_{5,t}  )
 Model B is a structurally different model which postulates a further simplification of the dynamics.
 This slightly over-simplified approximation does not produce very accurate forecasts, but nevertheless leads to good management decisions.
 
-\begin{equation}
-x_{1,t+1} &= s_{1,t} \exp(1.60 - 2.00 s_{1,t}  + \espilon_{1,t} )
-x_{4,t+1} &= s_{4,t} \exp(1.45 - 2.75 s_{1,t}  + \espilon_{4,t}  )
+\begin{align}
+x_{1,t+1} &= s_{1,t} \exp(1.60 - 2.00 s_{1,t}  + \epsilon_{1,t} ) \\
+x_{4,t+1} &= s_{4,t} \exp(1.45 - 2.75 s_{1,t}  + \epsilon_{4,t}  ) \\
 x_{5,t+1} &= 0.25 x_{5,t} 
-\end{equation}
+\end{align}
 
 Our alternate model has several oversimplifications:
 (1) it treat all three herring species as a single species,
@@ -119,7 +118,7 @@ scale_fill_discrete <- function(...) ggthemes::scale_fill_solarized()
 pal <- ggthemes::solarized_pal()(8)
 txtcolor <- "#586e75"
 
-knitr::opts_chunk$set(cache=FALSE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
+knitr::opts_chunk$set(cache=TRUE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
 
 ```
 
@@ -227,11 +226,19 @@ model_5sp <- function(u_prey = 0.5,
           s3[t] <- x3[t] * (1 - u_prey)
           s4[t] <- x4[t] * (1 - u_pred)
   
-          x1[t+1] = s1[t]*exp(1.0213 - s1[t] - 0.0861*s2[t] - 0.3141*s3[t] - 0.7252*s4[t] - 0.2445*x5[t] + xi1[t])
-          x2[t+1] = s2[t]*exp(1.0289 - 0.4765*s1[t] - s2[t] - 0.1370*s3[t] - 0.9811*s4[t] - 0.0915*x5[t] + xi2[t])
-          x3[t+1] = s3[t]*exp(1.0207 - 0.3193*s1[t] - 0.3461*s2[t] - s3[t] - 0.6367*s4[t] - 0.8716*x5[t] + xi3[t])
-          x4[t+1] = s4[t]*exp(0.7252*s1[t] + 0.9811*s2[t] + 0.6367*s3[t] - s4[t] + xi4[t])
-          x5[t+1] = x5[t]*exp(0.2445*s1[t] + 0.0915*s2[t] + 0.8716*s3[t] - x5[t] +  xi5[t])
+          x1[t+1] = s1[t]*exp(1.0213 - s1[t] - 0.0861*s2[t] -
+                                0.3141*s3[t] - 0.7252*s4[t] -
+                                0.2445*x5[t] + xi1[t])
+          x2[t+1] = s2[t]*exp(1.0289 - 0.4765*s1[t] - s2[t] -
+                                0.1370*s3[t] - 0.9811*s4[t] -
+                                0.0915*x5[t] + xi2[t])
+          x3[t+1] = s3[t]*exp(1.0207 - 0.3193*s1[t] - 
+                                0.3461*s2[t] - s3[t] -
+                                0.6367*s4[t] - 0.8716*x5[t] + xi3[t])
+          x4[t+1] = s4[t]*exp(0.7252*s1[t] + 0.9811*s2[t] +
+                                0.6367*s3[t] - s4[t] + xi4[t])
+          x5[t+1] = x5[t]*exp(0.2445*s1[t] + 0.0915*s2[t] + 
+                                0.8716*s3[t] - x5[t] +  xi5[t])
   
       }
       df <- dplyr::bind_rows(tibble(time = 1:Tmax, x1, x2, x3, x4, x5, r), df)
@@ -372,7 +379,7 @@ We simulate the system using the true model, while managing from the policy deri
 
 ```{r}
 Tmax <- 10
-resp <- 40
+reps <- 40
 
 x <- model_A_policy
 sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]],
