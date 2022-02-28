@@ -41,7 +41,7 @@ journal: Ecology Letters
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
 - number of words in the abstract: 148
 - number of words in main text: 4900
-- number of cited references: 33
+- number of cited references: 44
 - number of tables & figures: 5 Figures
 
 
@@ -69,9 +69,24 @@ pal <- ggthemes::solarized_pal()(8)
 txtcolor <- "#586e75"
 ```
 
-```{r, include=FALSE}
+
+
+
+```{r renderA, include=FALSE}
 rmarkdown::render("appendix-A.Rmd")
+
+```
+
+
+
+```{r renderB, include=FALSE, eval=FALSE}
 rmarkdown::render("appendix-B.Rmd")
+```
+
+
+
+```{r knit_global, include=FALSE}
+library(tidyverse)
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, 
                       warning = FALSE, dev="cairo_pdf", fig.height=5, fig.width=7.5)
 ```
@@ -88,7 +103,7 @@ In this paper, I demonstrate that the model that makes the better prediction (de
 I show that our best methods for learning about model structure or parameters by repeatedly comparing forecasts to observations can be counter-productive.
 Put another way, the value of information (VOI, as measured by the expected utility given that information minus the utility without it; see @Howard1966; @Katz1987), can actually be negative.
 When VOI is negative, the decision-maker may become trapped into accepting mediocre outcomes derived from a model that makes accurate forecasts, even when a less accurate model that would generate better outcomes is available.
-I will present two examples of this "forecast trap" and examine how it arises.
+I will present two examples of this "forecast trap" and examine how it arises as a result of non-uniqueness of models [@Oreskes1994; @Schindler2015] with respect to either of these objectives.
 
 The forecast trap is not the only mechanism by which some model-choice methods lead to worse outcomes.
 Previous work has long acknowledged the panoply of ways in which model-based decision making can go astray due to conflicting incentives, implementation errors, or lack of resources for monitoring and updating [e.g. @Ludwig1993].
@@ -134,14 +149,14 @@ conduct experiments that would be often impossible or unethical to perform in th
 # A motivating example
 
 To better understand how a model can produce a more accurate forecast and yet still lead to a worse decision, it may be helpful to start with a concrete example.
-Figure \ref{fig1} shows both the forecasts and realized management outcomes of two alternative three-species models, "A" and "B" (see Appendix A) in predicting the population dynamics of striped bass (an economically important fishery) and double-crested cormorants (a target species for conservation) which both feed on a population of river herring (whose abundance we assume is not measured). 
+Fig 1 shows both the forecasts and realized management outcomes of two alternative three-species models, "A" and "B" (see Appendix A) in predicting the population dynamics of striped bass (an economically important fishery) and double-crested cormorants (a target species for conservation) which both feed on a population of river herring (whose abundance we assume is not measured). 
 Model A accurately forecasts the abundance of both bass and cormorants well into the future, but the optimal management strategy derived from its forecasts leads to steadily declining species abundances and overall disappointing net utility.
 Model B produces substantially less accurate forecasts, but nevertheless achieves better outcomes.
 The net utility under model B is in fact nearly identical to the maximum utility attainable given the true model, while management under model A achieves only 38% of that utility.
 
 This management problem is motivated by a real world example of a herring fishery as described in @Brias2021, 
 in which our manager seeks to balance multiple objectives of sustaining the cormorant population while maximizing the economic value from harvesting both herring and striped bass.
-In the scenario depicted in Figure \ref{fig1}, I have used a the richer five-species model introduced @Brias2021 to drive the underlying dynamics, which includes three competing species of herring that are preyed upon by both the bass and the cormorants. 
+In the scenarios depicted in Fig 1, I have used a the richer five-species model introduced @Brias2021 to drive the underlying dynamics, which includes three competing species of herring that are preyed upon by both the bass and the cormorants. 
 Here, the manager seeks to maximize utility given by the weighted sum of the individual objectives [@Brias2021], placing 50% of the weight on the conservation objective and splits the remaining weight evenly over the harvests for predator (bass) and prey (herring) species.
 I have assumed a partially observable system - in this case, the manager measures only the abundance of bass and cormorant species, and not of the three herring species.
 In this scenario, I have further assumed the manager must choose a fixed fishing effort for herring and for the bass harvest,
@@ -319,7 +334,7 @@ The 2-model case achieves a net present value to -58% of the value of having use
 Including all 42 models reduces this to a value of -32%.
 Both harvests and fish biomass remain significantly lower under adaptive learning scenarios.
 
-```{r figure4, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
+```{r figure4, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (panel A) they remain significantly worse than had no iterative learning been included."}
 am <- read_csv("../data/am.csv")
 fig3a <- am %>% filter(time <=20) %>% 
   pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
@@ -444,12 +459,12 @@ This will allow the population to enter a range of state-space where discrepanci
 @Schindler2015 also underscores the value of flexible policies; rather than "managing solely within the range of past variation; active probing is usually needed," and contrasts this to a typical interpretation of the 'precautionary principle' often cited as a reason to avoid exploratory actions.
 However, just because active exploration can escape the forecast trap does mean it is always a good idea.
 
-Third, managers may emphasize policy robustness over expected net utility. 
+Third, managers may emphasize policy robustness over forecast skill [@Schindler2015]. 
 In many formal treatments, this is not qualitatively different to the analysis considered here: 
 a manager simply chooses a different utility function, such as minimizing 'regret' rather than maximizing expected value [@Polasky2011]. 
 Such approaches are just as vulnerable to bad outcomes (as defined by their own utility functions) whenever models are selected only on the basis of forecast skill.
 But in practice, robust design may emphasize acceptable performance across the widest possible array of scenarios (e.g. candidate models).
-This acts more like a sensitivity analysis of utility with respect to underlying assumptions, rather than an optimization routine.
+This acts more like a sensitivity analysis of utility with respect to underlying assumptions, rather than an optimization routine [e.g. @Punt2016; @Fischer2009].
 Computationally, the former is much simpler, allowing researchers to evaluate the performance of a policy on more complex simulations for which calculating the optimal policy would be prohibitively difficult.
 
 

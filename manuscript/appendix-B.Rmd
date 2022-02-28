@@ -96,10 +96,10 @@ Moreover, using a simple reward function makes it clear that model that performs
 Let us assume that our set of candidate models are simply the possible parameterizations of a stochastic version of the classic Gordon-Schaefer model [@Schaefer1954; @Gordon1954]:
 
 \begin{equation}
-f_i(Y_{t+1}) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
+X_{t+1} = f_i(Y_t) = Y_t + r_i Y_t \left( 1 - \frac{Y_t}{K_i} \right) * \xi_t(\sigma)
 \end{equation}
 
-where $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.  
+where harvest occurs before recruitment, $Y_t = \min(X_t - H_t, 0)$,  $\xi_i(t)$ is a multiplicative log-normal noise term with mean 1 and log-standard-deviation $\sigma_i$.  
 
 Before this or any other model can generate a forecast, we must first come up with some parameter estimates.
 Because the model includes (log-normal) stochastic growth, no amount of data will make any parameter combination impossible, though certain parameter values are more likely than others.
@@ -152,7 +152,7 @@ The mean, $\mu_t$ and variance, $\sigma_t$ of the forecast are compared against 
 S(x_t|\mu_t,\sigma_t) = -(\mu_t - x_t )^2 / \sigma_t^2 - \log(\sigma_t) \label{proper}
 \end{equation}
 
-for each prediction over 100 replicate simulations of 100 time steps each [Fig 1].
+for each prediction over 100 replicate simulations of 100 time steps each [Fig 2].
 
 
 
@@ -266,7 +266,7 @@ names(P) <- c("1", "2", "3")
 
 Likewise, a corresponding matrix defining the rewards associated with each state $X$ and each harvest action $H$ can also be defined.
 
-````{r}
+```{r}
 ## Compute reward matrix (shared across all models)
 n_s <- length(states)
 n_a <- length(actions)
@@ -304,7 +304,7 @@ write_csv(policies, "../data/policies.csv")
 
 
 
-# Simulations and step-ahead forecasts (Fig 2, 3A)
+# Simulations and step-ahead forecasts (Fig 3, 4A)
 
 We simulate fishing dynamics under the optimal policy for each model, using a simple helper function from the `mdplearning` package. Because growth dynamics are stochastic, we perform 100 simulations of each model from identical starting condition to ensure results are not the result of chance alone.
 
@@ -341,7 +341,7 @@ write_csv(sims, "../data/sims.csv")
 Using the transition matrices directly, we can examine what each model would 
 have forecast the future stock size to be in the following year when no fishing
 occurs (note that for each model, we use the transition matrix that corresponds
-to 'no fishing', `model[[state_index, ,1]]`) (Fig 1a, main text).  
+to 'no fishing', `model[[state_index, ,1]]`) (Fig 2A, main text).  
 
 The transition matrices give the full (discretized) probability distribution,
 from which we can easily calculate both the expected value and the 95% 
@@ -385,7 +385,7 @@ stepahead_fished <- sims %>%
 ```
 
 
-# Proper scores (Fig 1)
+# Proper scores (Fig 2C-D)
 
 It is straight forward to apply the proper scoring formula of @Gneiting2007 
 based on the first two moments of the distribution to score the respective
@@ -393,7 +393,9 @@ forecasts under both the un-fished and actively managed scenario for each model:
 
 ```{r proper_scores, message = FALSE}
 # Gneiting & Raferty (2007), eq27
-scoring_fn <- function(x, mu, sigma){ as.numeric( -(mu - x )^2 / sigma^2  - log(sigma) )}
+scoring_fn <- function(x, mu, sigma){
+  as.numeric( -(mu - x )^2 / sigma^2  - log(sigma) )
+  }
 
 stepahead_unfished <- stepahead_unfished %>%
   mutate(sd = sqrt(var),
@@ -425,7 +427,7 @@ write_csv(predictions, "../data/predictions.csv")
 
 
 
-# Economic value tabulation (Fig 2B)
+# Economic value tabulation (Fig 3B)
 
 
 To plot the economic value over time, we must sum up the discounted values
@@ -582,7 +584,8 @@ model_prior <- c(rep(.01, n_models-1) / (n_models - 1), .99)
 With the transition matrices defined for all `r n_models` models, we perform adaptive management as before:
 
 ```{r}
-adaptive_management <- memoise::memoise(mdp_learning, cache = memoise::cache_filesystem("cache/"))
+adaptive_management <- memoise::memoise(mdp_learning, 
+                                        cache = memoise::cache_filesystem("cache/"))
 am_many <- adaptive_management(many_transitions,  
                                reward = reward, 
                                discount = discount,
@@ -614,7 +617,7 @@ non_am_many <- mdp_planning(true_transition,
          method = "planning")
 ```
 
-Again we record the posterior belief in the 'model 1' parameter values, and stack the data frames for learning and planning-only cases into a single file used to generate figure 3B. 
+Again we record the posterior belief in the 'model 1' parameter values, and stack the data frames for learning and planning-only cases into a single file used to generate figure 4B. 
 
 ```{r}
 model1 <- dim(am_many$posterior)[2]
@@ -671,12 +674,12 @@ belief_K <- K_marginals %>%
 belief_r + belief_K 
 ```
 
-For most of the simulation, the most probable $r$ value is around 0.3, and the most probable $K$ value around 1.5. 
+For most of the simulation, the most probable $r$ value is around 0.3, and the most probable $K$ value around 10. 
 
 
 # Growth models 
 
-To plot growth curves of individual models (Fig 4a), we evaluate 
+To plot growth curves of individual models (Fig 5A), we evaluate 
 
 $$\Delta x = x_{t+1} - x_t = f(x_t) - x_t$$
 
@@ -690,7 +693,7 @@ model_curves <-
 write_csv(model_curves, "../data/model_curves.csv")
 ```
 
-The resulting model curves are shown in the main paper, Fig 4A. 
+The resulting model curves are shown in the main paper, Fig 5A. 
 
 
 ## Growth models in the many-models case
