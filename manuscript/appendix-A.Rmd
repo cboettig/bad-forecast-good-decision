@@ -1,5 +1,5 @@
 ---
-title: 'Appendix A: Forecast Trap in a multi-species model'
+title: 'Appendix A: Forecast Trap in a Multi-Species Model'
 author: Carl Boettiger
 journal: Ecology Letters
 layout: 3p
@@ -372,7 +372,7 @@ We simulate the system using the true model, while managing from the policy deri
 
 ```{r}
 Tmax <- 10
-resp <- 40
+reps <- 40
 
 x <- model_A_policy
 sim <- model_5sp(u_prey = x[[1]], u_pred = x[[2]],

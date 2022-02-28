@@ -6,7 +6,7 @@ affiliation: a,1
 date: "`r Sys.Date()`"
 
 abstract: |
-  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using several classic examples from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (measured by statistical scores) can sometimes lead to worse outcomes (measured by real-world objectives). This can create a forecast trap, in which the outcomes such as fish biomass or economic yield decline while the manager becomes increasingly convinced that these actions are consistent with the best models and data available. The forecast trap is not unique to this example, but a fundamental consequence of non-uniqueness of models. Existing practices that promote the consideration of a broader set of models _a priori_ rather than rely on forecast skill alone are the best way to avoid the trap. 
+  Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using several classic examples from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (measured by statistical scores) can sometimes lead to worse outcomes (measured by real-world objectives). This can create a forecast trap, in which the outcomes such as fish biomass or economic yield decline while the manager becomes increasingly convinced that these actions are consistent with the best models and data available. The forecast trap is not unique to this example, but a fundamental consequence of non-uniqueness of models. Existing practices promoting a broader set of models are the best way to avoid the trap. 
   
 corresponding_author:
   code: 1
@@ -39,10 +39,10 @@ journal: Ecology Letters
 - abbreviated running title: "The Forecast Trap"
 - Authorship statement: _This is a single-author paper_
 - data accessibility statement: _All simulation data generated for analyses here, along with code required for the analysis, is available in the Zenodo Data archive, https://doi.org/10.5281/zenodo.4660621_
-- number of words in the abstract: 149
-- number of words in main text: 4967
+- number of words in the abstract: 148
+- number of words in main text: 4900
 - number of cited references: 33
-- number of tables & figures: 4 Figures
+- number of tables & figures: 5 Figures
 
 
 
@@ -70,7 +70,8 @@ txtcolor <- "#586e75"
 ```
 
 ```{r, include=FALSE}
-rmarkdown::render("appendix.Rmd")
+rmarkdown::render("appendix-A.Rmd")
+rmarkdown::render("appendix-B.Rmd")
 knitr::opts_chunk$set(cache = TRUE, echo = FALSE, message = FALSE, 
                       warning = FALSE, dev="cairo_pdf", fig.height=5, fig.width=7.5)
 ```
@@ -113,23 +114,22 @@ As sophisticated forecasting techniques become more common-place in conservation
 **A note on models and data**
 
 I will use the term "model" to refer to any set of equations or code that can be used to produce a forecast.
-This term thus includes not only process-based models, but could also statistical forecasting methods (e.g. ARIMA, @arima), non-parametric approaches such as empirical dynamical modeling [@Ye2015], or machine learning. 
+This term thus includes not only process-based models, but could also statistical forecasting methods, non-parametric approaches such as empirical dynamical modeling [@Ye2015], or machine learning. 
 Most such models must first be calibrated to historical data before they can produce a forecast, e.g. by parameter fitting, expert knowledge, or some other means. 
 Different choices for those parameters create different forecasts, I will refer to those different parameterizations as different models.
 It is of course possible for a decision-maker to consider forecasts coming from multiple structurally different models simultaneously, and potentially assigning different weights to each model.
 As more data becomes available, it is possible to update model parameters, or equivalently, update the weights assigned across models.
 I will examine such approaches for model ensembles and model updating further on.
 
+I shall focus on examples involving fisheries management to illustrate principles shared in many ecological systems.
+Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
+Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
+
 In these examples, we will focus on situations in which our 'data' comes from a model simulation rather than empirical sources.
 Simulations are simplifications of the real world -- just because a method works in a simulation is no guarantee that it works in reality.
 Conversely, if decision methods are not reliable even when applied to simulated cases, we should be even more cautious in how we use them.
 Simulations also allow us to consider many replicates and
 conduct experiments that would be often impossible or unethical to perform in the real world: for instance, does a given fishery experience better long-term outcomes when managed according to forecasts derived from model 1 or from model 2?
-
-
-I shall focus on examples involving fisheries management to illustrate principles shared in many ecological systems.
-Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
-Moreover, their management has been a proving grounds for theoretical and practical decision-making issues which are widely applicable in other areas of ecology and conservation [@Ludwig1993; @Lande1994], and one that has long wrestled with issues of uncertainty in the context of management decisions [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982].
 
 # A motivating example
 
@@ -257,7 +257,7 @@ fig1ab + fig1cd +
 
 
 Despite the clearly superior predictive accuracy of model 2 in both scenarios, the outcomes from management under model 2 are substantially worse.
-We can assess such outcomes in less abstract terms than forecasting skill, such as economic value them manager sought to optimize (in dollars) or the ecological value (unharvested biomass) [Fig 3].
+We can assess such outcomes in less abstract terms than forecasting skill, such as economic value them manager sought to optimize (in dollars) or the ecological value (unharvested biomass) [Fig 4].
 
 ```{r figure3, message = FALSE, fig.cap = "Ecological and economic performance of each forecast. Harvest quotas derived from model 1 result in a significantly higher fish stock size than under Model 2 (panel A). Economic returns under model 1 are also substantially higher (panel B)"}
 
@@ -319,7 +319,7 @@ The 2-model case achieves a net present value to -58% of the value of having use
 Including all 42 models reduces this to a value of -32%.
 Both harvests and fish biomass remain significantly lower under adaptive learning scenarios.
 
-```{r figure3, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
+```{r figure4, fig.cap="Adaptive management under model uncertainty. Solid lines trace the trajectories of the state (fish stock, circles) and action (harvest quota, triangles), under adaptive management (learning). Dotted lines trace the corresponding trajectories if iterative learning is omitted, leaving the prior belief fixed throughout the simulation (planning). Color indicates the belief that model 1 is correct (blue), with an initial prior belief of 99%. Panel A: Management over the two candidate models, Model 1 and Model 2. Within a single iteration of adaptive management, the belief over models switches from a prior belief that heavily favored model 1 to a posterior that favors model 2 with near certainty. Future iterations reinforce the belief in model 2, resulting in both depressed harvests and low stock sizes (solid lines). If no iterative learning updates are performed, stock sizes and realized harvests (and thus economic profit) are both higher. Panel B: given 42 candidate models over a broad range of parameter values, adaptive management quickly reduces the probability of model 1, and substantially underperforms management without learning (dotted lines). While outcomes improve marginally relative to the two-model case (figure A) they remain significantly worse than had no iterative learning been included."}
 am <- read_csv("../data/am.csv")
 fig3a <- am %>% filter(time <=20) %>% 
   pivot_longer(c(stock, quota), values_to="stock", names_to="key") %>%
@@ -352,16 +352,16 @@ fig3a + fig3b
 
 
 
-<!-- Intuition, Figure 4 -->
+<!-- Intuition, Figure 5 -->
 
 The reason for model 1's seemingly contradictory ability to make good decisions but bad forecasts becomes obvious once we compare both curves to that of the underlying model, model 3.
-Looking at plots of the growth rate curves for each model [Fig 4A], it is hardly surprising that all model selection approaches prefer the closely overlapping curve of model 2 to the no-where-close curve of model 1 as the better approximation of model 3.
-Nevertheless, the decision policy derived from model 1 forecasts is indistinguishable from that based on the true model [Fig 4B], while the policy derived from model 2 forecasts lead to over-harvesting.
+Looking at plots of the growth rate curves for each model [Fig 5A], it is hardly surprising that all model selection approaches prefer the closely overlapping curve of model 2 to the no-where-close curve of model 1 as the better approximation of model 3.
+Nevertheless, the decision policy derived from model 1 forecasts is indistinguishable from that based on the true model [Fig 5B], while the policy derived from model 2 forecasts lead to over-harvesting.
 Being closest to the true model's forecast skill never guarantees that we are closest to the true model's optimal policy.
 
 
-```{r figure4, fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth. Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
-# Fig 4
+```{r figure5, fig.cap="Panel A: Population growth curves of each model. The positive equilibrium of each model occurs where the curve crosses the horizontal axis. Note that while Model 2 is a better approximation to the truth (Model 3), Model 1 better approximates the stock size which leads to maximum growth. Panel B: The optimal control policy under Model 1 is nearly identical to that under the true Model 3, while the optimal policy under Model 2 suppresses stock to a much lower escapement level."}
+# Fig 5
 model_curves <- read_csv("../data/model_curves.csv") %>% mutate(model = as.character(model))
 policies <- read_csv("../data/policies.csv") %>% mutate(model = as.character(model))
 
@@ -458,8 +458,8 @@ Finally, it is worth noting that decisions do not need to be premised on a forec
 Such a policy is not optimal, but it is robust across a wide range of unimodal stock-recruitment curves without ever estimating a predictive model.
 This is the basis of so-called 'model-free' reinforcement learning algorithms such as DQN [@DQN] and SAC [@SAC], which train deep neural networks to learn a policy without ever attempting to predict future states of the underlying process.
 Training such a artificial intelligence agents across a wide suite of simulations,
-a process known as curriculum learning [@curriculum-learning], mimics the scenario analyses and search for . Such approaches have been used to train agents to play 2600 Atari console games at superhuman ability [@], outperform race-car drivers [@sony] and control nuclear fusion reactions [@deepmind-fusion].
-Such approaches are also not yet well understood, and can fail dramatically [@].
+a process known as curriculum learning [@curriculum_learning], mimics the scenario analyses and search for robust policies. Such approaches have been used to train agents to play 2600 Atari console games at superhuman ability [@DQN], outperform race-car drivers [@sony] and control nuclear fusion reactions [@deepmind_fusion].
+Such approaches are also not yet well understood, and can fail dramatically [@Henderson2019; @Dulac-Arnold_2019].
 
 
 

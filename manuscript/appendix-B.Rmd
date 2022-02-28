@@ -1,5 +1,5 @@
 ---
-title: 'Appendix B: Forecast Trap in Sequential Decision-Making'
+title: 'Appendix B: The Forecast Trap in a Sequential Decision-Making Problem'
 author: Carl Boettiger
 journal: Ecology Letters
 layout: 3p
@@ -304,7 +304,7 @@ write_csv(policies, "../data/policies.csv")
 
 
 
-# Simulations and step-ahead forecasts (Fig 1, 2A)
+# Simulations and step-ahead forecasts (Fig 2, 3A)
 
 We simulate fishing dynamics under the optimal policy for each model, using a simple helper function from the `mdplearning` package. Because growth dynamics are stochastic, we perform 100 simulations of each model from identical starting condition to ensure results are not the result of chance alone.
 
