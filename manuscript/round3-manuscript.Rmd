@@ -126,7 +126,7 @@ As sophisticated forecasting techniques become more common-place in conservation
 
 
 
-**A note on models and data**
+## A note on models and data
 
 I will use the term "model" to refer to any set of equations or code that can be used to produce a forecast.
 This term thus includes not only process-based models, but could also statistical forecasting methods, non-parametric approaches such as empirical dynamical modeling [@Ye2015], or machine learning. 
@@ -182,7 +182,7 @@ example1 %>%
   facet_wrap(~scenario)
 ```
 
-# Iterative updating: _Sequential Decision Processes_
+# An Iterative Decision Example
 
 While this example demonstrates that the model which provides the better forecast does not necessarily lead to a better decision, it may raise more questions than it answers.
 Why does this happen? 
@@ -193,7 +193,6 @@ Such _sequential decision processes_ are not merely iterative versions of single
 In the opening example, the manager had to choose the harvest policy for each fish species at the start of the scenario and stick with it.
 The ability to select new actions in response to new observations turns that decision into a game of chess: each turn, the manager must consider not only their next move but all possible series of moves.
 
-
 How do we translate a model-based forecast into a decision policy?
 It is impossible to discuss outcomes associated with a forecast without first agreeing on this process.
 In practice, decision-makers may use a forecast in a wide variety of ways in selecting a course of action, including ways which may run counter to the stated objectives of management [@Ludwig1993].
@@ -201,7 +200,6 @@ In principle at least, the field of decision theory provides a formal mechanism 
 For instance, a wide range of ecological conservation and management problems can be expressed as a Markov Decision Process (MDP) problems [@Marescot2013].
 Existing computer algorithms such as stochastic dynamic programming (SDP) take a probabilistic model _forecast_ (more precisely, the probability $P(x_{t+1} | x_t, a_t)$ of the system being in state $x_{t+1}$ in the next iteration given that it was previously in state $x_t$ and the manager selected action $a_t$) and the _desired management objective_ (i.e. the maximize the expected biomass of species protected or the expected dollar profit of a fishery [see @Clark1990; @Halpern2013]) as input, and return the _decision policy_ which maximizes that objective [@Marescot2013].
 This provides a principled way to associate a decision policy with any given forecast model.
-
 
 Two features of this approach are worth emphasizing.
 As before, the resulting decision is derived directly from the forecast model and the desired objective.
@@ -215,13 +213,11 @@ Recognizing the SDP-derived policy (A) comes directly from the forecast model, a
 While this intuition is no doubt _often_ accurate, our purpose here is to demonstrate that it is by no means _guaranteed_:
 it is also possible for the model which makes the better forecast to lead to worse outcomes.
 
-
 Let us consider the management of single species in which we seek to maximize the long-term net harvest.
 In this scenario, the manager estimates the population size each year and must set the total allowable catch (TAC) for that season.
 The underlying dynamics are unknown, but the manager is presented with any of a variety of forecast models which can predict the future stock sizes given the current population size and proposed TAC. 
 Our manager does not know which of these models is the most accurate a priori. 
 Instead, the manager will be able to compare the population size predicted by each forecast (under the chosen TAC) to the measurement of the population size in the following year before coming up with the next year's catch limit.
-
 
 Faced with a collection of models, a manager can seek either to identify the best model to use, or to consider an integrative assessment which uses the whole ensemble of models to represent the manager's uncertainty about the underlying process.
 I will consider both approaches in turn. 
@@ -318,17 +314,17 @@ Had we been able to include Model 3 in our forecast comparisons, it would equal 
 In practice, we never have access to the generating model, so it is reasonable to expect model selection to determine the better approximation.
 As we see here, the better approximation for forecasting future states does not in fact lead to better outcomes.
 
-## Iterative upates and adaptive management
+## Adaptive Management
 
 Rather than select a single best model (or best parameter value), a manager could choose to integrate over possible outcomes generated from all candidate models.
 Updating posterior distributions over parameters and/or weights assigned to different models are examples of this kind of adaptive management [@Punt2016; @Ludwig1982].
 I illustrate the application of such an adaptive management strategy, following classic examples for parameter [@Ludwig1982] or structural [@Smith1981] model uncertainty.
 I first consider only the same two models considered in the previous example. 
 I later consider a larger suite of 42 models, spanning the parameter space of Gordon-Schaefer curves.
-To avoid failure to explore sufficiently, [see exploration-exploitation tradeoff, e.g. @Walters1981],
+To avoid failure to explore sufficiently, [see exploration-exploitation trade-off, e.g. @Walters1981],
 I assign prior belief of 99% weight on the optimally performing model, model 1.  
 For comparison, I consider the baseline case in which the manager does not update posterior distribution over which models/parameter values are correct (the manager still chooses a new TAC after each observation, but does not update their belief in the model, i.e. does not _learn_ over time).
-The difference between the performance with and without learning is known as the "Value of Information".
+The difference between the performance with and without learning is known as the "Value of Information" [@Howard1966].
 In both 2-model and 42-model scenarios, the value of information is strongly negative.
 The 2-model case achieves a net present value to -58% of the value of having used model 1 alone [Fig 4]. 
 Including all 42 models reduces this to a value of -32%.
@@ -357,10 +353,10 @@ fig3b <- am_multi %>%
 
 
 out <- am %>% group_by(method) %>% summarize(total = sum(quota*.99^time))
-( out[out$method=="learning","total"][[1]] -  out[out$method=="planning","total"][[1]]) / out[out$method=="planning","total"][[1]]
+VOI_2models <- ( out[out$method=="learning","total"][[1]] -  out[out$method=="planning","total"][[1]]) / out[out$method=="planning","total"][[1]]
 
 out <- am_multi %>% group_by(method) %>% summarize(total = sum(quota*.99^time))
-( out[out$method=="learning","total"][[1]] -  out[out$method=="planning","total"][[1]]) / out[out$method=="planning","total"][[1]]
+VOI_42models <- ( out[out$method=="learning","total"][[1]] -  out[out$method=="planning","total"][[1]]) / out[out$method=="planning","total"][[1]]
 
 fig3a + fig3b
 ```
@@ -452,7 +448,7 @@ Forecasts based on non-mechanistic models such as empirical dynamical modeling [
 In contrast, if such approaches are selected solely on forecasting skill, they may increase the probability of the forecast trap.
 The danger of an insufficiently broad model ensemble is well understood in many disciplines which use _scenario planning_ to assist policy in accounting for irreducible uncertainties [@Peterson2003].
 
-A manager may also escape the forecast trap by exploring actions which are never recommended from any of the available forecasts.
+Second, A manager may also escape the forecast trap by exploring actions which are never recommended from any of the available forecasts.
 For example, a manager looking at the low stocks and poor harvests achieved under model 2, could decide experimentally to reduce fishing quota. 
 This will allow the population to enter a range of state-space where discrepancies between model 2 and observations are more obvious.
 @Runge2016 describes how such "double-loop learning" can be used to identify when the entire model set is inaccurate, a problem which is not solved by "single-loop" adaptive-management in our examples above.
@@ -474,7 +470,7 @@ Such a policy is not optimal, but it is robust across a wide range of unimodal s
 This is the basis of so-called 'model-free' reinforcement learning algorithms such as DQN [@DQN] and SAC [@SAC], which train deep neural networks to learn a policy without ever attempting to predict future states of the underlying process.
 Training such a artificial intelligence agents across a wide suite of simulations,
 a process known as curriculum learning [@curriculum_learning], mimics the scenario analyses and search for robust policies. Such approaches have been used to train agents to play 2600 Atari console games at superhuman ability [@DQN], outperform race-car drivers [@sony] and control nuclear fusion reactions [@deepmind_fusion].
-Such approaches are also not yet well understood, and can fail dramatically [@Henderson2019; @Dulac-Arnold_2019].
+Such approaches are also not yet well understood, introducing new risks as well as new possibilities[@Henderson2019; @Dulac-Arnold_2019].
 
 
 
