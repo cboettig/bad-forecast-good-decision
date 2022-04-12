@@ -2,7 +2,7 @@ Package: compendium
 Project: Bad Forecast Good Decision
 Version: 0.1.0
 Depends: tidyverse, mdplearning, truncnorm, MDPtoolbox
-Suggests: rmarkdown, testthat, lintr, knitr, hrbrthemes, patchwork, Cairo, ggthemes, ggtext, rticles, styler
+Imports: rmarkdown, testthat, lintr, knitr, hrbrthemes, patchwork, Cairo, ggthemes, ggtext, rticles, styler
 License: CC0
 Title: Compendium Package
 Description: A template for a research compendium.  Modify this
