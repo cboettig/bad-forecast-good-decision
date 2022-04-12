@@ -23,6 +23,7 @@ header-includes:
 
 This appendix illustrates how the forecast trap can emerge in choosing between two alternative three-species models which may be used to manage a partially observed five-species system. 
 The underlying dynamics for the simulated "true" system are based on the five-dimensional model of a herring fishery presented in @Brias2021.
+I have used the model parameters from @Brias2021, which were selected to ensure co-existence of the five species as outlined in their paper.
 Following @Brias2021, we assume three species of herring, $X_1$, $X_2$, $X_3$ are preyed upon by 
 
 \begin{align}
@@ -64,7 +65,8 @@ To illustrate this, we will assume that the manager observes only the population
 
 Model A is a possible 3-species approximation that produces more accurate forecasts but leads to substantially worse management outcomes
 This model treats the three species of herring collectively as $x_1$. 
-Parameters are estimated consistent with limited historical data of the observed variables, bass biomass $x_4$ and herring biomass $x_5$.  
+As with the original @Brias2021 model, parameters are not based directly on historical fisheries data, but have been selected to be consistent with simulations of the observed variables from the "true" model of @Brias2021, bass biomass $x_4$ and herring biomass $x_5$.
+
 
 \begin{align}
 x_{1,t+1} &= s_{1,t} \exp(3 - 8 s_{1,t} - 0.9 s_4 - 0.9 * x_{5,t} + \epsilon_{1,t} ) \\
@@ -79,7 +81,7 @@ Model B is a structurally different model which postulates a further simplificat
 This slightly over-simplified approximation does not produce very accurate forecasts, but nevertheless leads to good management decisions.
 
 \begin{align}
-x_{1,t+1} &= s_{1,t} \exp(1.60 - 2.00 s_{1,t}  + \epsilon_{1,t} ) \\
+x_{1,t+1} &= s_{1,t} \exp(0.1 - 2.00 s_{1,t}  + \epsilon_{1,t} ) \\
 x_{4,t+1} &= s_{4,t} \exp(1.45 - 2.75 s_{1,t}  + \epsilon_{4,t}  ) \\
 x_{5,t+1} &= 0.25 x_{5,t} 
 \end{align}
@@ -120,6 +122,8 @@ txtcolor <- "#586e75"
 
 knitr::opts_chunk$set(cache=TRUE, tidy = "styler", message = FALSE, warning = FALSE, echo = TRUE)
 
+
+set.seed(123)
 ```
 
 
@@ -306,7 +310,7 @@ model_A <- function(u_prey = 0.5,
 model_B <- function(u_prey = 0,
                       u_predator = 0,
                       A1 = 2,
-                      R1 = 1.6,
+                      R1 = 0.1,
                       A2 = 2.75,
                       R2 = 1.45,
                       Tmax = 50,
@@ -333,7 +337,7 @@ model_B <- function(u_prey = 0,
     x5[1] <- x5o
 
     for (t in 1:(Tmax-1)) {
-        s1[t] <- x1[t] * (1 - 10*u_prey)
+        s1[t] <- x1[t] * (1 - u_prey)
         s4[t] <- x4[t] * (1 - u_predator)
 
         x1[t+1] <- s1[t] * exp(R1 - s1[t] * A1 + omega1[t])
@@ -355,14 +359,14 @@ Determine the optimal policy using Nelder-Meade simplex method provided by the `
 
 ```{r}
 u_A <- function(x) utility(x, f = model_A)
-A <- optim(c(.2,0.01), u_A)
+A <- optim(c(.8,0.02), u_A)
 model_A_policy <- clip(A$par, 0, 1)
 ```
 
 
 ```{r}
 u_B <- function(x) utility(x, f = model_B)
-B <- optim(c(0.5,0.1), u_B)
+B <- optim(c(0.01,0.1), u_B)
 model_B_policy <- clip(B$par, 0, 1)
 ```
 
@@ -443,7 +447,10 @@ example1 %>%
 
 
 ```{r}
-mean_utility_A / mean_utility_B
+ratio <- mean_utility_A / mean_utility_B
 ```
 
+The ratio of mean utility under model A to mean utility under the nearly-optimal model B is `r round(ratio *100)`%.
+
+# References
 

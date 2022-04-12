@@ -145,7 +145,7 @@ I consider each in turn.
 
 ## Statistical approaches: Forecasting under "Proper" Scoring Rules
 
-Like many decision problems, the task of setting a sustainable harvest quota appears to hinge on having an accurate forecast: if we can predict to what size the fish stock will increase next year, $X_t+1$, and we know the current stock, $X_t$, then we can sustainably harvest $X_{t+1} - X_t$ without decreasing the biomass over the long term.
+Like many decision problems, the task of setting a sustainable harvest quota appears to hinge on having an accurate forecast: if we can predict to what size the fish stock will increase next year, $X_{t+1}$, and we know the current stock, $X_t$, then we can sustainably harvest $X_{t+1} - X_t$ without decreasing the biomass over the long term.
 Selecting a model based on forecast skill is also justifiable on theoretical grounds, since it reduces the risk of overfitting by comparing model predictions to later observations that were not used to estimate the model [@Gneiting2014].
 
 I illustrate the process of model selection by strictly proper scoring rules using two scenarios.
@@ -288,7 +288,7 @@ for (k in 1:n_s) {
 
 We use value iteration to solve the stochastic dynamic program [@Marescot2013; @MDPtoolbox] for each model.
 This determines the optimal harvest policy for each possible state, given each model.
-Because this step is the most computationally intensive routine, we cache the results using memosization conditioned on the transition matrices [@memoise].
+Because this step is the most computationally intensive routine, we cache the results using memoization conditioned on the transition matrices [@memoise].
 Running this code with alternate transition matrices automatically invalidates that cache, reducing the risk of loading spurious results. 
 
 
@@ -540,11 +540,23 @@ We can also compare these results to the net economic value achieved under Model
 # tabular comparisons
 npv <- npv_df %>% group_by(model) %>% summarize(npv = max(mean_npv))
 
-am_npv <- sum(am$value * discount ^ am$time)
-am_economics_percent <- round(am_npv / npv[[1,"npv"]] * 100)
+am_npv <- am %>% group_by(method) %>% summarize(npv = sum(quota * discount ^ time))
+learning <- am_npv %>% filter(method=="learning") %>% pull(npv) 
+am_economics_percent <- round(learning / npv[[1,"npv"]] * 100)
 
-mean_state <- sims %>% group_by(model) %>% summarize(state = mean(state))
-am_ecology_percent <- round(mean(states[am$state])/mean_state[[1, "state"]]*100)
+mean_state <- sims %>%
+  group_by(model) %>% 
+  summarize(state = mean(state)) %>% 
+  filter(model == 1) %>%
+  pull(state)
+learn_state <- am %>%
+  group_by(method) %>% 
+  summarize(state = mean(stock))  %>%
+  filter(method == "learning") %>%
+  pull(state)
+
+
+am_ecology_percent <- round(learn_state / mean_state *100)
 ```
 
 
