@@ -1,4 +1,2 @@
-review-reply.Rmd
-review-reply.pdf
-review-reply-round2.Rmd
-review-reply-round2.pdf
+*.Rmd
+*.pdf
