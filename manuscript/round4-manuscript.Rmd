@@ -4,6 +4,7 @@ name: Carl Boettiger
 email: "cboettig@berkeley.edu"
 affiliation: a,1
 date: "`r Sys.Date()`"
+csl: csl/ecology-letters.csl
 
 abstract: |
   Encouraged by decision makers' appetite for future information on topics ranging from elections to pandemics, and enabled by the explosion of data and computational methods, model based forecasts have garnered increasing influence on a breadth of decisions in modern society. Using several classic examples from fisheries management, I demonstrate that selecting the model or models that produce the most accurate and precise forecast (measured by statistical scores) can sometimes lead to worse outcomes (measured by real-world objectives). This can create a forecast trap, in which the outcomes such as fish biomass or economic yield decline while the manager becomes increasingly convinced that these actions are consistent with the best models and data available. The forecast trap is not unique to this example, but a fundamental consequence of non-uniqueness of models. Existing practices promoting a broader set of models are the best way to avoid the trap. 
@@ -29,7 +30,6 @@ header-includes:
   - \usepackage{endfloat}
   
 
-csl: csl/ecology-letters.csl
 output: rticles::elsevier_article
 layout: 3p
 journal: Ecology Letters
@@ -140,7 +140,7 @@ I will examine such approaches for model ensembles and model updating further on
 I shall focus on examples involving fisheries management to illustrate principles shared in many ecological systems.
 Fisheries are a significant economic and conservation concern worldwide and their management remains an important debate [e.g. @Worm2006; @Worm2009; @Costello2016].
 Moreover, fisheries management has been a proving grounds for theoretical and practical decision-making issues [e.g. @Clark1973; @Reed1979; @Walters1981; @Ludwig1982] arising in a wide range of other contexts, including
-invasive species [@Boettiger2021], infectious diseases [@Li2017; Shea2014], fire management [@Richards1999] conservation planning and prioritization [@Chades2008; @Wilson2006] climate policy [@Nitzbon2017] and much else [@Ludwig1993; @Lande1994; @Polasky2011].
+invasive species [@Boettiger2021], infectious diseases [@Li2017; @Shea2014], fire management [@Richards1999] conservation planning and prioritization [@Chades2008; @Wilson2006] climate policy [@Nitzbon2017] and much else [@Ludwig1993; @Lande1994; @Polasky2011].
 
 In these examples, we will focus on situations in which our 'data' comes from a model simulation rather than empirical sources.
 Simulations are simplifications of the real world -- just because a method works in a simulation is no guarantee that it works in reality.
