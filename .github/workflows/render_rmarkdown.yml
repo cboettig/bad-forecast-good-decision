@@ -2,10 +2,10 @@ on:
   push:
     paths: ['**.Rmd', ".github/workflows/render_rmarkdown.yml", "renv.lock"]
 
-name: render-rmarkdown
+name: reproducibility
 
 jobs:
-  render-rmarkdown:
+  reproducibility:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -23,7 +23,7 @@ jobs:
         
       - uses: r-lib/actions/setup-renv@v1
 
-      - name: Render Rmarkdown files
+      - name: Render manuscript and appendices
         run: |
           RMD_PATH=($(ls manuscript/manuscript.Rmd | grep '[.]Rmd$'))
           Rscript -e 'for (f in commandArgs(TRUE)) if (file.exists(f)) rmarkdown::render(f)' ${RMD_PATH[*]}
