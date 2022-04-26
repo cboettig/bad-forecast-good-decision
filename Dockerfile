@@ -12,6 +12,6 @@ RUN chown -R ${NB_USER} ${HOME}
 
 ## Become normal user again
 USER ${NB_USER}
-RUN R -e "devtools::install_deps(dep=TRUE)"
+RUN R -e "renv::restore()"
 
 
